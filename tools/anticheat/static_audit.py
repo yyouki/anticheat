@@ -31,6 +31,7 @@ REQUIRED = [
     "tools/anticheat/staging_review.py",
     "tools/anticheat/staging_review_batch.py",
     "tools/anticheat/staging_review_capture.py",
+    "tools/anticheat/vehicle_trace_report.py",
     "tools/anticheat/staging_review_scenarios.json",
     "tools/anticheat/openmp_runtime_smoke.py",
     "tests/test_replay.py",
@@ -38,6 +39,7 @@ REQUIRED = [
     "tests/test_staging_review.py",
     "tests/test_staging_review_batch.py",
     "tests/test_staging_review_capture.py",
+    "tests/test_vehicle_trace_report.py",
     "docs/STAGING_FALSE_POSITIVE_MATRIX.md",
     "docs/templates/staging-review-template.json",
     "tests/fixtures/staging_acceptance_success.log",
@@ -128,6 +130,22 @@ def main() -> int:
     assert "vehicle_sample" in sources["tools/anticheat/replay.py"]
     assert "load_excluded_vehicle_models" in sources["tools/anticheat/replay.py"]
     assert "AC_VEHICLE_MAX_SPEED_KMH" in sources["tools/anticheat/replay.py"]
+    assert "parse_vehicle_observations" in sources["tools/anticheat/vehicle_trace_report.py"]
+    assert "safe_speed_envelope_established" in sources["tools/anticheat/vehicle_trace_report.py"]
+
+    # Staging telemetry must be bounded, model-scoped, and pseudonymous.
+    staging = sources["examples/staging.pwn"]
+    telemetry_capture = function_body(staging, "AC_StageCaptureVehicleTelemetry")
+    assert "AC_IsMonitored(playerid)" in telemetry_capture
+    assert "PLAYER_STATE_DRIVER" in telemetry_capture
+    assert "AC_SAMPLE_INTERVAL_MS" in telemetry_capture
+    assert "AC_VEHICLE_SPEED_FACTOR" in telemetry_capture
+    assert "[AC-STAGE-VEHICLE] schema=1 actor=primary model=%d" in telemetry_capture
+    assert "playerid=" not in telemetry_capture
+    assert "accountid=" not in telemetry_capture
+    assert "vehicleid=" not in telemetry_capture
+    assert "AC_StageCaptureVehicleTelemetry(playerid);" in staging
+    assert '"/acstagevehicle [modelid]"' in staging
 
     # Player-indexed helpers must reject out-of-range IDs before array access.
     require_player_id_guards("include/ac/state.inc", (
