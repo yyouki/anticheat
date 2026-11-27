@@ -155,9 +155,11 @@ CI also performs the repository static audit and default/opt-in Pawn smoke compi
 
 ## Current implementation focus
 
-PR #7, [Add live staging commands for legal state transitions](https://github.com/yyouki/anticheat/pull/7), is merged to `main` as `da1464dbbe1c499eac074a5a7aa5d8d621b95bc4`. Post-merge run #59 (`45962033428`) passed all three CI jobs: static audit/Python replay, all three Pawn compile targets, and pinned open.mp `v1.6.7.3218` headless boot.
+PR #7, [Add live staging commands for legal state transitions](https://github.com/yyouki/anticheat/pull/7), is merged to `main` as `da1464dbbe1c499eac074a5a7aa5d8d621b95bc4`. Post-merge run #59 (`45962033428`) passed all three CI jobs.
 
-The current follow-up adds pseudonymous `[AC-STAGE-EVENT]` records, `/acstagelogbegin` and `/acstagelogend`, and `tools/anticheat/staging_report.py`. The offline checker requires a complete legal teleport, vehicle, interior callback, virtual-world, and spectating sequence, and fails if evidence/review markers or incomplete/aborted captures appear. This does not replace real-client validation.
+PR #8, [Add privacy-safe staging acceptance report](https://github.com/yyouki/anticheat/pull/8), is open on branch `feat/privacy-safe-staging-acceptance-report`. Tested head `8d781806751783bc86b7077c09191374442947d3` passed Actions run #62 (`45963399362`): static audit (38 required files), 18 Python unit tests, all telemetry replay fixtures, all three Pawn compile targets, staging package upload (artifact ID `15181702026`), and pinned open.mp `v1.6.7.3218` headless boot. The package digest is `sha256:dc7e2ee2f92c19e18c762beef4dede469abad342419bb0bf9ad9bb5c8ee10a40`.
+
+PR #8 adds pseudonymous `[AC-STAGE-EVENT]` records, `/acstagelogbegin` and `/acstagelogend`, and `tools/anticheat/staging_report.py`. The offline checker requires the complete legal teleport, vehicle, interior callback, virtual-world, and spectating sequence, and fails on evidence/review markers or incomplete/aborted captures. The synthetic success fixture tests parser behavior only. Real-client execution and false-positive review remain outstanding.
 
 ## Remaining release gates
 
