@@ -42,21 +42,38 @@ CONSTANT_NAMES = (
     "AC_NETWORK_QUALITY_TTL_MS",
 )
 
+# Keep constants tied to the Pawn include that owns their definitions.
+CONSTANT_SOURCE_FILES = {
+    "AC_NETWORK_QUALITY_TTL_MS": "network.inc",
+}
 
-def load_constants(config_path: Path | None = None) -> dict[str, int | float]:
-    """Read numeric thresholds from the Pawn config to reduce model drift."""
-    path = config_path or ROOT / "include/ac/config.inc"
-    source = path.read_text(encoding="utf-8")
+
+def load_constants(
+    config_path: Path | None = None,
+    network_path: Path | None = None,
+) -> dict[str, int | float]:
+    """Read numeric thresholds from their owning Pawn include files."""
+    config_file = config_path or ROOT / "include/ac/config.inc"
+    network_file = network_path or config_file.with_name("network.inc")
+    source_files = {
+        "config.inc": (config_file, config_file.read_text(encoding="utf-8")),
+        "network.inc": (network_file, network_file.read_text(encoding="utf-8")),
+    }
     constants: dict[str, int | float] = {}
 
     for name in CONSTANT_NAMES:
+        source_name = CONSTANT_SOURCE_FILES.get(name, "config.inc")
+        source_file, source = source_files[source_name]
         match = re.search(
             rf"^\s*#define\s+{re.escape(name)}\s+\(([-+]?\d+(?:\.\d+)?)\)\s*$",
             source,
             re.MULTILINE,
         )
         if not match:
-            raise ValueError(f"Pawn configuration is missing numeric constant: {name}")
+            raise ValueError(
+                f"Pawn configuration is missing numeric constant: {name} "
+                f"(expected in {source_file})"
+            )
         raw = match.group(1)
         constants[name] = float(raw) if "." in raw else int(raw)
 
