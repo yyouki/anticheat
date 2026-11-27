@@ -42,14 +42,18 @@
 
 // Generic damage callback timing is not reliable enough for all clients.
 // Keep disabled until a server-specific trace corpus validates the heuristic.
-#define AC_ENABLE_COMBAT_CADENCE             (0)
+#if !defined AC_ENABLE_COMBAT_CADENCE
+    #define AC_ENABLE_COMBAT_CADENCE         (0)
+#endif
 #define AC_COMBAT_MAX_PING                   (160)
 #define AC_COMBAT_MIN_INTERVAL_MS            (30)
 #define AC_COMBAT_REQUIRED_FAST_INTERVALS    (4)
 #define AC_COMBAT_EVIDENCE_COOLDOWN_MS       (30000)
 
 // Client memory checks are intentionally disabled. No universal offsets exist.
-#define AC_ENABLE_CLIENT_MEMORY_CHECKS       (0)
+#if !defined AC_ENABLE_CLIENT_MEMORY_CHECKS
+    #define AC_ENABLE_CLIENT_MEMORY_CHECKS   (0)
+#endif
 
 // A single family cannot trigger a strike. At least two independent families
 // must report inside AC_EVIDENCE_WINDOW_SECONDS.
