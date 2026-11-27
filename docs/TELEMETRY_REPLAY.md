@@ -78,6 +78,6 @@ The replay command prints one PASS/FAIL line per fixture. The unittest suite als
 - Expired packet-loss measurements no longer suppressing samples.
 - Stale asynchronous account-load results and duplicate completions being rejected.
 - Persisted strike cooldown remaining active after disconnect, player-slot reuse, and account reload.
-- Sustained vehicle speed anomalies, excluded aircraft models, vehicle switching, grace windows, network-quality resets, and the shared sampling interval.
+- Sustained vehicle speed anomalies, excluded aircraft models, vehicle switching, grace windows, ping and packet-loss resets, and the shared sampling interval.
 
 Add a fixture whenever a threshold or suppressor changes. Update expected values only after reviewing the rule change; never change expected values merely to silence a failing test.
