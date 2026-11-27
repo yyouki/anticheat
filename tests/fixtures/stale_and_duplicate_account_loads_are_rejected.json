@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "scenario_id": "stale_and_duplicate_account_loads_are_rejected",
+  "description": "An async load result from a disconnected/reused player slot is rejected, the current result is accepted, and its duplicate is rejected.",
+  "events": [
+    {
+      "type": "connect",
+      "at_ms": 1000
+    },
+    {
+      "type": "load_begin",
+      "at_ms": 1100,
+      "account_id": 7
+    },
+    {
+      "type": "disconnect",
+      "at_ms": 1200
+    },
+    {
+      "type": "connect",
+      "at_ms": 1300
+    },
+    {
+      "type": "load_begin",
+      "at_ms": 1400,
+      "account_id": 99
+    },
+    {
+      "type": "load_complete",
+      "at_ms": 1500,
+      "account_id": 7,
+      "session_token": 2
+    },
+    {
+      "type": "load_complete",
+      "at_ms": 1600,
+      "account_id": 99,
+      "session_token": 5
+    },
+    {
+      "type": "load_complete",
+      "at_ms": 1700,
+      "account_id": 99,
+      "session_token": 5
+    }
+  ],
+  "expected": {
+    "evidence_count": 0,
+    "evidence_categories": [],
+    "score": 0,
+    "strikes": 0,
+    "loaded": true,
+    "account_id": 99,
+    "session_token": 5,
+    "load_completion_results": [
+      false,
+      true,
+      false
+    ]
+  }
+}
