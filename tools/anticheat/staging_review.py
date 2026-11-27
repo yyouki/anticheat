@@ -100,8 +100,8 @@ def validate_review_record(data: Any) -> dict[str, Any]:
         return _invalid_payload(["record root must be an object"])
 
     _exact_keys(data, {"schema_version", "run_id", "environment", "observations"}, errors, "record")
-    if type(data.get("schema_version")) is not int or data.get("schema_version") != 1:
-        errors.append("schema_version must equal 1")
+    if type(data.get("schema_version")) is not int or data.get("schema_version") != 2:
+        errors.append("schema_version must equal 2")
 
     run_id = data.get("run_id")
     if not isinstance(run_id, str) or not RUN_ID_PATTERN.fullmatch(run_id):
@@ -117,6 +117,7 @@ def validate_review_record(data: Any) -> dict[str, Any]:
             {
                 "server_commit",
                 "staging_artifact_sha256",
+                "capture_sha256",
                 "openmp_version",
                 "client_platform",
                 "client_build",
@@ -135,6 +136,10 @@ def validate_review_record(data: Any) -> dict[str, Any]:
         environment.get("staging_artifact_sha256", "")
     ):
         errors.append("environment.staging_artifact_sha256 must be a 64-character SHA-256 digest")
+    if not isinstance(environment.get("capture_sha256"), str) or not DIGEST_PATTERN.fullmatch(
+        environment.get("capture_sha256", "")
+    ):
+        errors.append("environment.capture_sha256 must be a 64-character SHA-256 digest")
     if not isinstance(environment.get("openmp_version"), str) or not OPENMP_VERSION_PATTERN.fullmatch(
         environment.get("openmp_version", "")
     ):
@@ -258,6 +263,7 @@ def validate_review_record(data: Any) -> dict[str, Any]:
     return {
         "record_status": "valid",
         "run_id": run_id,
+        "capture_sha256": environment["capture_sha256"],
         "evaluation_state": evaluation_state,
         "scenario_records_complete": not missing,
         "scenario_execution_complete": scenario_execution_complete,
