@@ -53,6 +53,8 @@ The supplied config disables server-list announcement, query visibility, and RCO
 8. Run `/acstageinterior` twice to enter and leave the 24/7 interior (ID 17). Then run `/acstageworld` twice to enter and leave reserved virtual world 9000.
 9. Run `/acstagespectate <targetid>` on the primary client, then `/acstageunspectate`. The target is logged only as the pseudonymous role `secondary`; the report never needs either client's player ID. The harness restores the spectator's previous position/context after spectating ends.
 10. On the primary client, run `/acstagelogend`. Copy the server console log to a local text file. The structured `[AC-STAGE-EVENT]` records contain only the fixed role labels `primary` and `secondary`, transition values, and detector category counters; they do not include player IDs, account IDs, IP addresses, or session tokens.
+The raw server console log may contain unrelated host/server connection metadata. Keep it local, do not commit or publicly upload it, and share only the redacted report summary if results need to be discussed.
+
 11. Run the offline report checker from the repository root:
 
     ```sh
