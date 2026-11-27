@@ -2,12 +2,14 @@
 
 ## Current repository validation
 
-- Static repository checks: pending initial CI run.
-- Pawn compile against pinned compiler and open.mp standard includes: pending initial CI run.
-- Runtime test server: not available in this repository bootstrap.
+- Static repository audit: PASSED in the latest GitHub Actions run (#4).
+- Pawn smoke compile: PASSED with Pawn compiler 3.10.11 and open.mp standard includes pinned to commit 17c1b0191195cb0b59a820135fbca622c84129dd. The smoke AMX was produced.
+- Runtime test server: not run.
 - Desktop/mobile false-positive suite: not run.
 - Performance measurements: not run.
 - Independent adversarial review: not run.
+
+The compile result proves source/include compatibility for the smoke gamemode. It does not prove runtime correctness, detector accuracy, resistance to bypasses, or production performance.
 
 ## Required release suite
 
