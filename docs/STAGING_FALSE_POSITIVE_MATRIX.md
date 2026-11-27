@@ -49,6 +49,18 @@ The full /acstagelogbegin to /acstagelogend acceptance capture remains a separat
 
 7. Keep the review JSON and raw logs private unless they have been checked for accidental identifiers. Share only the redacted summary when reporting results.
 
+## Binding a review to its staging capture
+
+The schema-v2 review record requires `environment.capture_sha256`. After saving the completed local console log, run:
+
+```sh
+python3 tools/anticheat/staging_review_capture.py --record /path/to/staging-review.json --capture-log /path/to/staging-console.log --write-digest
+```
+
+This validates the structured event sequence and writes the SHA-256 digest of the exact raw file bytes into the review record. Repeat without `--write-digest` to verify the binding later. The command rejects symlink inputs and raw captures larger than 32 MiB. It does not upload either file, authenticate log origin, or prove that the scenario observations were performed.
+
+The batch tool rejects a repeated `capture_sha256` across distinct run IDs, preventing accidental reuse of one capture as multiple independent runs. Keep the raw log and review record private.
+
 ## Interpreting the validator output
 
 record_status=valid means only that the review record has the required fields and internally consistent result labels. scenario_execution_complete means every scenario in the manifest has a clean or evidence observation. evidence_review_complete means there are no pending or inconclusive evidence decisions. A confirmed false positive remains visible in confirmed_false_positive_count and the evaluation state.
