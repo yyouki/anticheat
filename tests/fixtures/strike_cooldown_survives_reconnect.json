@@ -19,7 +19,8 @@
       "session_token": 2,
       "score": 50,
       "strikes": 1,
-      "strike_decay_at": 3
+      "strike_decay_at": 3,
+      "last_strike_at": 3
     },
     {
       "type": "disconnect",
@@ -41,7 +42,8 @@
       "session_token": 5,
       "score": 50,
       "strikes": 1,
-      "strike_decay_at": 3
+      "strike_decay_at": 3,
+      "last_strike_at": 3
     },
     {
       "type": "evidence",
