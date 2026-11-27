@@ -156,8 +156,6 @@ stock AC_StageCaptureVehicleTelemetry(playerid)
         // The first sample has no preceding observation to measure against.
         sample_interval_ms = 0;
     }
-    AC_StageLastVehicleTraceTick[playerid] = tick;
-
     new vehicleid = GetPlayerVehicleID(playerid);
     if (vehicleid == 0 || vehicleid == INVALID_VEHICLE_ID || !IsValidVehicle(vehicleid))
         return 0;
@@ -187,6 +185,9 @@ stock AC_StageCaptureVehicleTelemetry(playerid)
             floatround_round
         );
     }
+
+    // Update only after a complete observation is ready to be emitted.
+    AC_StageLastVehicleTraceTick[playerid] = tick;
 
     // No player ID, account ID, vehicle ID, or coordinates are written.
     printf(
