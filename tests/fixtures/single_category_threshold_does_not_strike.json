@@ -4,6 +4,21 @@
   "description": "Repeated movement-family evidence can raise suspicion over the threshold but cannot create a strike without an independent family.",
   "events": [
     {
+      "type": "connect",
+      "at_ms": 100
+    },
+    {
+      "type": "load_begin",
+      "at_ms": 200,
+      "account_id": 1005
+    },
+    {
+      "type": "load_complete",
+      "at_ms": 300,
+      "account_id": 1005,
+      "session_token": 2
+    },
+    {
       "type": "evidence",
       "at_ms": 100000,
       "category": "movement",
@@ -31,6 +46,12 @@
     ],
     "movement_evidence": 0,
     "score": 90,
-    "strikes": 0
+    "strikes": 0,
+    "loaded": true,
+    "account_id": 1005,
+    "session_token": 2,
+    "load_completion_results": [
+      true
+    ]
   }
 }
