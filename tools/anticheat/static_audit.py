@@ -30,12 +30,14 @@ REQUIRED = [
     "tools/anticheat/staging_report.py",
     "tools/anticheat/staging_review.py",
     "tools/anticheat/staging_review_batch.py",
+    "tools/anticheat/staging_review_capture.py",
     "tools/anticheat/staging_review_scenarios.json",
     "tools/anticheat/openmp_runtime_smoke.py",
     "tests/test_replay.py",
     "tests/test_staging_report.py",
     "tests/test_staging_review.py",
     "tests/test_staging_review_batch.py",
+    "tests/test_staging_review_capture.py",
     "docs/STAGING_FALSE_POSITIVE_MATRIX.md",
     "docs/templates/staging-review-template.json",
     "tests/fixtures/staging_acceptance_success.log",
@@ -271,7 +273,16 @@ def main() -> int:
     assert "requires_secondary_client" in review_tool
     assert len(review_template["observations"]) == len(review_manifest["scenarios"])
     assert "scenario_execution_complete" in review_tool
+    assert "capture_sha256" in review_tool
+    review_capture = sources["tools/anticheat/staging_review_capture.py"]
+    assert "validate_capture_binding" in review_capture
+    assert "MAX_CAPTURE_BYTES" in review_capture
+    assert "log_origin_authenticated" in review_capture
+    assert "duplicate capture_sha256 detected" in review_batch
+    assert "capture_sha256" in review_template["environment"]
     assert "false-positive matrix" in staging_readme.lower()
+    assert "staging_review_capture.py" in staging_readme
+    assert "--write-digest" in staging_readme
     review_batch = sources["tools/anticheat/staging_review_batch.py"]
     assert "false_positive_rate_estimated" in review_batch
     assert "scenario_result_counts" in review_batch
