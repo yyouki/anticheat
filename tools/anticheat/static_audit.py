@@ -235,9 +235,9 @@ def main() -> int:
     assert spectate_capture.index("PlayerSpectatePlayer(playerid, targetid)") < spectate_capture.index(
         'AC_StageLogEvent(playerid, "spectate_start"'
     )
-    assert 'AC_StageLogEvent(playerid, "teleport")' in staging
-    assert 'AC_StageLogEvent(playerid, "vehicle_enter")' in staging
-    assert 'AC_StageLogEvent(playerid, "vehicle_exit")' in staging
+    assert 'AC_StageLogEvent(playerid, "teleport", "")' in staging
+    assert 'AC_StageLogEvent(playerid, "vehicle_enter", "")' in staging
+    assert 'AC_StageLogEvent(playerid, "vehicle_exit", "")' in staging
     assert 'AC_StageLogEvent(playerid, "evidence", details)' in staging
     assert 'AC_StageLogEvent(playerid, "review_marker", details)' in staging
     assert 'AC_StageLogEvent(playerid, "run_abort", " reason=owner_disconnect")' in staging
@@ -291,7 +291,7 @@ def main() -> int:
 
     assert "OnPlayerInteriorChange" in staging
     assert "Connect a second test client" in staging_readme
-    assert "real game client remains connected" in staging_readme
+    assert "does not disconnect the real client" in staging_readme
     assert "AC_OnPlayerUpdate(playerid);" in staging
     assert not re.search(r"\b(?:Kick|Ban|BanEx)\s*\(", staging)
     assert staging_config.get("announce") is False
