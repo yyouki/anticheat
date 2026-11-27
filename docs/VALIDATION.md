@@ -188,3 +188,13 @@ PR #14, [Add deterministic vehicle telemetry replay coverage](https://github.com
 - Pinned open.mp `v1.6.7.3218` headless boot: PASSED.
 
 Run #83 did not connect an interactive game client. PR #14 expands only the synthetic Python reference replay; it does not change the Pawn vehicle detector or establish model-aware thresholds.
+
+
+PR #15, [Add bounded staging vehicle telemetry traces](https://github.com/yyouki/anticheat/pull/15), head `59f13bfff954cda534f6d5d5a15201f8218ded33`, passed workflow run #86 (`45991708681`). All three jobs completed successfully:
+
+- Static repository audit, all 77 Python unit tests, and deterministic telemetry replay: PASSED.
+- Default, opt-in feature-gate, and staging Pawn compile targets: PASSED.
+- Staging artifact upload: PASSED (`ac-staging-package`, ID `15192894648`, size 45,484 bytes, SHA-256 `dd97f0b151c1b513e7d784984529b9553573c3dbe9a71a44bea8ea5f9742f2db`).
+- Pinned open.mp headless runtime smoke: PASSED.
+
+PR #15 adds observational vehicle traces and a local per-model summary only. It does not modify Pawn detector thresholds or establish a safe speed envelope. Run #86 did not connect interactive game clients or collect real vehicle traces.
