@@ -7,6 +7,8 @@ forward AC_OnPersistenceSave(playerid, accountid, score, strikes, score_decay_at
 forward AC_OnAdministrativeReset(adminid, targetid, accountid);
 forward AC_OnEvidence(playerid, category, points, ping, const reason[], Float:metric);
 forward AC_OnStrike(playerid, accountid, strikes, const reason[]);
+forward AC_OnEvidenceV2(playerid, accountid, sessiontoken, sequence, timestamp, category, points, ping, const reason[], Float:metric);
+forward AC_OnStrikeV2(playerid, accountid, sessiontoken, sequence, timestamp, strikes, const reason[]);
 
 stock AC_Init()
 {
