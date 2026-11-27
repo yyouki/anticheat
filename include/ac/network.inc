@@ -7,7 +7,7 @@
 
 stock AC_SetNetworkQuality(playerid, ping, Float:packet_loss)
 {
-    if (!IsPlayerConnected(playerid))
+    if (!AC_IsValidPlayerId(playerid) || !IsPlayerConnected(playerid))
         return 0;
 
     AC_NetworkPing[playerid] = ping;
@@ -22,7 +22,7 @@ stock AC_SetNetworkQuality(playerid, ping, Float:packet_loss)
 
 stock AC_GetPing(playerid)
 {
-    if (!IsPlayerConnected(playerid))
+    if (!AC_IsValidPlayerId(playerid) || !IsPlayerConnected(playerid))
         return -1;
 
     if (AC_NetworkQualityTick[playerid] > 0
