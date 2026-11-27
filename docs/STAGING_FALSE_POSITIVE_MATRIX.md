@@ -60,3 +60,18 @@ The validator deliberately never certifies false_positive_free_certified, indepe
 Do not change detector thresholds based on one run or synthetic fixtures. Compare repeated runs across supported client builds and network profiles. Investigate each evidence record with its category, timestamp/order from the local log, relevant ping/packet-loss context, and the server-side action that preceded it. Change a detector only after the cause is understood and a regression test shows that the fix does not suppress unrelated evidence.
 
 The sample persistence adapter is RAM-only. A server process restart loses its saved records; this harness does not validate durable production persistence. Never run this worksheet against a production gamemode or public server.
+
+
+## Comparing multiple review runs
+
+Keep each completed review JSON file in a private local directory. Use a distinct, non-identifying \`run_id\` for every run. The batch aggregator validates every file before producing a combined report:
+
+\`\`\`sh
+python3 tools/anticheat/staging_review_batch.py --records-dir /path/to/private-review-records
+\`\`\`
+
+The output groups runs by the exact server commit, staging artifact digest, open.mp version, client platform/build label, and network profile. Each group contains total result counts and per-scenario counts, so a scenario that repeatedly produces evidence is visible instead of being hidden in an overall total.
+
+The command rejects a batch containing an invalid record or duplicate run ID; it does not silently produce a partial-success summary. It reads only top-level JSON files and limits a batch to 500 records. Keep the directory local: even though the schema excludes player/account/device identifiers, run metadata and test outcomes may still be operationally sensitive.
+
+Counts are observations, not false-positive rates. Runs may not be independent, durations may differ, and the validator cannot verify execution. The summary never certifies false-positive-free behavior, independent verification, or production readiness.
