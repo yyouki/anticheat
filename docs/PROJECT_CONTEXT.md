@@ -264,3 +264,5 @@ Bound mode pairs each vehicle trace log with one schema-v2 review record and ver
 ## PR #17 — measured staging vehicle sample intervals
 
 The PR #17 branch adds a per-observation `sample_interval_ms` field to vehicle telemetry schema 2. The first accepted sample in a capture records zero; later samples record elapsed time since the preceding accepted observation. The offline report retains schema-1 compatibility and emits report schema 3 with per-model interval distributions. These are collector-cadence diagnostics only; they are not detector inputs, client timing measurements, safe speed limits, or live-client validation.
+
+CI for PR #17 branch head `c439b9ee89e30c4abeb2c57fddce9d9e26af8d2a` passed in run #97 (`46001052529`): static audit, 93 Python unit tests, deterministic replay, all Pawn compile targets, and pinned open.mp headless boot. Artifact `ac-staging-package` ID `15198191515`, 46,093 bytes, SHA-256 `e75ba3abc7d1b297956e4e77f11d66f813fde27f0f8668069432d2c66d263bba`. This is a pre-merge PR validation result only and still does not represent an interactive client test.
