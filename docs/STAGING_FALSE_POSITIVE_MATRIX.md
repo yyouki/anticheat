@@ -72,6 +72,6 @@ python3 tools/anticheat/staging_review_batch.py --records-dir /path/to/private-r
 
 The output groups runs by the exact server commit, staging artifact digest, open.mp version, client platform/build label, and network profile. Each group contains total result counts and per-scenario counts, so a scenario that repeatedly produces evidence is visible instead of being hidden in an overall total.
 
-The command rejects a batch containing an invalid record or duplicate run ID; it does not silently produce a partial-success summary. It reads only top-level JSON files and limits a batch to 500 records. Keep the directory local: even though the schema excludes player/account/device identifiers, run metadata and test outcomes may still be operationally sensitive.
+The command rejects a batch containing an invalid record or duplicate run ID; it does not silently produce a partial-success summary. It reads only top-level, non-symlink JSON files, limits a batch to 500 records, and rejects individual files larger than 1 MiB. Keep the directory local: even though the schema excludes player/account/device identifiers, run metadata and test outcomes may still be operationally sensitive.
 
 Counts are observations, not false-positive rates. Runs may not be independent, durations may differ, and the validator cannot verify execution. The summary never certifies false-positive-free behavior, independent verification, or production readiness.
