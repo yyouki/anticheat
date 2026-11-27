@@ -32,6 +32,12 @@ The framework is gamemode-neutral. It must not assume a particular account schem
 
 See [docs/INTEGRATION.md](docs/INTEGRATION.md) before connecting host callbacks. In particular, persist `last_strike_at` independently from `strike_decay_at`; they represent different clocks.
 
+## Staging harness
+
+An isolated reference gamemode and temporary in-memory persistence adapter are available under [examples/staging](examples/staging/README.md). The harness demonstrates the public account-load/save callbacks, lifecycle forwarding, legal transition notifications, and evidence inspection without selecting a database or authentication provider.
+
+CI compiles the staging gamemode, publishes an `ac-staging-package` artifact, then starts a pinned open.mp Linux server and verifies that the gamemode loads. This is a headless server-boot check only; it does not simulate a connected game client or prove detector accuracy. Follow the manual player test sequence in [examples/staging/README.md](examples/staging/README.md) for interactive runtime validation.
+
 ## Development and release gates
 
 Every production candidate must pass:
