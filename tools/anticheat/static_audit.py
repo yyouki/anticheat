@@ -278,12 +278,12 @@ def main() -> int:
     assert "validate_capture_binding" in review_capture
     assert "MAX_CAPTURE_BYTES" in review_capture
     assert "log_origin_authenticated" in review_capture
-    assert "duplicate capture_sha256 detected" in review_batch
     assert "capture_sha256" in review_template["environment"]
     assert "false-positive matrix" in staging_readme.lower()
     assert "staging_review_capture.py" in staging_readme
     assert "--write-digest" in staging_readme
     review_batch = sources["tools/anticheat/staging_review_batch.py"]
+    assert "duplicate capture_sha256 detected" in review_batch
     assert "false_positive_rate_estimated" in review_batch
     assert "scenario_result_counts" in review_batch
     assert "MAX_RECORDS = 500" in review_batch
