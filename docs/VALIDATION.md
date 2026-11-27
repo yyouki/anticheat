@@ -66,6 +66,27 @@ PR #6 adds explicit server-owned interior, virtual-world, and spectating notific
 
 These checks verify compilation, source contracts, and gamemode startup. They do not execute `/acstagetest` with a connected client or prove that actual live interior/world/spectating transitions are false-positive free.
 
+PR #6 was merged to `main` as `003793945a546c8eb25b67c8036ad19cf633301e`. Post-merge Actions run #56 (`45959927009`) completed successfully:
+
+- Static repository audit: PASSED (35 required files).
+- Python unit tests and telemetry replay: PASSED.
+- Default, opt-in feature-gate, and staging Pawn compiles: PASSED.
+- Staging package: uploaded as `ac-staging-package` (artifact ID `15180860714`).
+- Pinned open.mp `v1.6.7.3218` headless boot: PASSED.
+
+This run verifies the legal-transition API and staging self-test compilation. It does not execute the test commands with connected game clients.
+
+PR #7 adds live staging commands for interior, virtual-world, and spectating transitions. Its tested head `f56c810ec2344558a959227a646eba99a98751b1` passed GitHub Actions run #57 (`45961527023`):
+
+- Static repository audit: PASSED (35 required files).
+- Python unit tests: PASSED (10 tests).
+- Deterministic telemetry replay: PASSED (all 10 fixtures).
+- Default, opt-in feature-gate, and staging Pawn compiles: PASSED.
+- Staging package: uploaded as `ac-staging-package` (artifact ID `15181240532`).
+- Pinned open.mp `v1.6.7.3218` headless boot: PASSED.
+
+The headless job does not connect players or issue staging commands. The interior, virtual-world, and spectating commands therefore still require interactive validation with supported game clients. Spectating requires a second connected player. The staging adapter remains RAM-only.
+
 ## Required release suite
 
 | Area | Required cases |

@@ -132,6 +132,86 @@ class TelemetryReplayTests(unittest.TestCase):
         self.assertIn("TogglePlayerSpectating", integration)
         self.assertIn("Only server-controlled legal actions", integration)
 
+    def test_staging_live_transition_commands_notify_before_server_actions(self) -> None:
+        staging = (ROOT / "examples" / "staging.pwn").read_text(encoding="utf-8")
+        guide = (ROOT / "examples" / "staging" / "README.md").read_text(encoding="utf-8")
+
+        def pawn_stock_body(name: str) -> str:
+            # Match nested Pawn blocks by brace depth instead of a fragile regex.
+            start = staging.index(f"stock {name}(")
+            opening = staging.index("{", start)
+            depth = 0
+            for index in range(opening, len(staging)):
+                if staging[index] == "{":
+                    depth += 1
+                elif staging[index] == "}":
+                    depth -= 1
+                    if depth == 0:
+                        return staging[opening + 1:index]
+            self.fail(f"unterminated Pawn stock function: {name}")
+
+        for command in (
+            '"/acstageinterior"',
+            '"/acstageworld"',
+            '"/acstagespectate "',
+            '"/acstageunspectate"',
+        ):
+            with self.subTest(command=command):
+                self.assertIn(command, staging)
+
+        player_id_parser = pawn_stock_body("AC_StageParsePlayerId")
+        self.assertIn("return -1;", player_id_parser)
+        self.assertIn("new targetid = AC_StageParsePlayerId(cmdtext[17]);", staging)
+        self.assertIn("if (targetid < 0 || !AC_IsValidPlayerId(targetid))", staging)
+
+        interior = pawn_stock_body("AC_StageToggleInterior")
+        self.assertLess(
+            interior.index("AC_NotifyLegitimateInteriorChange(playerid);"),
+            interior.index("SetPlayerInterior(playerid, AC_STAGE_TEST_INTERIOR_ID)"),
+        )
+        self.assertLess(
+            interior.index("AC_NotifyLegitimateTeleport(playerid);"),
+            interior.index("SetPlayerPos(playerid, -25.7220"),
+        )
+        self.assertIn("AC_STAGE_TEST_INTERIOR_ID (17)", staging)
+
+        world = pawn_stock_body("AC_StageToggleVirtualWorld")
+        self.assertLess(
+            world.index("AC_NotifyLegitimateVirtualWorldChange(playerid);"),
+            world.index("SetPlayerVirtualWorld(playerid, AC_STAGE_TEST_WORLD_ID)"),
+        )
+        self.assertIn("AC_STAGE_TEST_WORLD_ID (9000)", staging)
+
+        spectate = pawn_stock_body("AC_StageStartSpectating")
+        self.assertLess(
+            spectate.index("AC_NotifyLegitimateSpectateChange(playerid);"),
+            spectate.index("TogglePlayerSpectating(playerid, true)"),
+        )
+        self.assertLess(
+            spectate.index("TogglePlayerSpectating(playerid, true)"),
+            spectate.index("PlayerSpectatePlayer(playerid, targetid)"),
+        )
+
+        unspectate = pawn_stock_body("AC_StageEndSpectating")
+        self.assertLess(
+            unspectate.index("AC_NotifyLegitimateSpectateChange(playerid);"),
+            unspectate.index("TogglePlayerSpectating(playerid, false)"),
+        )
+
+        restore = pawn_stock_body("AC_StageRestoreSpectateContext")
+        for notification, action in (
+            ("AC_NotifyLegitimateInteriorChange(playerid);", "SetPlayerInterior("),
+            ("AC_NotifyLegitimateVirtualWorldChange(playerid);", "SetPlayerVirtualWorld("),
+            ("AC_NotifyLegitimateTeleport(playerid);", "SetPlayerPos("),
+        ):
+            self.assertLess(restore.index(notification), restore.index(action))
+
+        self.assertIn("OnPlayerInteriorChange", staging)
+        self.assertIn("GetPlayerInterior(playerid)", pawn_stock_body("AC_StageShowInfo"))
+        self.assertIn("GetPlayerVirtualWorld(playerid)", pawn_stock_body("AC_StageShowInfo"))
+        self.assertIn("Connect a second test client", guide)
+        self.assertIn("restores the spectator's previous position/context", guide)
+
     def test_openmp_runtime_smoke_script_checks_boot_and_stops_server(self) -> None:
         script = (ROOT / "tools" / "anticheat" / "openmp_runtime_smoke.py").read_text(
             encoding="utf-8"

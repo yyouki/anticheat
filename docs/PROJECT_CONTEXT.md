@@ -95,6 +95,11 @@ Always use a session token and account key to reject stale asynchronous loads an
   - Merge commit: `60a9b4d080034be41613959c369c8af1fcdef8d0`.
   - PR head `345f4cd5a9743c82a47b9c13706d0cb9f039b70f` passed Actions run #51 (`45955418806`); post-merge `main` run #52 (`45956905920`) passed all jobs.
   - The `ac-staging-package` artifact from post-merge run #52 is ID `15178982257`.
+- PR #6, explicit legal transition notification hooks, merged to `main`.
+  - PR: https://github.com/yyouki/anticheat/pull/6
+  - Merge commit: `003793945a546c8eb25b67c8036ad19cf633301e`.
+  - Final PR branch Actions run #55 (`45957683000`) and post-merge `main` run #56 (`45959927009`) passed all jobs.
+  - The post-merge `ac-staging-package` artifact is ID `15180860714`.
 - PR #3, replay CI repair and durable project context, merged to `main`.
   - PR: https://github.com/yyouki/anticheat/pull/3
   - Merge commit: `5bf1443a87ec132ba6d93655b45f4b89427fa2e8`.
@@ -146,7 +151,7 @@ CI also performs the repository static audit and default/opt-in Pawn smoke compi
 
 ## Current implementation focus
 
-PR #6, [Add explicit legal transition notification hooks](https://github.com/yyouki/anticheat/pull/6), is open on branch `feat/legal-transition-hooks`. It adds explicit notifications for server-owned interior, virtual-world, and spectating transitions. The helpers validate the player and share the conservative sampling/grace reset path; do not treat PR #6 as merged until its merge is verified. Its tested head `5cde5fa8b368ae93f31794f6a346b768489eaa03` passed Actions run #54 (`45957558835`): 9 Python unit tests, all 10 telemetry fixtures, static audit, three Pawn compile targets, staging artifact upload (ID `15178978161`), and pinned open.mp headless boot. The self-test hooks are compiled/source-checked; live player transition checks remain manual.
+PR #7, [Add live staging commands for legal state transitions](https://github.com/yyouki/anticheat/pull/7), is open on branch `test/staging-live-transition-commands`. Tested head `f56c810ec2344558a959227a646eba99a98751b1` passed Actions run #57 (`45961527023`): static audit, 10 Python unit tests, all 10 telemetry fixtures, all three Pawn compile targets, staging artifact upload (ID `15181240532`), and pinned open.mp headless boot. The commands exercise a documented 24/7 interior (ID 17), reserved virtual world 9000, and spectating a second connected player; they notify before server-owned setters and restore the prior context after spectating. These CI checks verify source contracts and gamemode startup, not actual client-side transition behavior.
 
 ## Remaining release gates
 

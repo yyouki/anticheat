@@ -11,6 +11,10 @@ This is a disposable test gamemode for validating the anti-cheat integration con
 - Monitoring enable/disable, evidence inspection, and review-state reset.
 - A server-owned teleport that notifies the framework before `SetPlayerPos`.
 - Server-owned vehicle placement/removal with the corresponding vehicle-change notification.
+- A real interior transition using interior 17, including a return to the saved position.
+- A virtual-world transition to reserved staging world 9000 and a return to the saved world.
+- Spectating another connected player, including alignment to the target's interior/world and restoration after spectating ends.
+- Logs for actual interior and spectating state callbacks.
 
 The adapter keeps up to `MAX_PLAYERS` synthetic account records in RAM. All records are lost when the server process restarts. This is deliberate: the sample demonstrates the callback interface without selecting a database or suggesting that volatile storage is suitable for production.
 
@@ -44,14 +48,17 @@ The supplied config disables server-list announcement, query visibility, and RCO
 4. Walk and drive normally while the server runs. This is for checking that valid gameplay and ordinary network variation do not create unexplained evidence.
 5. Run `/acstageteleport`; the gamemode notifies the detector before the server-side position change. Confirm this legal transition does not create movement evidence.
 6. Run `/acstagevehicle` and then `/acstageexitvehicle` to test server-owned vehicle placement and exit notifications.
-7. Run `/acstagesave`, disconnect, reconnect, and authenticate again with the same synthetic account ID. Confirm the in-memory values load while the same server process is still running.
-8. Run `/acstageevidence` and `/acstageclear` to inspect and clear the current review state.
+7. Run `/acstageinterior` to enter the 24/7 test interior (ID 17), then run it again to restore your saved position and interior. The command uses the documented coordinates from the [open.mp interior list](https://open.mp/docs/scripting/resources/interiorids).
+8. Run `/acstageworld` to enter reserved virtual world 9000, then run it again to return to the previous world. Use `/acstageinfo` to inspect the current interior, virtual world, and player state.
+9. Connect a second test client. Run `/acstagespectate <targetid>` on the first client, then `/acstageunspectate` to exit. The command aligns the spectator's interior/world with the target and restores the spectator's previous position/context after spawn. It follows the required [open.mp spectating order](https://open.mp/docs/scripting/functions/PlayerSpectatePlayer): enable spectating before attaching the camera to the target.
+10. Run `/acstagesave`, disconnect, reconnect, and authenticate again with the same synthetic account ID. Confirm the in-memory values load while the same server process is still running.
+11. Run `/acstageevidence` and `/acstageclear` to inspect and clear the current review state.
 
 Before the manual reconnect test, run `/acstagetest`. It performs in-server checks for stale session-token rejection, account-ID mismatch rejection, duplicate load rejection, restoration of the independent strike-cooldown timestamp, generic/interior/virtual-world/spectating grace notifications, vehicle-change notification, persistence callback save, and state restoration after a simulated framework-session reset. It saves the currently authenticated synthetic account first and restores it after the test.
 
 The self-test uses a reserved synthetic account ID range beginning at `2000000000`. Do not use that range for manually assigned test accounts. It simulates the framework disconnect/connect handlers while the real game client remains connected; it is not a network reconnect test. The separate manual disconnect/reconnect step below remains required.
 
-Useful commands: `/acstagehelp`, `/acstageauth <accountid>`, `/acstageinfo`, `/acstagetest`, `/acstageevidence`, `/acstagetoggle`, `/acstagesave`, `/acstageclear`, `/acstageteleport`, `/acstagevehicle`, and `/acstageexitvehicle`.
+Useful commands: `/acstagehelp`, `/acstageauth <accountid>`, `/acstageinfo`, `/acstagetest`, `/acstageevidence`, `/acstagetoggle`, `/acstagesave`, `/acstageclear`, `/acstageteleport`, `/acstagevehicle`, `/acstageexitvehicle`, `/acstageinterior`, `/acstageworld`, `/acstagespectate <playerid>`, and `/acstageunspectate`.
 
 ## What this does not prove
 

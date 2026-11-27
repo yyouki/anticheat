@@ -203,6 +203,54 @@ def main() -> int:
         "spectate change notification starts grace window",
     ):
         assert selftest_case in staging, f"staging self-test missing case: {selftest_case}"
+    for staging_command in (
+        '"/acstageinterior"',
+        '"/acstageworld"',
+        '"/acstagespectate "',
+        '"/acstageunspectate"',
+    ):
+        assert staging_command in staging, f"staging command missing: {staging_command}"
+
+    player_id_parser = function_body(staging, "AC_StageParsePlayerId")
+    assert "return -1;" in player_id_parser
+    assert "new targetid = AC_StageParsePlayerId(cmdtext[17]);" in staging
+    assert "targetid < 0 || !AC_IsValidPlayerId(targetid)" in staging
+
+    interior_test = function_body(staging, "AC_StageToggleInterior")
+    assert interior_test.index("AC_NotifyLegitimateInteriorChange(playerid);") < interior_test.index(
+        "SetPlayerInterior(playerid, AC_STAGE_TEST_INTERIOR_ID)"
+    )
+    assert interior_test.index("AC_NotifyLegitimateTeleport(playerid);") < interior_test.index(
+        "SetPlayerPos(playerid, -25.7220"
+    )
+
+    world_test = function_body(staging, "AC_StageToggleVirtualWorld")
+    assert world_test.index("AC_NotifyLegitimateVirtualWorldChange(playerid);") < world_test.index(
+        "SetPlayerVirtualWorld(playerid, AC_STAGE_TEST_WORLD_ID)"
+    )
+
+    spectate_test = function_body(staging, "AC_StageStartSpectating")
+    assert spectate_test.index("AC_NotifyLegitimateSpectateChange(playerid);") < spectate_test.index(
+        "TogglePlayerSpectating(playerid, true)"
+    )
+    assert spectate_test.index("TogglePlayerSpectating(playerid, true)") < spectate_test.index(
+        "PlayerSpectatePlayer(playerid, targetid)"
+    )
+
+    unspectate_test = function_body(staging, "AC_StageEndSpectating")
+    assert unspectate_test.index("AC_NotifyLegitimateSpectateChange(playerid);") < unspectate_test.index(
+        "TogglePlayerSpectating(playerid, false)"
+    )
+    restore_spectate = function_body(staging, "AC_StageRestoreSpectateContext")
+    for notification, action in (
+        ("AC_NotifyLegitimateInteriorChange(playerid);", "SetPlayerInterior("),
+        ("AC_NotifyLegitimateVirtualWorldChange(playerid);", "SetPlayerVirtualWorld("),
+        ("AC_NotifyLegitimateTeleport(playerid);", "SetPlayerPos("),
+    ):
+        assert restore_spectate.index(notification) < restore_spectate.index(action)
+
+    assert "OnPlayerInteriorChange" in staging
+    assert "Connect a second test client" in staging_readme
     assert "real game client remains connected" in staging_readme
     assert "AC_OnPlayerUpdate(playerid);" in staging
     assert not re.search(r"\b(?:Kick|Ban|BanEx)\s*\(", staging)
