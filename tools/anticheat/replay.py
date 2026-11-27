@@ -105,7 +105,7 @@ def validate_fixture(fixture: dict[str, Any]) -> None:
         if event_type == "load_complete":
             _require(isinstance(event.get("session_token"), int),
                      f"event {index} session_token must be an integer")
-            for key in ("score", "strikes", "strike_decay_at"):
+            for key in ("score", "strikes", "strike_decay_at", "last_strike_at"):
                 if key in event:
                     _require(isinstance(event[key], int) and event[key] >= 0,
                              f"event {index} {key} must be a non-negative integer")
@@ -343,16 +343,16 @@ class ReplayEngine:
                     self.enabled = True
                     self.score = min(100, event.get("score", 0))
                     self.strikes = event.get("strikes", 0)
-                    strike_decay_at = event.get("strike_decay_at", 0)
+                    last_strike_at = event.get("last_strike_at", 0)
                     now_seconds = at_ms // 1000
                     self.last_strike_at = 0
                     if (
                         self.strikes > 0
-                        and strike_decay_at > 0
-                        and strike_decay_at <= now_seconds
-                        and now_seconds - strike_decay_at < self.c["AC_STRIKE_COOLDOWN_SECONDS"]
+                        and last_strike_at > 0
+                        and last_strike_at <= now_seconds
+                        and now_seconds - last_strike_at < self.c["AC_STRIKE_COOLDOWN_SECONDS"]
                     ):
-                        self.last_strike_at = strike_decay_at
+                        self.last_strike_at = last_strike_at
             elif kind == "grace_start":
                 self.grace_started_tick = at_ms
                 self.grace_duration_ms = event["duration_ms"]
