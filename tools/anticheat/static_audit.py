@@ -177,6 +177,18 @@ def main() -> int:
         "SetPlayerPos(playerid, x + 8.0"
     ), "staging gamemode must notify before its legal teleport"
     assert "AC_NotifyLegitimateVehicleChange(playerid);" in staging
+    assert '"/acstagetest"' in staging
+    for selftest_case in (
+        "stale session token rejected",
+        "account ID mismatch rejected",
+        "duplicate account load rejected",
+        "strike cooldown timestamp remains separate",
+        "persistence callback saves score, strikes and cooldown timestamp",
+        "saved state restored after simulated session reconnect",
+        "original synthetic account restored",
+    ):
+        assert selftest_case in staging, f"staging self-test missing case: {selftest_case}"
+    assert "real game client remains connected" in staging_readme
     assert "AC_OnPlayerUpdate(playerid);" in staging
     assert not re.search(r"\b(?:Kick|Ban|BanEx)\s*\(", staging)
     assert staging_config.get("announce") is False
