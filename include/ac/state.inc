@@ -18,6 +18,7 @@ new bool:AC_Dirty[MAX_PLAYERS];
 
 new AC_CategoryLastAt[MAX_PLAYERS][AC_CATEGORY_COUNT];
 new AC_EvidenceHead[MAX_PLAYERS];
+new AC_EvidenceSequence[MAX_PLAYERS];
 new AC_EvidenceCount[MAX_PLAYERS];
 new AC_EvidenceTime[MAX_PLAYERS][AC_MAX_EVIDENCE];
 new AC_EvidenceCategory[MAX_PLAYERS][AC_MAX_EVIDENCE];
@@ -109,6 +110,7 @@ stock AC_ResetPlayer(playerid)
     AC_LastStrikeAt[playerid] = 0;
     AC_LastPersistAt[playerid] = 0;
     AC_Dirty[playerid] = false;
+    AC_EvidenceSequence[playerid] = 0;
     AC_GraceStartedTick[playerid] = 0;
     AC_GraceDurationMs[playerid] = 0;
     AC_NetworkPing[playerid] = 0;
