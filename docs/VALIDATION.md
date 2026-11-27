@@ -173,3 +173,8 @@ No automatic punishment in v1. A production release requires a successful build,
 PR #12, [Add multi-run staging review summaries](https://github.com/yyouki/anticheat/pull/12), merged as `18346071602254afa6177bbf2cf9d86f92b246cb`. Post-merge run #75 (`45982873217`) passed all three jobs: static audit, Pawn compile, and pinned open.mp headless runtime smoke. Artifact `ac-staging-package` ID `15189179026`, size 43,718 bytes, SHA-256 `1a0bd8dc250c2771f2177776406a638918bc4560eec5310fddc2a0117668754a`.
 
 PR #12 adds a bounded multi-run summary for operator-entered review records. Counts remain observations, not rates; they do not establish test execution, authenticate logs, or certify detector quality. No connected game-client test was performed by run #75.
+
+
+PR #13, [Bind staging reviews to exact capture logs](https://github.com/yyouki/anticheat/pull/13), merged as `aa8b0a9809c36b2c75450309a957ca5d6a40b882`. PR workflow run #77 (`45983957773`) and post-merge `main` run #78 (`45984403784`) passed static audit, Python tests/replay, all three Pawn compile targets, staging artifact upload, and pinned open.mp `v1.6.7.3218` headless boot. The post-merge artifact `ac-staging-package` is ID `15191081168`, size 43,973 bytes, SHA-256 `e8a6bb55e841f2017fd93fda59ddcb72fb3de09db6d61b1f67a0e628f30acb60`.
+
+PR #13 changes the manual review schema to v2 and binds each review record to an exact local capture-file digest. This validates file consistency and the structured event contract only; it does not authenticate who produced the log or verify that a human performed the scenario observations. No connected game-client test ran in run #78.
