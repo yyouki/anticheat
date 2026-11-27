@@ -1,0 +1,62 @@
+# Interactive staging and false-positive evaluation
+
+This matrix is an operator worksheet for real, isolated staging runs. It is not a synthetic CI fixture and does not claim that any scenario has already been executed.
+
+## Run isolation and identity
+
+Use a private staging server with announcement, query visibility and RCON disabled. Use only synthetic test accounts. Do not use production players, production credentials, real account IDs, player IDs, IP addresses, device identifiers, or private chat in the review record.
+
+Use one review JSON file per client build and network profile. Record the exact main commit used by the server and the SHA-256 digest of the downloaded staging package. Keep the raw server console log local: it may contain host connection metadata not present in the structured AC-STAGE-EVENT records.
+
+The client_platform field is a broad platform label (android, windows, linux, macos, or other). client_build is a short release/build label only; do not enter device model serials, IMEI, account names or other unique device identifiers. network_profile identifies the controlled test condition for this run: stable, high_ping, jitter, packet_loss, or low_fps. Use a separate record for each condition. Do not label a run with a network condition that was not actually observed.
+
+## Required scenario matrix
+
+The machine-readable source of scenario IDs and expected outcomes is tools/anticheat/staging_review_scenarios.json. Each review record contains one observation per scenario, or a subset when a run is intentionally partial. Missing scenarios are reported as incomplete.
+
+| Scenario ID | Exercise | Expected benign result |
+| --- | --- | --- |
+| walk_idle | Stand still, walk and sprint normally. | No movement evidence. |
+| jump_fall_land | Jump, fall and land normally. | No movement evidence. |
+| admin_teleport | Execute the staging server-authorized teleport. | No movement evidence after the host transition notification. |
+| spawn_death_respawn | Spawn, die and respawn using normal game flow. | No evidence caused solely by lifecycle transitions. |
+| interior_roundtrip | Enter and leave interior 17 using the staging command. | No evidence in either direction. |
+| virtual_world_roundtrip | Enter and leave virtual world 9000 using the staging command. | No evidence in either direction. |
+| vehicle_enter_drive_exit | Enter, drive and exit the staging vehicle. | No vehicle evidence for ordinary driver activity. |
+| vehicle_switch_collision | Switch vehicles and observe ordinary collision impulses. | No evidence for representative legal vehicle activity. |
+| spectate_roundtrip | Spectate the second connected client and restore the original context. | No evidence; record secondary_client_connected=true. |
+| disconnect_reconnect | Perform an actual client disconnect and reconnect, then authenticate the same synthetic account. | No stale-session evidence. The simulated /acstagetest reset is not a substitute. |
+| network_condition_sample | Repeat ordinary movement and vehicle activity under the selected network profile. | No false evidence caused solely by the declared network condition. |
+
+The full /acstagelogbegin to /acstagelogend acceptance capture remains a separate transition-sequence check. A staging report status=pass means only that its structured records meet the expected log contract; it does not replace the scenario observations above.
+
+## Recording observations
+
+1. Copy docs/templates/staging-review-template.json to a new local file for each client build and network profile.
+2. Fill server_commit with the exact 40-character commit SHA and staging_artifact_sha256 with the artifact digest. Fill client_build with a non-identifying build label and started_at with an ISO-8601 timestamp including timezone.
+3. Set each scenario result to:
+   - clean: the scenario was executed and no evidence/review marker was observed.
+   - evidence: evidence was observed. Name every evidence category and choose a human review decision.
+   - blocked: the scenario could not be executed. Use one controlled block_reason.
+   - not_run: the scenario has not been attempted.
+4. For an evidence result, choose pending, confirmed_false_positive, rejected_false_positive, or inconclusive. Do not automatically classify evidence as a false positive or dismiss it. Preserve the evidence for human review.
+5. For spectate_roundtrip, set secondary_client_connected=true only when the second test client was actually connected for that scenario.
+6. Validate the local record:
+
+   \`\`\`sh
+   python3 tools/anticheat/staging_review.py --record /path/to/staging-review.json
+   \`\`\`
+
+7. Keep the review JSON and raw logs private unless they have been checked for accidental identifiers. Share only the redacted summary when reporting results.
+
+## Interpreting the validator output
+
+record_status=valid means only that the review record has the required fields and internally consistent result labels. scenario_execution_complete means every scenario in the manifest has a clean or evidence observation. evidence_review_complete means there are no pending or inconclusive evidence decisions. A confirmed false positive remains visible in confirmed_false_positive_count and the evaluation state.
+
+The validator deliberately never certifies false_positive_free_certified, independently_verified, or production_ready. These remain false even when every scenario is marked clean. The tool cannot verify that a human actually executed the test, authenticate a server log, estimate a statistically meaningful false-positive rate, or prove detector accuracy.
+
+## Evaluation rules
+
+Do not change detector thresholds based on one run or synthetic fixtures. Compare repeated runs across supported client builds and network profiles. Investigate each evidence record with its category, timestamp/order from the local log, relevant ping/packet-loss context, and the server-side action that preceded it. Change a detector only after the cause is understood and a regression test shows that the fix does not suppress unrelated evidence.
+
+The sample persistence adapter is RAM-only. A server process restart loses its saved records; this harness does not validate durable production persistence. Never run this worksheet against a production gamemode or public server.
