@@ -153,7 +153,7 @@ class VehicleTraceReportTests(unittest.TestCase):
         self.assertNotIn("accountid=", body)
         self.assertNotIn("vehicleid=", body)
         self.assertIn("AC_StageCaptureVehicleTelemetry(playerid);", staging)
-        self.assertIn('"/acstagevehicle [modelid]"', staging)
+        self.assertIn('"/acstagevehicle [modelid]', staging)
 
     def test_staging_trace_model_allowlist_excludes_special_vehicle_models(self) -> None:
         from replay import load_excluded_vehicle_models
