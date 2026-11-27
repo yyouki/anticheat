@@ -4,7 +4,7 @@
 
 The replay format is a deterministic, privacy-safe test input for the anti-cheat contract. It is intended for synthetic scenarios and reviewed, anonymised traces after sensitive identifiers and coordinates have been removed.
 
-The Python replay engine is a reference model for the documented v1 rules. It reads numeric thresholds from `include/ac/config.inc`, but it does not execute Pawn bytecode or start open.mp. A passing replay validates the fixture and reference model, not live detector accuracy. Runtime, Android/desktop false-positive, performance, and adversarial validation remain separate release gates.
+The Python replay engine is a reference model for the documented v1 rules. It reads numeric thresholds from both `include/ac/config.inc` and `include/ac/network.inc`, following the include that owns each constant. It does not execute Pawn bytecode or start open.mp. A passing replay validates the fixture and reference model, not live detector accuracy. Runtime, Android/desktop false-positive, performance, and adversarial validation remain separate release gates.
 
 Never commit account names, IP addresses, session secrets, real player identifiers, or raw private chat into fixtures. Use relative coordinates, synthetic account IDs, and monotonic timestamps.
 
@@ -51,7 +51,7 @@ All event timestamps are integer milliseconds on one monotonic timeline and must
 | `movement_sample` | `at_ms`, `x`, `y`, `ping` | Submit a synthetic movement sample with optional network/state context. |
 | `evidence` | `at_ms`, `category`, `points` | Inject detector-family evidence to test correlation policy. |
 
-Optional movement fields are `packet_loss`, `packet_loss_age_ms`, `state`, `interior`, and `world`. A null or omitted packet-loss value means unknown. A measurement older than the configured network-quality TTL is ignored. The replay reads numeric sampling and threshold values from the Pawn configuration.
+Optional movement fields are `packet_loss`, `packet_loss_age_ms`, `state`, `interior`, and `world`. A null or omitted packet-loss value means unknown. A measurement older than the configured network-quality TTL is ignored. The replay reads numeric sampling and threshold values from the Pawn includes.
 
 The `expected` object asserts exact output fields and can include `evidence_count`, `evidence_categories`, `movement_evidence`, `score`, `strikes`, `loaded`, `account_id`, `session_token`, and `load_completion_results`.
 
@@ -64,7 +64,7 @@ python3 tools/anticheat/replay.py
 python3 -m unittest discover -s tests -v
 ```
 
-The replay command prints one PASS/FAIL line per fixture. The unittest suite also checks timestamp ordering, schema rejection, source-derived thresholds, and important source-contract gates.
+The replay command prints one PASS/FAIL line per fixture. The unittest suite also checks timestamp ordering, schema rejection, source-derived constants, and important source-contract gates.
 
 ## Current fixture coverage
 
