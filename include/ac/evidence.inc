@@ -109,22 +109,28 @@ stock AC_RecordEvidence(playerid, category, points, const reason[], Float:metric
 
 stock AC_GetSuspicionScore(playerid)
 {
+    if (!AC_IsValidPlayerId(playerid))
+        return 0;
     return AC_SuspicionScore[playerid];
 }
 
 stock AC_GetStrikeCount(playerid)
 {
+    if (!AC_IsValidPlayerId(playerid))
+        return 0;
     return AC_StrikeCount[playerid];
 }
 
 stock AC_GetEvidenceCount(playerid)
 {
+    if (!AC_IsValidPlayerId(playerid))
+        return 0;
     return AC_EvidenceCount[playerid];
 }
 
 stock AC_GetEvidence(playerid, index, &timestamp, &category, &points, &ping, &Float:metric, reason[], size = sizeof(reason))
 {
-    if (index < 0 || index >= AC_EvidenceCount[playerid])
+    if (!AC_IsValidPlayerId(playerid) || index < 0 || index >= AC_EvidenceCount[playerid])
         return 0;
 
     new slot = (AC_EvidenceHead[playerid] - AC_EvidenceCount[playerid] + index + AC_MAX_EVIDENCE) % AC_MAX_EVIDENCE;
@@ -139,12 +145,16 @@ stock AC_GetEvidence(playerid, index, &timestamp, &category, &points, &ping, &Fl
 
 stock AC_ClearPlayerEvidence(playerid)
 {
+    if (!AC_IsValidPlayerId(playerid))
+        return 0;
     AC_ResetEvidence(playerid);
     return 1;
 }
 
 stock AC_ClearPlayerReviewState(playerid)
 {
+    if (!AC_IsValidPlayerId(playerid))
+        return 0;
     if (!AC_PlayerLoaded[playerid])
         return 0;
 
