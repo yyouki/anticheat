@@ -132,11 +132,16 @@ Always use a session token and account key to reject stale asynchronous loads an
   - Merge commit: `17192632aab1e8c63c17b3aaac1ebc6fb67f0752`.
   - Post-merge run #71 (`45977639889`) passed static audit, Python tests/replay, all Pawn compile targets, staging artifact upload, and pinned open.mp headless boot.
   - Artifact: `ac-staging-package`, ID `15187896874`, SHA-256 `9cfff4b4c34ae292d68d11f0f7bbc94a7a31cdd6a0806e9e37b81fd0ba6dc`.
-- PR #11, privacy-safe false-positive review ledger, merged to `main`.
-  - PR: https://github.com/yyouki/anticheat/pull/11
-  - Merge commit: `17192632aab1e8c63c17b3aaac1ebc6fb67f0752`.
-  - Post-merge run #71 (`45977639889`) passed all three jobs.
-  - Artifact: `ac-staging-package`, ID `15187896874`, SHA-256 `9cfff4b4c34ae292d68d11f0f7bbc94a7a31cdd6a0806e9e37b81fd0ba6dc`.
+- PR #12, multi-run review summaries, merged to `main`.
+  - PR: https://github.com/yyouki/anticheat/pull/12
+  - Merge commit: `18346071602254afa6177bbf2cf9d86f92b246cb`.
+  - Post-merge run #75 (`45982873217`) passed all three jobs.
+  - Artifact: `ac-staging-package`, ID `15189179026`, SHA-256 `1a0bd8dc250c2771f2177776406a638918bc4560eec5310fddc2a0117668754a`.
+- PR #13, local staging capture-to-review digest binding, merged to `main`.
+  - PR: https://github.com/yyouki/anticheat/pull/13
+  - Merge commit: `aa8b0a9809c36b2c75450309a957ca5d6a40b882`.
+  - PR workflow run #77 (`45983957773`) and post-merge run #78 (`45984403784`) passed all three jobs.
+  - Post-merge artifact: `ac-staging-package`, ID `15191081168`, size 43,973 bytes, SHA-256 `e8a6bb55e841f2017fd93fda59ddcb72fb3de09db6d61b1f67a0e628f30acb60`.
 
 A PR being merged does not imply every CI job passed. Always verify the latest workflow for the resulting `main` commit.
 
@@ -219,3 +224,8 @@ The review JSON directory remains local and should not be committed or uploaded 
 ## PR #12 — multi-run review summaries
 
 PR #12, [Add multi-run staging review summaries](https://github.com/yyouki/anticheat/pull/12), was merged as `18346071602254afa6177bbf2cf9d86f92b246cb` on 2026-11-27. Post-merge workflow run #75 (`45982873217`) completed successfully: static audit, Pawn compile, and pinned open.mp headless runtime smoke all passed. The `ac-staging-package` artifact is ID `15189179026`, SHA-256 `1a0bd8dc250c2771f2177776406a638918bc4560eec5310fddc2a0117668754a` (43,718 bytes). These automated checks do not connect interactive game clients.
+
+
+## PR #13 — staging capture digest binding
+
+Schema-v2 staging review records require `environment.capture_sha256`. The local `staging_review_capture.py` command validates the structured event contract against the exact bounded file bytes, writes or verifies the SHA-256 binding, and never uploads the log. The batch validator rejects duplicate capture digests. This provides file-to-record consistency only: it does not authenticate log origin or prove a human executed each scenario.
