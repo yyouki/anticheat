@@ -95,6 +95,11 @@ Always use a session token and account key to reject stale asynchronous loads an
   - Merge commit: `60a9b4d080034be41613959c369c8af1fcdef8d0`.
   - PR head `345f4cd5a9743c82a47b9c13706d0cb9f039b70f` passed Actions run #51 (`45955418806`); post-merge `main` run #52 (`45956905920`) passed all jobs.
   - The `ac-staging-package` artifact from post-merge run #52 is ID `15178982257`.
+- PR #6, explicit legal transition notification hooks, merged to `main`.
+  - PR: https://github.com/yyouki/anticheat/pull/6
+  - Merge commit: `003793945a546c8eb25b67c8036ad19cf633301e`.
+  - Final PR branch Actions run #55 (`45957683000`) and post-merge `main` run #56 (`45959927009`) passed all jobs.
+  - The post-merge `ac-staging-package` artifact is ID `15180860714`.
 - PR #3, replay CI repair and durable project context, merged to `main`.
   - PR: https://github.com/yyouki/anticheat/pull/3
   - Merge commit: `5bf1443a87ec132ba6d93655b45f4b89427fa2e8`.
