@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "run_id": "run-001",
   "environment": {
     "server_commit": "",
@@ -8,7 +8,8 @@
     "client_platform": "android",
     "client_build": "",
     "network_profile": "stable",
-    "started_at": ""
+    "started_at": "",
+    "capture_sha256": ""
   },
   "observations": [
     {
