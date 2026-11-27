@@ -168,7 +168,10 @@ def _read_review_record(path: Path) -> dict[str, Any]:
 
     try:
         data = json.loads(raw.decode("utf-8"), object_pairs_hook=reject_duplicate_keys)
-    except (UnicodeDecodeError, json.JSONDecodeError, ValueError) as error:
+    except ValueError:
+        # Preserve explicit duplicate-key errors from the object-pairs hook.
+        raise
+    except (UnicodeDecodeError, json.JSONDecodeError) as error:
         raise ValueError("review record could not be read as JSON") from error
     if not isinstance(data, dict):
         raise ValueError("review record root must be an object")
