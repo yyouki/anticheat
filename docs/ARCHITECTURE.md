@@ -29,7 +29,7 @@ The framework is not a client-side anti-tamper product. It must not describe cli
 2. The host calls AC_OnPlayerConnect and AC_OnPlayerDisconnect from the matching callbacks.
 3. After successful authentication, the host calls AC_SetIdentity, or starts an asynchronous load through AC_BeginAccountLoad and completes it with AC_ApplyPersistentState.
 4. The host forwards OnPlayerUpdate, OnPlayerSpawn, OnPlayerDeath, OnPlayerStateChange, OnPlayerGiveDamage, OnPlayerWeaponShot and OnClientCheckResponse to the corresponding AC_ functions.
-5. Before a legitimate server-side position/state/vehicle transition, the host calls the appropriate AC_NotifyLegitimate... helper.
+5. Before a legitimate server-side position/state/vehicle transition, the host calls the matching AC_NotifyLegitimate... helper. Explicit wrappers cover teleports, interior changes, virtual-world changes, spectating changes, spawn, and vehicle transitions; other scripted state changes use AC_NotifyLegitimateStateChange.
 6. Optional callbacks receive evidence, strikes, administrative resets and persistence requests.
 
 The library does not replace existing callbacks. The gamemode must forward to the framework from its existing callback bodies or use its established callback-hook mechanism. Do not define duplicate callbacks.
@@ -45,7 +45,7 @@ CI compiles this gamemode, packages the AMX, and boots it on a pinned open.mp Li
 ## Detector policy
 
 ### Movement
-On-foot positions are sampled no more often than twice per second. The first sample establishes a baseline. Interior/world/state transitions, spawn, death, grace windows, high ping, high supplied packet loss, and long sample gaps reset or suppress sampling. A speed anomaly must persist across multiple valid samples before evidence is recorded. The initial detector uses XY distance; it does not infer a teleport solely from a single position update.
+On-foot positions are sampled no more often than twice per second. The first sample establishes a baseline. Interior/world/state transitions, spawn, death, spectating changes, grace windows, high ping, high supplied packet loss, and long sample gaps reset or suppress sampling. Server-owned interior, virtual-world, and spectating operations should be preceded by their explicit notification helper. A speed anomaly must persist across multiple valid samples before evidence is recorded. The initial detector uses XY distance; it does not infer a teleport solely from a single position update.
 
 ### Vehicle
 Only the server-reported driver is sampled. open.mp vehicle velocity is converted with the documented 250.66667 km/h factor. Aircraft, boats, trains, and other special vehicle classes are excluded from this generic speed envelope. Per-model handling and collision impulses need staging traces before more precise thresholds can be enabled.
