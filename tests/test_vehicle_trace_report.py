@@ -218,8 +218,8 @@ class VehicleTraceReportTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             first = Path(directory) / "first.log"
             second = Path(directory) / "second.log"
-            first.write_text(line() + "\\n", encoding="utf-8")
-            second.write_text(line(560) + "\\n", encoding="utf-8")
+            first.write_text(line() + "\n", encoding="utf-8")
+            second.write_text(line(560) + "\n", encoding="utf-8")
             output = StringIO()
             error_output = StringIO()
             with patch("vehicle_trace_report.MAX_TOTAL_LOG_BYTES", 1):
