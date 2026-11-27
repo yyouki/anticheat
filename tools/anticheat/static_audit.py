@@ -115,7 +115,9 @@ def main() -> int:
         "AC_AdvanceSessionToken", "AC_GetSessionToken", "AC_OnPlayerConnect",
         "AC_OnPlayerDisconnect", "AC_SetIdentity", "AC_BeginAccountLoad",
         "AC_ApplyPersistentState", "AC_SetEnabled", "AC_IsMonitored",
-        "AC_NotifyLegitimateTeleport", "AC_NotifyLegitimateVehicleChange",
+        "AC_NotifyLegitimateTeleport", "AC_NotifyLegitimateStateChange",
+        "AC_NotifyLegitimateInteriorChange", "AC_NotifyLegitimateVirtualWorldChange",
+        "AC_NotifyLegitimateSpectateChange", "AC_NotifyLegitimateVehicleChange",
         "AC_NotifyLegitimateHealthChange", "AC_IsInGrace",
         "AC_SavePersistentState", "AC_ApplyDecay"
     ), sources)
@@ -140,6 +142,16 @@ def main() -> int:
     assert "AC_LastStrikeAt[playerid] = last_strike_at" in function_body(
         sources["include/ac/core.inc"], "AC_ApplyPersistentState"
     ), "active strike cooldown must be restored from its own persisted timestamp"
+    for transition_helper in (
+        "AC_NotifyLegitimateInteriorChange",
+        "AC_NotifyLegitimateVirtualWorldChange",
+        "AC_NotifyLegitimateSpectateChange",
+    ):
+        body = function_body(sources["include/ac/core.inc"], transition_helper)
+        assert "AC_IsValidPlayerId(playerid)" in body
+        assert "IsPlayerConnected(playerid)" in body
+        assert "AC_NotifyLegitimateStateChange(playerid, milliseconds)" in body
+
     assert '"AC_OnPersistenceSave", "ddddddd"' in sources["include/ac/core.inc"]
 
     # The library must remain framework/database independent.
