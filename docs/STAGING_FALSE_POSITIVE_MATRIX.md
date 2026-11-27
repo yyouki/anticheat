@@ -61,6 +61,24 @@ This validates the structured event sequence and writes the SHA-256 digest of th
 
 The batch tool rejects a repeated `capture_sha256` across distinct run IDs, preventing accidental reuse of one capture as multiple independent runs. Keep the raw log and review record private.
 
+## Collecting vehicle telemetry observations
+
+During each bounded acceptance capture, the staging gamemode also writes \`[AC-STAGE-VEHICLE]\` records for the primary client while it is driving. Samples are limited to two per second and contain an approved road-car model ID, quantized server-side speed, ping, and a fresh host-supplied packet-loss value when one exists. Unknown packet loss is recorded as \`-1\`. Player IDs, account IDs, vehicle IDs, and coordinates are not written.
+
+Use one vehicle model per complete acceptance capture because the transition report intentionally requires one vehicle-enter/exit pair. The staging command accepts \`/acstagevehicle <modelid>\`; it defaults to model 411. Approved model IDs are:
+
+\`400, 401, 402, 404, 405, 410, 411, 415, 419, 421, 426, 429, 436, 439, 445, 451, 458, 477, 489, 496, 506, 517, 518, 526, 527, 533, 541, 546, 547, 550, 555, 560, 562, 565, 566, 567, 575, 576, 580, 585, 587, 589, 602, 603\`.
+
+For multiple model runs, combine the local logs:
+
+\`\`\`sh
+python3 tools/anticheat/vehicle_trace_report.py \\
+  --log /path/to/model-411-console.log \\
+  --log /path/to/model-560-console.log
+\`\`\`
+
+The tool reports counts and descriptive min/p50/p95/max values per model. These values are observations from the supplied logs, not safe speed limits, detector decisions, or evidence that a scenario was executed correctly. The tool cannot authenticate log origin. Keep raw logs private and local.
+
 ## Interpreting the validator output
 
 record_status=valid means only that the review record has the required fields and internally consistent result labels. scenario_execution_complete means every scenario in the manifest has a clean or evidence observation. evidence_review_complete means there are no pending or inconclusive evidence decisions. A confirmed false positive remains visible in confirmed_false_positive_count and the evaluation state.
