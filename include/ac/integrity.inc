@@ -24,6 +24,8 @@ stock AC_OnClientCheckResponse(playerid, actionid, memaddr, retndata)
 
 stock AC_GetClientIntegrityStatus(playerid)
 {
+    if (!AC_IsValidPlayerId(playerid))
+        return 0;
     // 0 = not checked / unknown. Unknown is not a cheat verdict.
     #pragma unused playerid
     return 0;
