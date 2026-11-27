@@ -198,3 +198,13 @@ PR #15, [Add bounded staging vehicle telemetry traces](https://github.com/yyouki
 - Pinned open.mp headless runtime smoke: PASSED.
 
 PR #15 adds observational vehicle traces and a local per-model summary only. It does not modify Pawn detector thresholds or establish a safe speed envelope. Run #86 did not connect interactive game clients or collect real vehicle traces.
+
+
+PR #15, [Add bounded staging vehicle telemetry traces](https://github.com/yyouki/anticheat/pull/15), merged to `main` as `3437bca25682efb01c0bed559d510d9853c65074`. Post-merge run #90 (`45996487757`) completed successfully on that exact merge commit:
+
+- Static repository audit, Python tests, and deterministic telemetry replay: PASSED.
+- Default, opt-in feature-gate, and staging Pawn compiles: PASSED.
+- Staging package upload: PASSED (`ac-staging-package`, ID `15195404151`, size 45,484 bytes, SHA-256 `26edf768a6d41783ba20a977fc3161aa04a5787d6a7df98aa30ba35ad2770ea2`).
+- Pinned open.mp `v1.6.7.3218` headless boot: PASSED.
+
+Run #90 did not connect an interactive game client or collect real vehicle traces. The detector thresholds remain unchanged.
