@@ -387,5 +387,7 @@ if __name__ == "__main__":
     try:
         raise SystemExit(main())
     except AssertionError as error:
+        import traceback
+        traceback.print_exc()
         print(f"Anti-cheat static audit failed: {error}", file=sys.stderr)
         raise SystemExit(1)
