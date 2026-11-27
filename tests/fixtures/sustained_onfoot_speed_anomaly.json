@@ -4,6 +4,21 @@
   "description": "Three consecutive valid samples over the source-derived speed envelope emit one movement evidence record.",
   "events": [
     {
+      "type": "connect",
+      "at_ms": 100
+    },
+    {
+      "type": "load_begin",
+      "at_ms": 200,
+      "account_id": 1002
+    },
+    {
+      "type": "load_complete",
+      "at_ms": 300,
+      "account_id": 1002,
+      "session_token": 2
+    },
+    {
       "type": "movement_sample",
       "at_ms": 1000,
       "x": 0,
@@ -43,6 +58,12 @@
     ],
     "movement_evidence": 1,
     "score": 14,
-    "strikes": 0
+    "strikes": 0,
+    "loaded": true,
+    "account_id": 1002,
+    "session_token": 2,
+    "load_completion_results": [
+      true
+    ]
   }
 }
