@@ -96,6 +96,7 @@ stock AC_BeginAccountLoad(playerid, accountid)
 
 stock AC_ApplyPersistentState(playerid, accountid, sessiontoken, score, strikes, score_decay_at, strike_decay_at)
 {
+    new now = gettime();
     if (!AC_IsValidPlayerId(playerid)
         || !IsPlayerConnected(playerid)
         || sessiontoken != AC_SessionToken[playerid]
@@ -112,8 +113,18 @@ stock AC_ApplyPersistentState(playerid, accountid, sessiontoken, score, strikes,
     AC_SuspicionScore[playerid] = score;
     AC_StrikeCount[playerid] = strikes;
     AC_LastScoreDecayAt[playerid] = score_decay_at > 0 ? score_decay_at : gettime();
-    AC_LastStrikeDecayAt[playerid] = strike_decay_at > 0 ? strike_decay_at : gettime();
-    AC_LastPersistAt[playerid] = gettime();
+    AC_LastStrikeDecayAt[playerid] = strike_decay_at > 0 ? strike_decay_at : now;
+    AC_LastStrikeAt[playerid] = 0;
+    // The persisted decay timestamp equals the latest strike time until the
+    // six-hour decay period elapses. Restore only a still-active five-minute cooldown.
+    if (AC_StrikeCount[playerid] > 0
+        && strike_decay_at > 0
+        && strike_decay_at <= now
+        && (now - strike_decay_at) < AC_STRIKE_COOLDOWN_SECONDS)
+    {
+        AC_LastStrikeAt[playerid] = strike_decay_at;
+    }
+    AC_LastPersistAt[playerid] = now;
     AC_PlayerLoaded[playerid] = true;
     AC_PlayerEnabled[playerid] = true;
     AC_ApplyDecay(playerid);
