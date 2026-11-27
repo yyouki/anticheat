@@ -51,6 +51,12 @@ REQUIRED = [
     "tests/fixtures/stale_and_duplicate_account_loads_are_rejected.json",
     "tests/fixtures/strike_cooldown_survives_reconnect.json",
     "tests/fixtures/expired_strike_cooldown_not_restarted_by_decay_timestamp.json",
+    "tests/fixtures/sustained_vehicle_speed_anomaly.json",
+    "tests/fixtures/excluded_vehicle_model_is_not_scored.json",
+    "tests/fixtures/vehicle_switch_resets_speed_streak.json",
+    "tests/fixtures/network_quality_resets_vehicle_streak.json",
+    "tests/fixtures/vehicle_grace_resets_speed_streak.json",
+    "tests/fixtures/vehicle_samples_obey_shared_sampling_interval.json",
     "docs/TELEMETRY_REPLAY.md",
     "docs/ARCHITECTURE.md",
     "docs/INTEGRATION.md",
@@ -118,6 +124,9 @@ def main() -> int:
     assert "AC_NETWORK_QUALITY_TTL_MS" in sources["include/ac/network.inc"]
     assert "AC_MOVEMENT_REQUIRED_SAMPLES" in sources["include/ac/movement.inc"]
     assert "AC_VEHICLE_REQUIRED_SAMPLES" in sources["include/ac/vehicle.inc"]
+    assert "vehicle_sample" in sources["tools/anticheat/replay.py"]
+    assert "load_excluded_vehicle_models" in sources["tools/anticheat/replay.py"]
+    assert "AC_VEHICLE_MAX_SPEED_KMH" in sources["tools/anticheat/replay.py"]
 
     # Player-indexed helpers must reject out-of-range IDs before array access.
     require_player_id_guards("include/ac/state.inc", (
