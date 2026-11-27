@@ -45,7 +45,7 @@ The public include surface is `include/ac.inc`. The modular implementation is un
 
 Supporting validation lives in:
 
-- `tools/anticheat/replay.py`: Python reference model and fixture runner.
+- `tools/anticheat/replay.py`: Python reference model and fixture runner for movement, vehicle, evidence and session contracts; it does not execute Pawn bytecode.
 - `tools/anticheat/openmp_runtime_smoke.py`: starts the pinned open.mp server and verifies that the staging gamemode loads.
 - `tools/anticheat/staging_report.py`: validates one privacy-safe interactive staging capture.
 - `tools/anticheat/staging_review.py`: validates one local operator-authored false-positive review record.
