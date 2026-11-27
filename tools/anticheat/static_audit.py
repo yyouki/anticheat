@@ -33,6 +33,33 @@ def read(relative: str) -> str:
         raise AssertionError(f"required file missing: {relative}")
     return path.read_text(encoding="utf-8")
 
+
+def function_body(source: str, name: str) -> str:
+    """Return one Pawn stock function body using brace-depth matching."""
+    pattern = r"\bstock\s+(?:bool:)?"+re.escape(name)+r"\s*\([^;]*?\)\s*\{"
+    match = re.search(pattern, source, re.DOTALL)
+    if not match:
+        raise AssertionError(f"required function missing: {name}")
+
+    opening = match.end() - 1
+    depth = 0
+    for index in range(opening, len(source)):
+        if source[index] == "{":
+            depth += 1
+        elif source[index] == "}":
+            depth -= 1
+            if depth == 0:
+                return source[opening + 1:index]
+    raise AssertionError(f"unterminated function body: {name}")
+
+
+def require_player_id_guards(relative: str, names: tuple[str, ...], sources: dict[str, str]) -> None:
+    for name in names:
+        body = function_body(sources[relative], name)
+        assert "AC_IsValidPlayerId(playerid)" in body, (
+            f"{relative}:{name} must validate playerid before array access"
+        )
+
 def main() -> int:
     sources = {path: read(path) for path in REQUIRED}
     combined = "\n".join(
@@ -56,6 +83,28 @@ def main() -> int:
     assert "AC_NETWORK_QUALITY_TTL_MS" in sources["include/ac/network.inc"]
     assert "AC_MOVEMENT_REQUIRED_SAMPLES" in sources["include/ac/movement.inc"]
     assert "AC_VEHICLE_REQUIRED_SAMPLES" in sources["include/ac/vehicle.inc"]
+
+    # Player-indexed helpers must reject out-of-range IDs before array access.
+    require_player_id_guards("include/ac/state.inc", (
+        "AC_ResetSampling", "AC_ResetEvidence", "AC_ResetPlayer"
+    ), sources)
+    require_player_id_guards("include/ac/core.inc", (
+        "AC_AdvanceSessionToken", "AC_GetSessionToken", "AC_OnPlayerConnect",
+        "AC_OnPlayerDisconnect", "AC_SetIdentity", "AC_BeginAccountLoad",
+        "AC_ApplyPersistentState", "AC_SetEnabled", "AC_IsMonitored",
+        "AC_NotifyLegitimateTeleport", "AC_NotifyLegitimateVehicleChange",
+        "AC_NotifyLegitimateHealthChange", "AC_IsInGrace",
+        "AC_SavePersistentState", "AC_ApplyDecay"
+    ), sources)
+    require_player_id_guards("include/ac/network.inc", (
+        "AC_SetNetworkQuality", "AC_GetPing"
+    ), sources)
+    require_player_id_guards("include/ac/evidence.inc", (
+        "AC_GetSuspicionScore", "AC_GetStrikeCount", "AC_GetEvidenceCount",
+        "AC_GetEvidence", "AC_ClearPlayerEvidence", "AC_ClearPlayerReviewState"
+    ), sources)
+    require_player_id_guards("include/ac/player_state.inc", ("AC_OnPlayerDeath",), sources)
+    require_player_id_guards("include/ac/integrity.inc", ("AC_GetClientIntegrityStatus",), sources)
 
     # The library must remain framework/database independent.
     forbidden = ("PlayerData[", "AccountData[", "mysql_tquery", "SQL_Connect", "PawnPlus", "pp-hooks")
