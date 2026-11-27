@@ -63,7 +63,7 @@ The batch tool rejects a repeated `capture_sha256` across distinct run IDs, prev
 
 ## Collecting vehicle telemetry observations
 
-During each bounded acceptance capture, the staging gamemode also writes \`[AC-STAGE-VEHICLE]\` records for the primary client while it is driving. Samples are limited to two per second and contain an approved road-car model ID, quantized server-side speed, ping, and a fresh host-supplied packet-loss value when one exists. Unknown packet loss is recorded as \`-1\`. Player IDs, account IDs, vehicle IDs, and coordinates are not written.
+During each bounded acceptance capture, the staging gamemode also writes \`[AC-STAGE-VEHICLE]\` records for the primary client while it is driving. Samples are limited to two per second and 3,600 per capture (about 30 minutes); after the cap, collection stops and emits one notice. Each sample contains an approved road-car model ID, quantized server-side speed, ping, and a fresh host-supplied packet-loss value when one exists. Unknown packet loss is recorded as \`-1\`. Player IDs, account IDs, vehicle IDs, and coordinates are not written.
 
 Use one vehicle model per complete acceptance capture because the transition report intentionally requires one vehicle-enter/exit pair. The staging command accepts \`/acstagevehicle <modelid>\`; it defaults to model 411. Approved model IDs are:
 
