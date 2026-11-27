@@ -48,11 +48,20 @@ No MySQL plugin, SQLite library, ORM, database engine, or table schema is requir
 
 ## Legitimate action notifications
 
-Call AC_NotifyLegitimateTeleport before server-authoritative SetPlayerPos/SetPlayerPosEx operations. Also notify the framework about scripted spawn, interior/world transitions and state transitions when appropriate.
+Notify the framework immediately before a server-controlled operation that changes a player's position or movement context:
 
-Call AC_NotifyLegitimateVehicleChange when server logic places a player in a vehicle or changes their vehicle. AC_NotifyLegitimateHealthChange is currently a no-op compatibility hook; health/armour are not scored in v1.
+- Call `AC_NotifyLegitimateTeleport(playerid)` before `SetPlayerPos` or `SetPlayerPosEx`.
+- Call `AC_NotifyLegitimateInteriorChange(playerid)` before `SetPlayerInterior`.
+- Call `AC_NotifyLegitimateVirtualWorldChange(playerid)` before `SetPlayerVirtualWorld`.
+- Call `AC_NotifyLegitimateSpectateChange(playerid)` before `TogglePlayerSpectating`, `PlayerSpectatePlayer`, or `PlayerSpectateVehicle`.
+- Call `AC_NotifyLegitimateSpawn(playerid)` for a server-controlled spawn. The forwarded `OnPlayerSpawn` handler already does this.
+- Call `AC_NotifyLegitimateStateChange(playerid, milliseconds)` for another scripted state transition that changes movement context but does not fit the named helpers.
 
-Do not add grace markers to arbitrary client movement. Only server-controlled legal actions should be acknowledged.
+The interior, virtual-world, and spectating helpers accept an optional grace duration in milliseconds and default to `AC_DEFAULT_GRACE_MS`. Each validates the player and resets movement sampling through the shared state-change path.
+
+Call `AC_NotifyLegitimateVehicleChange(playerid)` when server logic places a player in a vehicle, removes them, or otherwise changes their vehicle. `AC_NotifyLegitimateHealthChange` is currently a no-op compatibility hook; health/armour are not scored in v1.
+
+Place the notification before the server action, not after it. Do not add grace markers to arbitrary client movement. Only server-controlled legal actions should be acknowledged.
 
 ## Network adapter
 
