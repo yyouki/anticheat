@@ -62,6 +62,10 @@ The framework uses GetPlayerPing by default. If the gamemode already has a trust
 
 Before calling AC_AdminStatus, AC_AdminEvidence, or AC_AdminClear, enforce the host gamemode's admin permission and target validity. Implement AC_OnAdministrativeReset if the reset must be written to the existing admin audit log.
 
+## Reference staging gamemode
+
+Use [examples/staging/README.md](../examples/staging/README.md) and `examples/staging.pwn` as a working integration reference. The sample uses a temporary in-memory persistence adapter so the callback contract can be tested without imposing a database engine or schema. Its stored records are lost on server restart; do not reuse it as a production persistence layer.
+
 ## Evidence callbacks
 
 Optional public callbacks:

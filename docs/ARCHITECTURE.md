@@ -34,6 +34,14 @@ The framework is not a client-side anti-tamper product. It must not describe cli
 
 The library does not replace existing callbacks. The gamemode must forward to the framework from its existing callback bodies or use its established callback-hook mechanism. Do not define duplicate callbacks.
 
+## Staging integration harness
+
+`examples/staging.pwn` is a disposable open.mp gamemode for validating host integration. It forwards the normal lifecycle/update callbacks and uses the same public persistence callback signatures as a real host.
+
+Its adapter stores synthetic account state in bounded process memory and preserves the three independent timestamps. It is deliberately volatile and is not a production database implementation. The sample provides commands for authentication simulation, save/restore, state inspection, review-state clearing, and server-owned legal teleport/vehicle transitions.
+
+CI compiles this gamemode, packages the AMX, and boots it on a pinned open.mp Linux server. The boot probe confirms only that the server and gamemode load; player synchronization, false-positive behavior, persistence across a server restart, and live performance remain manual staging gates.
+
 ## Detector policy
 
 ### Movement

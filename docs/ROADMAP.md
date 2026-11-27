@@ -12,7 +12,9 @@
 - [x] Add defensive player-ID validation to per-player state, lifecycle, network and evidence helpers.
 - [x] Reject duplicate asynchronous account-load completions after the active session has already been loaded.
 - [x] Restore an active strike cooldown from the persisted `last_strike_at` timestamp; keep it separate from the six-hour `strike_decay_at` timestamp.
-- [ ] Complete staging-server runtime and false-positive testing.
+- [x] Add a neutral staging gamemode with a volatile persistence adapter and legal transition test commands.
+- [x] Compile and package the staging AMX; verify headless boot on pinned open.mp `v1.6.7.3218` in PR #4 run #43.
+- [ ] Complete interactive staging tests with supported game clients, including false-positive review.
 
 ## Milestone 1 — investigation and host adapters
 

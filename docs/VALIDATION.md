@@ -14,6 +14,22 @@ Post-merge GitHub Actions run #37 (`45946672307`) for merge commit `5bf1443a87ec
 
 These checks validate static repository invariants, the Python reference contract, and compiler/include compatibility for the smoke gamemodes. They do not prove live detector accuracy, runtime correctness, resistance to bypasses, or production performance.
 
+PR #4 adds an isolated staging gamemode, a volatile in-memory persistence adapter, a compiled staging package, and a headless open.mp boot smoke against pinned server release `v1.6.7.3218`.
+
+The latest PR #4 head commit `b830c90509c38e64da977b34e664c4da75854a6b` passed GitHub Actions run #43 (`45949652586`):
+
+- Static repository audit: PASSED (35 required files).
+- Python unit tests: PASSED (7 tests).
+- Existing deterministic telemetry replay: PASSED (all 10 fixtures).
+- Default Pawn smoke compile: PASSED.
+- Opt-in feature-gate Pawn smoke compile: PASSED.
+- Staging gamemode Pawn compile: PASSED without compiler warnings.
+- Staging package: uploaded as `ac-staging-package` (artifact ID `15176187949`).
+- Headless open.mp runtime: PASSED; official pinned Linux x86 server `v1.6.7.3218` started and emitted the staging gamemode initialization marker.
+
+This headless boot check proves that the server process can start and load the staging AMX. It does not connect a game client, exercise live player callbacks, validate anti-cheat thresholds, or establish mobile/desktop false-positive rates. Interactive player testing remains outstanding.
+
+
 ## Required release suite
 
 | Area | Required cases |

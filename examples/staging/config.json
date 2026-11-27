@@ -1,0 +1,32 @@
+{
+  "name": "Anti-Cheat Staging (Private)",
+  "language": "English",
+  "announce": false,
+  "enable_query": false,
+  "network": {
+    "port": 7777
+  },
+  "max_players": 16,
+  "game": {
+    "mode": "Anti-Cheat Staging"
+  },
+  "pawn": {
+    "main_scripts": [
+      "ac-staging 1"
+    ],
+    "legacy_plugins": [],
+    "side_scripts": []
+  },
+  "rcon": {
+    "enable": false,
+    "password": ""
+  },
+  "logging": {
+    "enable": true,
+    "file": "ac-staging.log",
+    "log_chat": true,
+    "log_connection_messages": true,
+    "log_cookies": false,
+    "log_deaths": true
+  }
+}
