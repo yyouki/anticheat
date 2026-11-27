@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import copy
 import json
+import re
 import sys
 import unittest
 from pathlib import Path
@@ -87,6 +88,42 @@ class TelemetryReplayTests(unittest.TestCase):
         self.assertIn("original synthetic account restored", staging)
         self.assertIn("real game client remains connected", guide)
         self.assertIn("2000000000", guide)
+
+    def test_legal_transition_helpers_validate_and_share_grace_reset(self) -> None:
+        core = (ROOT / "include" / "ac" / "core.inc").read_text(encoding="utf-8")
+        integration = (ROOT / "docs" / "INTEGRATION.md").read_text(encoding="utf-8")
+
+        state_change = re.search(
+            r"stock AC_NotifyLegitimateStateChange\(.*?\)\s*\{(.*?)\n\}",
+            core,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(state_change)
+        self.assertIn("AC_IsValidPlayerId(playerid)", state_change.group(1))
+        self.assertIn("AC_NotifyLegitimateTeleport(playerid, milliseconds)", state_change.group(1))
+
+        helpers = (
+            "AC_NotifyLegitimateInteriorChange",
+            "AC_NotifyLegitimateVirtualWorldChange",
+            "AC_NotifyLegitimateSpectateChange",
+        )
+        for helper in helpers:
+            with self.subTest(helper=helper):
+                body = re.search(
+                    rf"stock {helper}\(playerid, milliseconds = AC_DEFAULT_GRACE_MS\)\s*\{{(.*?)\n\}}",
+                    core,
+                    re.DOTALL,
+                )
+                self.assertIsNotNone(body)
+                self.assertIn("AC_IsValidPlayerId(playerid)", body.group(1))
+                self.assertIn("IsPlayerConnected(playerid)", body.group(1))
+                self.assertIn("AC_NotifyLegitimateStateChange(playerid, milliseconds)", body.group(1))
+                self.assertIn(helper, integration)
+
+        self.assertIn("SetPlayerInterior", integration)
+        self.assertIn("SetPlayerVirtualWorld", integration)
+        self.assertIn("TogglePlayerSpectating", integration)
+        self.assertIn("Only server-controlled legal actions", integration)
 
     def test_openmp_runtime_smoke_script_checks_boot_and_stops_server(self) -> None:
         script = (ROOT / "tools" / "anticheat" / "openmp_runtime_smoke.py").read_text(
