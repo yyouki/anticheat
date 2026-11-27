@@ -132,6 +132,12 @@ def main() -> int:
     assert "AC_VEHICLE_MAX_SPEED_KMH" in sources["tools/anticheat/replay.py"]
     assert "parse_vehicle_observations" in sources["tools/anticheat/vehicle_trace_report.py"]
     assert "safe_speed_envelope_established" in sources["tools/anticheat/vehicle_trace_report.py"]
+    assert "validate_capture_binding" in sources["tools/anticheat/vehicle_trace_report.py"]
+    assert "_load_bound_traces" in sources["tools/anticheat/vehicle_trace_report.py"]
+    assert "ENVIRONMENT_GROUP_FIELDS" in sources["tools/anticheat/vehicle_trace_report.py"]
+    assert "duplicate capture digest detected" in sources["tools/anticheat/vehicle_trace_report.py"]
+    assert "test_bound_capture_verifies_sha256_and_environment" in sources["tests/test_vehicle_trace_report.py"]
+    assert "test_bound_capture_requires_matching_metadata" in sources["tests/test_vehicle_trace_report.py"]
 
     # Staging telemetry must be bounded, model-scoped, and pseudonymous.
     staging = sources["examples/staging.pwn"]
