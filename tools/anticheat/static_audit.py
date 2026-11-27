@@ -147,6 +147,9 @@ def main() -> int:
     assert "parse_staging_log" in sanitizer and "_parse_record" in sanitizer
     assert "parse_vehicle_observations" in sanitizer
     assert "os.O_EXCL" in sanitizer and "0o600" in sanitizer
+    assert "path.lstat()" in sanitizer and "os.fstat(descriptor)" in sanitizer
+    assert "os.O_NOFOLLOW" in sanitizer and "os.fdopen(descriptor" in sanitizer
+    assert "test_cli_rejects_source_replaced_with_symlink_during_open" in sources["tests/test_staging_log_sanitize.py"]
     assert "test_export_keeps_only_valid_structured_records" in sources["tests/test_staging_log_sanitize.py"]
     assert "test_export_rejects_event_records_after_run_end" in sources["tests/test_staging_log_sanitize.py"]
     assert "test_export_rejects_malformed_vehicle_telemetry" in sources["tests/test_staging_log_sanitize.py"]
