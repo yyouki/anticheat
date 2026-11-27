@@ -76,5 +76,6 @@ The replay command prints one PASS/FAIL line per fixture. The unittest suite als
 - Cross-family evidence correlation creating a review strike.
 - Expired packet-loss measurements no longer suppressing samples.
 - Stale asynchronous account-load results and duplicate completions being rejected.
+- Persisted strike cooldown remaining active after disconnect, player-slot reuse, and account reload.
 
 Add a fixture whenever a threshold or suppressor changes. Update expected values only after reviewing the rule change; never change expected values merely to silence a failing test.
