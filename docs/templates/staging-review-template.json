@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "run_id": "run-001",
+  "environment": {
+    "server_commit": "",
+    "staging_artifact_sha256": "",
+    "openmp_version": "v1.6.7.3218",
+    "client_platform": "android",
+    "client_build": "",
+    "network_profile": "stable",
+    "started_at": ""
+  },
+  "observations": [
+    {
+      "scenario_id": "walk_idle",
+      "result": "not_run",
+      "evidence_categories": [],
+      "review_decision": "not_applicable",
+      "block_reason": null,
+      "secondary_client_connected": false
+    },
+    {
+      "scenario_id": "jump_fall_land",
+      "result": "not_run",
+      "evidence_categories": [],
+      "review_decision": "not_applicable",
+      "block_reason": null,
+      "secondary_client_connected": false
+    },
+    {
+      "scenario_id": "admin_teleport",
+      "result": "not_run",
+      "evidence_categories": [],
+      "review_decision": "not_applicable",
+      "block_reason": null,
+      "secondary_client_connected": false
+    },
+    {
+      "scenario_id": "spawn_death_respawn",
+      "result": "not_run",
+      "evidence_categories": [],
+      "review_decision": "not_applicable",
+      "block_reason": null,
+      "secondary_client_connected": false
+    },
+    {
+      "scenario_id": "interior_roundtrip",
+      "result": "not_run",
+      "evidence_categories": [],
+      "review_decision": "not_applicable",
+      "block_reason": null,
+      "secondary_client_connected": false
+    },
+    {
+      "scenario_id": "virtual_world_roundtrip",
+      "result": "not_run",
+      "evidence_categories": [],
+      "review_decision": "not_applicable",
+      "block_reason": null,
+      "secondary_client_connected": false
+    },
+    {
+      "scenario_id": "vehicle_enter_drive_exit",
+      "result": "not_run",
+      "evidence_categories": [],
+      "review_decision": "not_applicable",
+      "block_reason": null,
+      "secondary_client_connected": false
+    },
+    {
+      "scenario_id": "vehicle_switch_collision",
+      "result": "not_run",
+      "evidence_categories": [],
+      "review_decision": "not_applicable",
+      "block_reason": null,
+      "secondary_client_connected": false
+    },
+    {
+      "scenario_id": "spectate_roundtrip",
+      "result": "not_run",
+      "evidence_categories": [],
+      "review_decision": "not_applicable",
+      "block_reason": null,
+      "secondary_client_connected": false
+    },
+    {
+      "scenario_id": "disconnect_reconnect",
+      "result": "not_run",
+      "evidence_categories": [],
+      "review_decision": "not_applicable",
+      "block_reason": null,
+      "secondary_client_connected": false
+    },
+    {
+      "scenario_id": "network_condition_sample",
+      "result": "not_run",
+      "evidence_categories": [],
+      "review_decision": "not_applicable",
+      "block_reason": null,
+      "secondary_client_connected": false
+    }
+  ]
+}
