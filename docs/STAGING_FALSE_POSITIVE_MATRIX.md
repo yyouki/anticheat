@@ -51,15 +51,27 @@ The full /acstagelogbegin to /acstagelogend acceptance capture remains a separat
 
 ## Binding a review to its staging capture
 
-The schema-v2 review record requires `environment.capture_sha256`. After saving the completed local console log, run:
+The schema-v2 review record requires `environment.capture_sha256`. The digest must bind the sanitized export, never the original raw server console log. Raw logs may contain unrelated host connection metadata, so keep them local and do not commit or publicly upload them.
+
+First export one complete, validated capture from the private raw console log:
 
 ```sh
-python3 tools/anticheat/staging_review_capture.py --record /path/to/staging-review.json --capture-log /path/to/staging-console.log --write-digest
+python3 tools/anticheat/staging_log_sanitize.py \
+  --log /path/to/private-raw-console.log \
+  --output /path/to/staging-sanitized.log
 ```
 
-This validates the structured event sequence and writes the SHA-256 digest of the exact raw file bytes into the review record. Repeat without `--write-digest` to verify the binding later. The command rejects symlink inputs and raw captures larger than 32 MiB. It does not upload either file, authenticate log origin, or prove that the scenario observations were performed.
+The exporter keeps only validated `[AC-STAGE-EVENT]` and `[AC-STAGE-VEHICLE]` records, removes timestamps and unrelated console output, rejects incomplete or malformed captures, and writes a new file without overwriting an existing one. The source is limited to 32 MiB and the sanitized export to 8 MiB. It is a privacy/format filter only; it does not authenticate log origin or prove operator execution.
 
-The batch tool rejects a repeated `capture_sha256` across distinct run IDs, preventing accidental reuse of one capture as multiple independent runs. Keep the raw log and review record private.
+After completing the local review JSON, bind it to the sanitized export:
+
+```sh
+python3 tools/anticheat/staging_review_capture.py --record /path/to/staging-review.json --capture-log /path/to/staging-sanitized.log --write-digest
+```
+
+This validates the structured event sequence and writes the SHA-256 digest of the exact sanitized export bytes into the review record. Repeat without `--write-digest` to verify the binding later. The command rejects symlink inputs and capture files larger than 32 MiB. It does not upload either file, authenticate log origin, or prove that the scenario observations were performed.
+
+Use sanitized exports for every report and review-binding command. The batch tool rejects a repeated `capture_sha256` across distinct run IDs, preventing accidental reuse of one capture as multiple independent runs. Keep the raw log and review record private.
 
 ## Collecting vehicle telemetry observations
 
@@ -71,22 +83,22 @@ Use one vehicle model per complete acceptance capture because the transition rep
 
 Only combine captures from the same server commit, client build, and network profile. Keep different client or network profiles in separate reports so their distributions are not blended.
 
-The report accepts individual source logs up to 32 MiB each, a combined 64 MiB total, and 100,000 observations. It rejects symlinks and unsupported model IDs.
+The sanitizer accepts raw source logs up to 32 MiB and emits exports up to 8 MiB each. The vehicle trace report independently caps its input files at 32 MiB each, 64 MiB combined, and 100,000 observations. Both tools reject symlink inputs and unsupported model IDs.
 
 For an exploratory summary, logs can be read without review records. Such output has `provenance.binding_status=not_provided` and must not be treated as an evidence-bound run.
 
-For a bound summary, first fill the schema-v2 review JSON for each capture and bind it to the exact raw file:
+For a bound summary, first fill the schema-v2 review JSON for each capture and bind it to the exact sanitized export:
 
 ```sh
-python3 tools/anticheat/staging_review_capture.py --record /path/to/model-411-review.json --capture-log /path/to/model-411-console.log --write-digest
+python3 tools/anticheat/staging_review_capture.py --record /path/to/model-411-review.json --capture-log /path/to/model-411-sanitized.log --write-digest
 ```
 
 Pass each log and its matching record in the same order:
 
 ```sh
-python3 tools/anticheat/vehicle_trace_report.py \\
-  --log /path/to/model-411-console.log --record /path/to/model-411-review.json \\
-  --log /path/to/model-560-console.log --record /path/to/model-560-review.json --json
+python3 tools/anticheat/vehicle_trace_report.py \
+  --log /path/to/model-411-sanitized.log --record /path/to/model-411-review.json \
+  --log /path/to/model-560-sanitized.log --record /path/to/model-560-review.json --json
 ```
 
 Bound mode checks the exact capture SHA-256, full staging transition contract, and the review record schema. It requires a clean `vehicle_enter_drive_exit` review observation and distinct run IDs and capture digests. It rejects captures with no vehicle observations, more than one vehicle model in a file, or mismatched server commit, staging artifact, open.mp version, client platform/build, or network profile. Limits are 500 captures, 64 MiB combined logs, 8 MiB combined review records, and 100,000 telemetry samples.
