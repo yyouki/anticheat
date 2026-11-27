@@ -162,7 +162,37 @@ stock AC_NotifyLegitimateTeleport(playerid, milliseconds = AC_DEFAULT_GRACE_MS)
 
 stock AC_NotifyLegitimateStateChange(playerid, milliseconds = 2500)
 {
+    if (!AC_IsValidPlayerId(playerid) || !IsPlayerConnected(playerid))
+        return 0;
+
     return AC_NotifyLegitimateTeleport(playerid, milliseconds);
+}
+
+// Call before a server-controlled SetPlayerInterior operation.
+stock AC_NotifyLegitimateInteriorChange(playerid, milliseconds = AC_DEFAULT_GRACE_MS)
+{
+    if (!AC_IsValidPlayerId(playerid) || !IsPlayerConnected(playerid))
+        return 0;
+
+    return AC_NotifyLegitimateStateChange(playerid, milliseconds);
+}
+
+// Call before a server-controlled SetPlayerVirtualWorld operation.
+stock AC_NotifyLegitimateVirtualWorldChange(playerid, milliseconds = AC_DEFAULT_GRACE_MS)
+{
+    if (!AC_IsValidPlayerId(playerid) || !IsPlayerConnected(playerid))
+        return 0;
+
+    return AC_NotifyLegitimateStateChange(playerid, milliseconds);
+}
+
+// Call before enabling/disabling server-controlled spectating.
+stock AC_NotifyLegitimateSpectateChange(playerid, milliseconds = AC_DEFAULT_GRACE_MS)
+{
+    if (!AC_IsValidPlayerId(playerid) || !IsPlayerConnected(playerid))
+        return 0;
+
+    return AC_NotifyLegitimateStateChange(playerid, milliseconds);
 }
 
 stock AC_NotifyLegitimateSpawn(playerid)
