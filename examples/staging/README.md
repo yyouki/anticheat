@@ -61,6 +61,14 @@ The raw server console log may contain unrelated host/server connection metadata
     python3 tools/anticheat/staging_report.py --log /path/to/staging-console.log
     ```
 
+    For automation, append `--json` to print a machine-readable summary:
+
+    ```sh
+    python3 tools/anticheat/staging_report.py --log /path/to/staging-console.log --json
+    ```
+
+    The JSON includes a versioned report schema, pass/fail status, event counts, evidence/review counts, and errors. Its `runtime_validation` fields deliberately remain false: this parser does not verify a connected client's behavior, authenticate the log's origin, or determine production readiness. A JSON `status: pass` means only that the supplied structured records satisfy the expected log contract.
+
     The parser also rejects malformed or duplicate fields, negative counters, unknown evidence categories, non-pseudonymous spectate targets, and event-specific records missing required transition fields. These checks validate the structured record contract; they do not authenticate who produced the log.
 
 The report must show `PASS`. It requires the complete teleport, vehicle, interior callback, world, and spectating event sequence. Any evidence, review marker, missing callback, failed restoration, capture abort, or incomplete capture makes the report fail. The parser ignores ordinary console lines and only evaluates the structured records inside the capture window.

@@ -248,7 +248,11 @@ def main() -> int:
     assert "parse_staging_log" in report_tool
     assert '"playerid"' not in report_tool
     assert "unsupported field" in report_tool
+    assert 'parser.add_argument(\n        "--json"' in report_tool
+    assert '"log_origin_authenticated": False' in report_tool
+    assert "report_to_payload" in report_tool
     assert "python3 tools/anticheat/staging_report.py --log" in staging_readme
+    assert "--json" in staging_readme
     assert "staging_acceptance_success.log" in sources["tests/test_staging_report.py"]
 
     player_id_parser = function_body(staging, "AC_StageParsePlayerId")

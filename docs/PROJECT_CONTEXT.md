@@ -110,6 +110,15 @@ Always use a session token and account key to reject stale asynchronous loads an
   - Merge commit: `da1464dbbe1c499eac074a5a7aa5d8d621b95bc4`.
   - Post-merge run #59 (`45962033428`) passed static audit, all Python tests/replay, all three Pawn compile targets, staging artifact upload, and pinned open.mp headless boot.
   - Artifact: `ac-staging-package`, ID `15180944000`, SHA-256 `1914e4b4d0387ef7224a868d52dde8f20050e59f1943351c6093b013c130bc2d`.
+- PR #8, privacy-safe staging acceptance report, merged to `main`.
+  - PR: https://github.com/yyouki/anticheat/pull/8
+  - Merge commit: `49c7b4476d136b7f8117118644915d63485fc9cf`.
+  - Post-merge run #65 (`45965726373`) passed.
+- PR #9, strict staging acceptance log validation, merged to `main`.
+  - PR: https://github.com/yyouki/anticheat/pull/9
+  - Merge commit: `088cd2da36b84f28eb1e6c4cf78f202151aa7ffd`.
+  - Post-merge run #67 (`45973908533`) passed static audit (38 files), 23 Python unit tests, replay, all three Pawn compile targets, staging package upload, and pinned open.mp headless boot.
+  - Artifact: `ac-staging-package`, ID `15185799075`, SHA-256 `ae8e9e5a930cf4e7267bc5af8205764708940b266837fb8d7cca833aac497745`.
 
 A PR being merged does not imply every CI job passed. Always verify the latest workflow for the resulting `main` commit.
 
@@ -146,20 +155,17 @@ CI also performs the repository static audit and default/opt-in Pawn smoke compi
 
 ## Current staging work and verified CI
 
-- PR #4: [Add open.mp staging integration harness](https://github.com/yyouki/anticheat/pull/4), merged as `c0591531c02dc7829e5b0964081f8d177c2d100b`.
-- Its post-merge Actions run #46 (`45951716621`) passed static audit, Python tests/replay, all three Pawn compile targets, staging artifact upload, and pinned open.mp headless boot.
-- PR #5: [Add staging persistence and session self-tests](https://github.com/yyouki/anticheat/pull/5), merged as `60a9b4d080034be41613959c369c8af1fcdef8d0`.
-- PR #5 final head `345f4cd5a9743c82a47b9c13706d0cb9f039b70f` passed Actions run #51 (`45955418806`); post-merge `main` run #52 (`45956905920`) also passed static audit, 8 Python unit tests, all 10 fixtures, all three Pawn compile targets, artifact upload, and pinned open.mp headless boot.
-- Latest merged staging artifact: `ac-staging-package`, ID `15178982257`.
-- The harness and `/acstagetest` use a bounded RAM-only synthetic persistence adapter. The self-test simulates framework lifecycle reset while a client remains connected; it is not a real network reconnect and does not prove client movement detector accuracy.
+PR #7, [Add live staging commands for legal state transitions](https://github.com/yyouki/anticheat/pull/7), is merged as `da1464dbbe1c499eac074a5a7aa5d8d621b95bc4`. Its post-merge run #59 passed all three CI jobs.
 
-## Current implementation focus
+PR #8, [Add privacy-safe staging acceptance report](https://github.com/yyouki/anticheat/pull/8), is merged as `49c7b4476d136b7f8117118644915d63485fc9cf`. Post-merge run #65 (`45965726373`) passed.
 
-PR #7, [Add live staging commands for legal state transitions](https://github.com/yyouki/anticheat/pull/7), is merged to `main` as `da1464dbbe1c499eac074a5a7aa5d8d621b95bc4`. Post-merge run #59 (`45962033428`) passed all three CI jobs.
+PR #9, [Harden staging acceptance log validation](https://github.com/yyouki/anticheat/pull/9), is merged as `088cd2da36b84f28eb1e6c4cf78f202151aa7ffd`. Post-merge run #67 (`45973908533`) passed static audit (38 files), 23 Python unit tests, deterministic replay, all three Pawn compile targets, staging artifact packaging, and pinned open.mp `v1.6.7.3218` headless boot. The artifact is `ac-staging-package`, ID `15185799075`, SHA-256 `ae8e9e5a930cf4e7267bc5af8205764708940b266837fb8d7cca833aac497745`.
 
-PR #8, [Add privacy-safe staging acceptance report](https://github.com/yyouki/anticheat/pull/8), is open on branch `feat/privacy-safe-staging-acceptance-report`. Tested head `8d781806751783bc86b7077c09191374442947d3` passed Actions run #62 (`45963399362`): static audit (38 required files), 18 Python unit tests, all telemetry replay fixtures, all three Pawn compile targets, staging package upload (artifact ID `15181702026`), and pinned open.mp `v1.6.7.3218` headless boot. The package digest is `sha256:dc7e2ee2f92c19e18c762beef4dede469abad342419bb0bf9ad9bb5c8ee10a40`.
+The staging capture uses pseudonymous `[AC-STAGE-EVENT]` records and `/acstagelogbegin` / `/acstagelogend`. The offline parser checks one complete legal teleport, vehicle, interior callback, virtual-world, and spectating sequence; it rejects malformed/duplicate fields, missing event-specific fields, negative counters, unsupported evidence categories, and evidence/review markers inside the capture.
 
-PR #8 adds pseudonymous `[AC-STAGE-EVENT]` records, `/acstagelogbegin` and `/acstagelogend`, and `tools/anticheat/staging_report.py`. The offline checker requires the complete legal teleport, vehicle, interior callback, virtual-world, and spectating sequence, and fails on evidence/review markers or incomplete/aborted captures. The synthetic success fixture tests parser behavior only. Real-client execution and false-positive review remain outstanding.
+The report tool supports human-readable output and versioned `--json` output. Both describe structured-log contract validation only. JSON explicitly leaves `client_runtime_verified`, `log_origin_authenticated`, and `production_ready` false. A parser PASS does not authenticate the log or prove that a real client performed the actions.
+
+The sample adapter remains volatile RAM only. The synthetic success fixture validates parser behavior only; it is not runtime evidence.
 
 ## Remaining release gates
 

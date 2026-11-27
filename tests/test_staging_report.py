@@ -3,13 +3,17 @@
 
 from __future__ import annotations
 
+from contextlib import redirect_stdout
+import json
+from io import StringIO
 from pathlib import Path
 import sys
+from unittest.mock import patch
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools" / "anticheat"))
-from staging_report import parse_staging_log  # noqa: E402
+from staging_report import main, parse_staging_log, report_to_payload  # noqa: E402
 
 FIXTURES = ROOT / "tests" / "fixtures"
 
@@ -108,6 +112,58 @@ class StagingReportTests(unittest.TestCase):
         report = parse_staging_log(lines)
         self.assertFalse(report.passed)
         self.assertTrue(any("world_enter missing required field" in error for error in report.errors))
+
+    def test_json_payload_separates_log_pass_from_runtime_validation(self) -> None:
+        path = FIXTURES / "staging_acceptance_success.log"
+        with path.open("r", encoding="utf-8") as handle:
+            payload = report_to_payload(parse_staging_log(handle))
+
+        self.assertEqual(payload["report_schema_version"], 1)
+        self.assertEqual(payload["report_type"], "openmp_staging_acceptance")
+        self.assertEqual(payload["status"], "pass")
+        self.assertTrue(payload["passed"])
+        self.assertEqual(payload["validation_scope"], "structured_log_contract")
+        self.assertEqual(
+            payload["runtime_validation"],
+            {
+                "client_runtime_verified": False,
+                "log_origin_authenticated": False,
+                "production_ready": False,
+            },
+        )
+        serialized = json.dumps(payload, sort_keys=True)
+        self.assertNotIn("playerid", serialized.lower())
+        self.assertNotIn("accountid", serialized.lower())
+
+    def test_json_payload_marks_incomplete_capture_as_failure(self) -> None:
+        lines = [
+            line for line in (FIXTURES / "staging_acceptance_success.log").read_text(encoding="utf-8").splitlines()
+            if "event=run_end" not in line
+        ]
+        payload = report_to_payload(parse_staging_log(lines))
+        self.assertEqual(payload["status"], "fail")
+        self.assertFalse(payload["passed"])
+        self.assertFalse(payload["runtime_validation"]["production_ready"])
+
+    def test_unknown_event_value_is_not_echoed_into_report(self) -> None:
+        lines = (FIXTURES / "staging_acceptance_success.log").read_text(encoding="utf-8").splitlines()
+        lines[1] = lines[1].replace("event=teleport", "event=private-account-value")
+        report = parse_staging_log(lines)
+        self.assertFalse(report.passed)
+        self.assertTrue(any("unsupported event value" in error for error in report.errors))
+        self.assertNotIn("private-account-value", json.dumps(report_to_payload(report)))
+
+    def test_json_cli_outputs_only_the_report_payload(self) -> None:
+        output = StringIO()
+        fixture = FIXTURES / "staging_acceptance_success.log"
+        with patch("sys.argv", ["staging_report.py", "--log", str(fixture), "--json"]):
+            with redirect_stdout(output):
+                exit_code = main()
+
+        self.assertEqual(exit_code, 0)
+        payload = json.loads(output.getvalue())
+        self.assertEqual(payload["status"], "pass")
+        self.assertFalse(payload["runtime_validation"]["client_runtime_verified"])
 
     def test_source_registers_capture_commands_and_keeps_records_pseudonymous(self) -> None:
         staging = (ROOT / "examples" / "staging.pwn").read_text(encoding="utf-8")

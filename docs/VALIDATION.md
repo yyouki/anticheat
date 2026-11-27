@@ -109,6 +109,20 @@ PR #8, [Add privacy-safe staging acceptance report](https://github.com/yyouki/an
 
 An earlier run #60 (`45963167850`) failed because two existing source-contract tests expected wording removed during README restructuring. The guide was updated to retain the tested contract statements; run #62 passed. Neither run connects a real client. The synthetic success fixture validates only the parser and is not evidence of runtime correctness.
 
+
+PR #9, [Harden staging acceptance log validation](https://github.com/yyouki/anticheat/pull/9), was merged as `088cd2da36b84f28eb1e6c4cf78f202151aa7ffd`. Post-merge GitHub Actions run #67 (`45973908533`) completed successfully:
+
+- Static repository audit: PASSED (38 required files).
+- Python unit tests: PASSED (23 tests).
+- Deterministic telemetry replay: PASSED.
+- Default, opt-in feature-gate, and staging Pawn compiles: PASSED.
+- Staging package: uploaded as `ac-staging-package`, artifact ID `15185799075`, SHA-256 `ae8e9e5a930cf4e7267bc5af8205764708940b266837fb8d7cca833aac497745`.
+- Pinned open.mp `v1.6.7.3218` headless boot: PASSED.
+
+PR #9 strengthens required event fields, negative-value rejection, spectate target-role validation, and abort-reason placement. The post-merge workflow still uses a synthetic log fixture and a headless server boot; it does not execute staging commands with connected clients.
+
+The staging report's JSON mode provides a versioned machine-readable representation of the structured-log check. Its `status` and `passed` fields describe only whether the supplied records satisfy the expected log contract. The report explicitly states that client runtime behavior is unverified, log origin is unauthenticated, and production readiness is false. A successful JSON report is not a runtime acceptance result.
+
 ## Required release suite
 
 | Area | Required cases |
