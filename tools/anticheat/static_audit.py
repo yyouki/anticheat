@@ -122,7 +122,10 @@ def main() -> int:
     ), sources)
     require_player_id_guards("include/ac/player_state.inc", ("AC_OnPlayerDeath",), sources)
     require_player_id_guards("include/ac/integrity.inc", ("AC_GetClientIntegrityStatus",), sources)
-    require_player_id_guards("include/ac/admin.inc", ("AC_AdminStatus", "AC_AdminEvidence", "AC_AdminClear"), sources)
+    for admin_function in ("AC_AdminStatus", "AC_AdminEvidence", "AC_AdminClear"):
+        admin_body = function_body(sources["include/ac/admin.inc"], admin_function)
+        assert "AC_IsValidPlayerId(adminid)" in admin_body
+        assert "AC_IsValidPlayerId(targetid)" in admin_body
     require_player_id_guards("include/ac/vehicle.inc", ("AC_OnVehicleSample",), sources)
     require_player_id_guards("include/ac/movement.inc", ("AC_UpdateMovementBaseline",), sources)
     assert "|| AC_PlayerLoaded[playerid])" in function_body(
