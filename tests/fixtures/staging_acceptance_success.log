@@ -1,0 +1,12 @@
+[AC-STAGE-EVENT] schema=1 event=run_begin actor=primary
+[AC-STAGE-EVENT] schema=1 event=interior_callback actor=primary old=0 new=17
+[AC-STAGE-EVENT] schema=1 event=interior_enter actor=primary from=0 to=17
+[AC-STAGE-EVENT] schema=1 event=interior_callback actor=primary old=17 new=0
+[AC-STAGE-EVENT] schema=1 event=interior_exit actor=primary from=17 to=0
+[AC-STAGE-EVENT] schema=1 event=world_enter actor=primary from=0 to=9000
+[AC-STAGE-EVENT] schema=1 event=world_exit actor=primary from=9000 to=0
+[AC-STAGE-EVENT] schema=1 event=spectate_state_enter actor=primary
+[AC-STAGE-EVENT] schema=1 event=spectate_start actor=primary target=secondary
+[AC-STAGE-EVENT] schema=1 event=spectate_state_exit actor=primary
+[AC-STAGE-EVENT] schema=1 event=spectate_stop actor=primary
+[AC-STAGE-EVENT] schema=1 event=run_end actor=primary
