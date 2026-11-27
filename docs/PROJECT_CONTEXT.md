@@ -126,15 +126,20 @@ CI also performs the repository static audit and default/opt-in Pawn smoke compi
 6. Do not mark a feature production-ready because it compiles or passes synthetic replay.
 7. Update this document whenever merged PRs, public API contracts, known CI state, release gates, or project preferences change.
 
-## Current staging work
+## Current staging work and verified CI
 
-The branch `feat/staging-integration-harness` adds an isolated staging gamemode with a bounded in-memory persistence adapter. It exercises account load/save using all three timestamps, reconnect restoration within one server process, lifecycle callback forwarding, and server-owned legal teleport/vehicle transitions. It is not a production auth or database adapter.
-
-CI compiles the sample, publishes an `ac-staging-package` artifact, then downloads the pinned open.mp Linux server release `v1.6.7.3218` and checks that the staging gamemode boot marker appears. A successful headless boot is not interactive runtime validation; no game client connects during that job.
+- PR #4: [Add open.mp staging integration harness](https://github.com/yyouki/anticheat/pull/4).
+- Branch: `feat/staging-integration-harness`.
+- Verified head commit: `b830c90509c38e64da977b34e664c4da75854a6b`.
+- GitHub Actions run #43 (`45949652586`) passed static audit (35 required files), 7 Python unit tests, all 10 telemetry fixtures, default/feature-gate/staging Pawn compiles, artifact upload, and headless open.mp boot.
+- The staging AMX is published as the `ac-staging-package` artifact (ID `15176187949`).
+- The open.mp server smoke uses the official Linux x86 release `v1.6.7.3218`, verifies its SHA-256, and confirms that the staging gamemode initialization marker is logged.
+- This is a headless process/gamemode-load check only. It does not connect a player client or establish detector accuracy.
+- Persistence in the sample is RAM-only, bounded to `MAX_PLAYERS` test accounts, and lost after server restart. Do not use it in production.
 
 ## Next work
 
-1. Complete the PR CI checks, including the open.mp headless boot smoke.
-2. Run the manual player test sequence in `examples/staging/README.md` on a private staging server with supported game clients.
+1. Install the `ac-staging-package` artifact on an isolated private open.mp server and follow `examples/staging/README.md` with supported game clients.
+2. Record outcomes for normal movement, legal teleport, vehicle entry/exit, reconnect persistence, evidence display, and review-state reset.
 3. Collect representative desktop/mobile traces and legal-transition cases before tightening movement/vehicle/combat thresholds.
 4. Replace the volatile adapter only in a host-specific integration package after the host's real persistence contract is known.
