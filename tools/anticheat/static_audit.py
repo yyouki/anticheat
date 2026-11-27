@@ -211,6 +211,11 @@ def main() -> int:
     ):
         assert staging_command in staging, f"staging command missing: {staging_command}"
 
+    player_id_parser = function_body(staging, "AC_StageParsePlayerId")
+    assert "return -1;" in player_id_parser
+    assert "new targetid = AC_StageParsePlayerId(cmdtext[17]);" in staging
+    assert "targetid < 0 || !AC_IsValidPlayerId(targetid)" in staging
+
     interior_test = function_body(staging, "AC_StageToggleInterior")
     assert interior_test.index("AC_NotifyLegitimateInteriorChange(playerid);") < interior_test.index(
         "SetPlayerInterior(playerid, AC_STAGE_TEST_INTERIOR_ID)"
