@@ -198,3 +198,24 @@ PR #15, [Add bounded staging vehicle telemetry traces](https://github.com/yyouki
 - Pinned open.mp headless runtime smoke: PASSED.
 
 PR #15 adds observational vehicle traces and a local per-model summary only. It does not modify Pawn detector thresholds or establish a safe speed envelope. Run #86 did not connect interactive game clients or collect real vehicle traces.
+
+
+PR #15, [Add bounded staging vehicle telemetry traces](https://github.com/yyouki/anticheat/pull/15), merged to `main` as `3437bca25682efb01c0bed559d510d9853c65074`. Post-merge run #90 (`45996487757`) completed successfully on that exact merge commit:
+
+- Static repository audit, Python tests, and deterministic telemetry replay: PASSED.
+- Default, opt-in feature-gate, and staging Pawn compiles: PASSED.
+- Staging package upload: PASSED (`ac-staging-package`, ID `15195404151`, size 45,484 bytes, SHA-256 `26edf768a6d41783ba20a977fc3161aa04a5787d6a7df98aa30ba35ad2770ea2`).
+- Pinned open.mp `v1.6.7.3218` headless boot: PASSED.
+
+Run #90 did not connect an interactive game client or collect real vehicle traces. The detector thresholds remain unchanged.
+
+
+
+PR #16, [Bind vehicle trace summaries to staging review captures](https://github.com/yyouki/anticheat/pull/16), latest head `047aa601e1c04612dab8399988fdfc26d56dea05`, passed workflow run #93 (`45997527879`). All three jobs completed successfully:
+
+- Static repository audit, all 90 Python unit tests, and deterministic telemetry replay: PASSED.
+- Default, opt-in feature-gate, and staging Pawn compile targets: PASSED.
+- Staging artifact upload: PASSED (`ac-staging-package`, ID `15196916230`, size 45,753 bytes, SHA-256 `be81fbd42bd1a63a810512c33ad19aad6184e758c99d8bc30ce4a952981198f3`).
+- Pinned open.mp `v1.6.7.3218` headless runtime smoke: PASSED.
+
+PR #16 adds local capture-to-review consistency validation only. Bound reports verify exact file digests and matching operator-entered metadata, but do not authenticate log origin or prove that a human executed the scenarios. No interactive client tests or detector-threshold changes were made.
