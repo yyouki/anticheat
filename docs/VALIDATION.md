@@ -2,17 +2,17 @@
 
 ## Current repository validation
 
-- Static repository audit: PASSED in GitHub Actions run #14.
-- Default Pawn smoke compile: PASSED with Pawn compiler 3.10.11 and open.mp standard includes pinned to commit 17c1b0191195cb0b59a820135fbca622c84129dd. The default smoke AMX was produced.
-- Opt-in feature-gate smoke compile: PASSED in run #14. The compile-only fixture enables the experimental combat cadence branch; it does not enable that detector in the default sample or prove runtime accuracy.
-- Runtime test server: not run.
-- Desktop/mobile false-positive suite: not run.
-- Performance measurements: not run.
-- Independent adversarial review: not run.
-- Deterministic telemetry contract replays: pending first CI run. These are reference-model tests, not Pawn runtime tests.
-- Reconnect strike-cooldown restoration: regression fixture added; awaiting CI verification.
+PR #3 fixes the replay-loader regression from PR #2. Its head commit `da672c628cc0b85c5116fa3b61b1041ee9543c80` passed GitHub Actions run #33 (`45945300237`):
 
-The compile result proves source/include compatibility for the smoke gamemode. It does not prove runtime correctness, detector accuracy, resistance to bypasses, or production performance.
+- Static repository audit: PASSED (31 required files).
+- Python unit tests: PASSED (5 tests).
+- Deterministic telemetry replay: PASSED (all 10 fixtures).
+- Default Pawn smoke compile: PASSED with Pawn compiler 3.10.11 and open.mp standard includes pinned to commit `17c1b0191195cb0b59a820135fbca622c84129dd`.
+- Opt-in feature-gate Pawn smoke compile: PASSED.
+
+The PR #3 changes are not yet merged to `main`; merge only after review. The currently merged PR #2 workflow had failed its Python test step, which this follow-up repairs.
+
+These checks validate static repository invariants, the Python reference contract, and compiler/include compatibility for the smoke gamemodes. They do not prove live detector accuracy, runtime correctness, resistance to bypasses, or production performance.
 
 ## Required release suite
 
