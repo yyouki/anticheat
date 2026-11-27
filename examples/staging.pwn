@@ -10,6 +10,26 @@ new AC_StageSavedStrikeDecayAt[AC_STAGE_STORE_CAPACITY];
 new AC_StageSavedLastStrikeAt[AC_STAGE_STORE_CAPACITY];
 new AC_StageVehicleId[MAX_PLAYERS];
 
+#define AC_STAGE_TEST_INTERIOR_ID (17)
+#define AC_STAGE_TEST_WORLD_ID (9000)
+
+new bool:AC_StageInteriorActive[MAX_PLAYERS];
+new AC_StageSavedInterior[MAX_PLAYERS];
+new Float:AC_StageSavedInteriorX[MAX_PLAYERS];
+new Float:AC_StageSavedInteriorY[MAX_PLAYERS];
+new Float:AC_StageSavedInteriorZ[MAX_PLAYERS];
+
+new bool:AC_StageWorldActive[MAX_PLAYERS];
+new AC_StageSavedWorld[MAX_PLAYERS];
+
+new bool:AC_StageSpectating[MAX_PLAYERS];
+new bool:AC_StagePendingSpectateRestore[MAX_PLAYERS];
+new AC_StageSpectateSavedInterior[MAX_PLAYERS];
+new AC_StageSpectateSavedWorld[MAX_PLAYERS];
+new Float:AC_StageSpectateSavedX[MAX_PLAYERS];
+new Float:AC_StageSpectateSavedY[MAX_PLAYERS];
+new Float:AC_StageSpectateSavedZ[MAX_PLAYERS];
+
 stock AC_StageFindSavedSlot(accountid)
 {
     if (accountid <= 0)
@@ -69,6 +89,234 @@ stock AC_StageRequireLoaded(playerid)
     if (!AC_PlayerLoaded[playerid])
     {
         SendClientMessage(playerid, 0xE05A5AFF, "[AC-STAGE] Authenticate first: /acstageauth <accountid>");
+        return 0;
+    }
+    return 1;
+}
+
+stock AC_StageRequireOnFoot(playerid)
+{
+    if (!AC_StageRequireLoaded(playerid))
+        return 0;
+
+    if (AC_StageSpectating[playerid] || GetPlayerState(playerid) != PLAYER_STATE_ONFOOT)
+    {
+        SendClientMessage(playerid, 0xE05A5AFF, "[AC-STAGE] This command requires a loaded player on foot.");
+        return 0;
+    }
+    return 1;
+}
+
+stock AC_StageRestoreSpectateContext(playerid)
+{
+    if (!AC_IsValidPlayerId(playerid) || !AC_StagePendingSpectateRestore[playerid])
+        return 0;
+
+    AC_StagePendingSpectateRestore[playerid] = false;
+    AC_StageSpectating[playerid] = false;
+
+    // Restore the player's original interior before restoring their position.
+    AC_NotifyLegitimateInteriorChange(playerid);
+    SetPlayerInterior(playerid, AC_StageSpectateSavedInterior[playerid]);
+
+    AC_NotifyLegitimateVirtualWorldChange(playerid);
+    SetPlayerVirtualWorld(playerid, AC_StageSpectateSavedWorld[playerid]);
+
+    AC_NotifyLegitimateTeleport(playerid);
+    SetPlayerPos(
+        playerid,
+        AC_StageSpectateSavedX[playerid],
+        AC_StageSpectateSavedY[playerid],
+        AC_StageSpectateSavedZ[playerid]
+    );
+
+    SendClientMessage(playerid, 0xD8D8D8FF, "[AC-STAGE] Spectating ended; your previous position and world were restored.");
+    return 1;
+}
+
+stock AC_StageToggleInterior(playerid)
+{
+    if (!AC_StageRequireOnFoot(playerid))
+        return 0;
+
+    if (!AC_StageInteriorActive[playerid])
+    {
+        if (GetPlayerInterior(playerid) != 0)
+        {
+            SendClientMessage(playerid, 0xE05A5AFF, "[AC-STAGE] Enter the test interior from exterior interior 0.");
+            return 0;
+        }
+
+        if (!GetPlayerPos(
+            playerid,
+            AC_StageSavedInteriorX[playerid],
+            AC_StageSavedInteriorY[playerid],
+            AC_StageSavedInteriorZ[playerid]
+        ))
+            return 0;
+
+        AC_StageSavedInterior[playerid] = GetPlayerInterior(playerid);
+
+        // Interior notification and teleport notification must precede their actions.
+        AC_NotifyLegitimateInteriorChange(playerid);
+        if (!SetPlayerInterior(playerid, AC_STAGE_TEST_INTERIOR_ID))
+            return 0;
+
+        AC_NotifyLegitimateTeleport(playerid);
+        if (!SetPlayerPos(playerid, -25.7220, -187.8216, 1003.5469))
+            return 0;
+
+        AC_StageInteriorActive[playerid] = true;
+        SendClientMessage(playerid, 0xD8D8D8FF, "[AC-STAGE] Entered the 24/7 test interior (17). Run the command again to return.");
+    }
+    else
+    {
+        AC_NotifyLegitimateInteriorChange(playerid);
+        if (!SetPlayerInterior(playerid, AC_StageSavedInterior[playerid]))
+            return 0;
+
+        AC_NotifyLegitimateTeleport(playerid);
+        if (!SetPlayerPos(
+            playerid,
+            AC_StageSavedInteriorX[playerid],
+            AC_StageSavedInteriorY[playerid],
+            AC_StageSavedInteriorZ[playerid]
+        ))
+            return 0;
+
+        AC_StageInteriorActive[playerid] = false;
+        SendClientMessage(playerid, 0xD8D8D8FF, "[AC-STAGE] Returned to your previous position and interior.");
+    }
+    return 1;
+}
+
+stock AC_StageToggleVirtualWorld(playerid)
+{
+    if (!AC_StageRequireOnFoot(playerid))
+        return 0;
+
+    if (!AC_StageWorldActive[playerid])
+    {
+        new current_world = GetPlayerVirtualWorld(playerid);
+        if (current_world == AC_STAGE_TEST_WORLD_ID)
+        {
+            SendClientMessage(playerid, 0xE05A5AFF, "[AC-STAGE] World 9000 is reserved for this staging test.");
+            return 0;
+        }
+
+        AC_StageSavedWorld[playerid] = current_world;
+        AC_NotifyLegitimateVirtualWorldChange(playerid);
+        if (!SetPlayerVirtualWorld(playerid, AC_STAGE_TEST_WORLD_ID))
+            return 0;
+
+        AC_StageWorldActive[playerid] = true;
+        SendClientMessage(playerid, 0xD8D8D8FF, "[AC-STAGE] Entered staging virtual world 9000. Run the command again to return.");
+    }
+    else
+    {
+        AC_NotifyLegitimateVirtualWorldChange(playerid);
+        if (!SetPlayerVirtualWorld(playerid, AC_StageSavedWorld[playerid]))
+            return 0;
+
+        AC_StageWorldActive[playerid] = false;
+        SendClientMessage(playerid, 0xD8D8D8FF, "[AC-STAGE] Returned to your previous virtual world.");
+    }
+    return 1;
+}
+
+stock AC_StageStartSpectating(playerid, targetid)
+{
+    if (!AC_StageRequireOnFoot(playerid))
+        return 0;
+
+    if (!AC_IsValidPlayerId(targetid) || !IsPlayerConnected(targetid) || targetid == playerid)
+    {
+        SendClientMessage(playerid, 0xE05A5AFF, "[AC-STAGE] Target must be another connected player.");
+        return 0;
+    }
+
+    if (GetPlayerState(targetid) == PLAYER_STATE_SPECTATING)
+    {
+        SendClientMessage(playerid, 0xE05A5AFF, "[AC-STAGE] Choose a target who is not spectating.");
+        return 0;
+    }
+
+    if (!GetPlayerPos(
+        playerid,
+        AC_StageSpectateSavedX[playerid],
+        AC_StageSpectateSavedY[playerid],
+        AC_StageSpectateSavedZ[playerid]
+    ))
+        return 0;
+
+    AC_StageSpectateSavedInterior[playerid] = GetPlayerInterior(playerid);
+    AC_StageSpectateSavedWorld[playerid] = GetPlayerVirtualWorld(playerid);
+
+    // The open.mp spectate API requires both players to share interior and world.
+    if (AC_StageSpectateSavedInterior[playerid] != GetPlayerInterior(targetid))
+    {
+        AC_NotifyLegitimateInteriorChange(playerid);
+        if (!SetPlayerInterior(playerid, GetPlayerInterior(targetid)))
+        {
+            AC_StagePendingSpectateRestore[playerid] = true;
+            AC_StageRestoreSpectateContext(playerid);
+            return 0;
+        }
+    }
+
+    if (AC_StageSpectateSavedWorld[playerid] != GetPlayerVirtualWorld(targetid))
+    {
+        AC_NotifyLegitimateVirtualWorldChange(playerid);
+        if (!SetPlayerVirtualWorld(playerid, GetPlayerVirtualWorld(targetid)))
+        {
+            AC_StagePendingSpectateRestore[playerid] = true;
+            AC_StageRestoreSpectateContext(playerid);
+            return 0;
+        }
+    }
+
+    AC_NotifyLegitimateSpectateChange(playerid);
+    if (!TogglePlayerSpectating(playerid, true))
+    {
+        AC_StagePendingSpectateRestore[playerid] = true;
+        AC_StageRestoreSpectateContext(playerid);
+        SendClientMessage(playerid, 0xE05A5AFF, "[AC-STAGE] Could not enable spectating.");
+        return 0;
+    }
+
+    if (!PlayerSpectatePlayer(playerid, targetid))
+    {
+        // TogglePlayerSpectating(false) triggers the normal spawn callback.
+        AC_StagePendingSpectateRestore[playerid] = true;
+        AC_NotifyLegitimateSpectateChange(playerid);
+        if (!TogglePlayerSpectating(playerid, false))
+            AC_StageRestoreSpectateContext(playerid);
+        SendClientMessage(playerid, 0xE05A5AFF, "[AC-STAGE] Could not attach the spectate camera to that target.");
+        return 0;
+    }
+
+    AC_StageSpectating[playerid] = true;
+    SendClientMessage(playerid, 0xD8D8D8FF, "[AC-STAGE] Spectating target. Use /acstageunspectate to return.");
+    return 1;
+}
+
+stock AC_StageEndSpectating(playerid)
+{
+    if (!AC_StageRequireLoaded(playerid))
+        return 0;
+
+    if (!AC_StageSpectating[playerid])
+    {
+        SendClientMessage(playerid, 0xE05A5AFF, "[AC-STAGE] You are not in staging spectate mode.");
+        return 0;
+    }
+
+    AC_StagePendingSpectateRestore[playerid] = true;
+    AC_NotifyLegitimateSpectateChange(playerid);
+    if (!TogglePlayerSpectating(playerid, false))
+    {
+        AC_StagePendingSpectateRestore[playerid] = false;
+        SendClientMessage(playerid, 0xE05A5AFF, "[AC-STAGE] Could not disable spectating.");
         return 0;
     }
     return 1;
@@ -480,6 +728,10 @@ public OnPlayerConnect(playerid)
 {
     AC_OnPlayerConnect(playerid);
     AC_StageVehicleId[playerid] = INVALID_VEHICLE_ID;
+    AC_StageInteriorActive[playerid] = false;
+    AC_StageWorldActive[playerid] = false;
+    AC_StageSpectating[playerid] = false;
+    AC_StagePendingSpectateRestore[playerid] = false;
     SendClientMessage(playerid, 0xD8D8D8FF, "[AC-STAGE] Monitoring is off until you authenticate.");
     SendClientMessage(playerid, 0xD8D8D8FF, "[AC-STAGE] Authenticate with /acstageauth <accountid>.");
     return 1;
@@ -489,6 +741,10 @@ public OnPlayerDisconnect(playerid, reason)
 {
     #pragma unused reason
     AC_StageDestroyVehicle(playerid);
+    AC_StageInteriorActive[playerid] = false;
+    AC_StageWorldActive[playerid] = false;
+    AC_StageSpectating[playerid] = false;
+    AC_StagePendingSpectateRestore[playerid] = false;
     AC_OnPlayerDisconnect(playerid);
     return 1;
 }
@@ -496,6 +752,7 @@ public OnPlayerDisconnect(playerid, reason)
 public OnPlayerSpawn(playerid)
 {
     AC_OnPlayerSpawn(playerid);
+    AC_StageRestoreSpectateContext(playerid);
     return 1;
 }
 
@@ -509,6 +766,18 @@ public OnPlayerDeath(playerid, killerid, WEAPON:reason)
 public OnPlayerStateChange(playerid, PLAYER_STATE:newstate, PLAYER_STATE:oldstate)
 {
     AC_OnPlayerStateChange(playerid, newstate, oldstate);
+    if (newstate == PLAYER_STATE_SPECTATING || oldstate == PLAYER_STATE_SPECTATING)
+    {
+        printf("[AC-STAGE] STATE_CHANGE player=%d old=%d new=%d",
+            playerid, _:oldstate, _:newstate);
+    }
+    return 1;
+}
+
+public OnPlayerInteriorChange(playerid, newinteriorid, oldinteriorid)
+{
+    printf("[AC-STAGE] INTERIOR_CHANGE player=%d old=%d new=%d",
+        playerid, oldinteriorid, newinteriorid);
     return 1;
 }
 
@@ -533,6 +802,10 @@ public OnPlayerCommandText(playerid, cmdtext[])
         SendClientMessage(playerid, 0xD8D8D8FF, "/acstageteleport - test a server-notified legal teleport");
         SendClientMessage(playerid, 0xD8D8D8FF, "/acstagevehicle - spawn and enter a test vehicle");
         SendClientMessage(playerid, 0xD8D8D8FF, "/acstageexitvehicle - leave your current vehicle");
+        SendClientMessage(playerid, 0xD8D8D8FF, "/acstageinterior - enter/exit a real test interior transition");
+        SendClientMessage(playerid, 0xD8D8D8FF, "/acstageworld - enter/exit reserved virtual world 9000");
+        SendClientMessage(playerid, 0xD8D8D8FF, "/acstagespectate <playerid> - spectate another connected player");
+        SendClientMessage(playerid, 0xD8D8D8FF, "/acstageunspectate - leave spectate and restore your position");
         return 1;
     }
 
@@ -552,6 +825,42 @@ public OnPlayerCommandText(playerid, cmdtext[])
         }
 
         AC_StageAuthenticate(playerid, accountid);
+        return 1;
+    }
+
+    if (!strcmp(cmdtext, "/acstageinterior", true))
+    {
+        AC_StageToggleInterior(playerid);
+        return 1;
+    }
+
+    if (!strcmp(cmdtext, "/acstageworld", true))
+    {
+        AC_StageToggleVirtualWorld(playerid);
+        return 1;
+    }
+
+    if (!strcmp(cmdtext, "/acstagespectate", true))
+    {
+        SendClientMessage(playerid, 0xE05A5AFF, "Usage: /acstagespectate <connected player ID>");
+        return 1;
+    }
+
+    if (strfind(cmdtext, "/acstagespectate ", true) == 0)
+    {
+        new targetid = AC_StageParseAccountId(cmdtext[17]);
+        if (targetid <= 0 || !AC_IsValidPlayerId(targetid))
+        {
+            SendClientMessage(playerid, 0xE05A5AFF, "[AC-STAGE] Target player ID is invalid.");
+            return 1;
+        }
+        AC_StageStartSpectating(playerid, targetid);
+        return 1;
+    }
+
+    if (!strcmp(cmdtext, "/acstageunspectate", true))
+    {
+        AC_StageEndSpectating(playerid);
         return 1;
     }
 
