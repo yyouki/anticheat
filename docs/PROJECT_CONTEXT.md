@@ -143,7 +143,7 @@ CI also performs the repository static audit and default/opt-in Pawn smoke compi
 
 ## Current follow-up: staging self-test
 
-PR #5: [Add staging persistence and session self-tests](https://github.com/yyouki/anticheat/pull/5), branch `test/staging-persistence-selftest`, head `ff9a1aa715e6ae52228ef7ab5d3698fe08eab3cb`. Actions run #47 (`45952158445`) passed audit, 8 Python unit tests, all 10 fixtures, all three Pawn compile targets, staging artifact upload (ID `15177127842`), and pinned open.mp headless boot.
+PR #5: [Add staging persistence and session self-tests](https://github.com/yyouki/anticheat/pull/5), branch `test/staging-persistence-selftest`. The self-test implementation is in commit `ff9a1aa715e6ae52228ef7ab5d3698fe08eab3cb`; the latest PR head is `4f28ec393b65c382a47b9c13706d0cb9f039b70f`. Latest Actions run #49 (`45952346617`) passed audit, 8 Python unit tests, all 10 fixtures, all three Pawn compile targets, staging artifact upload (ID `15177417527`), and pinned open.mp headless boot. The `/acstagetest` command is compiled and source-contract checked, but still requires a connected game client to execute.
 
 The added `/acstagetest` command checks stale session-token rejection, account-ID mismatch rejection, duplicate account-load rejection, independent restoration of `last_strike_at`, grace notification, persistence callback save, and restoration after simulating the framework disconnect/connect reset path while the game client remains connected. It uses reserved synthetic account IDs beginning at `2000000000`, saves the current synthetic account first, and restores it at the end.
 
