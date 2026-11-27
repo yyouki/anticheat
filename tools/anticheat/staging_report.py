@@ -14,6 +14,7 @@ from typing import Iterable
 PREFIX = "[AC-STAGE-EVENT] "
 ALLOWED_EVENTS = {
     "run_begin", "run_end", "run_abort",
+    "teleport", "vehicle_enter", "vehicle_exit",
     "interior_enter", "interior_exit", "interior_callback",
     "world_enter", "world_exit",
     "spectate_start", "spectate_stop",
@@ -116,6 +117,7 @@ def parse_staging_log(lines: Iterable[str]) -> StagingReport:
 
     counts = Counter(event["event"] for event in events)
     required_once = (
+        "teleport", "vehicle_enter", "vehicle_exit",
         "interior_enter", "interior_exit", "world_enter", "world_exit",
         "spectate_start", "spectate_stop", "spectate_state_enter", "spectate_state_exit",
     )
@@ -138,6 +140,7 @@ def parse_staging_log(lines: Iterable[str]) -> StagingReport:
         for name in ALLOWED_EVENTS
     }
     for earlier, later in (
+        ("vehicle_enter", "vehicle_exit"),
         ("interior_enter", "interior_exit"),
         ("world_enter", "world_exit"),
         ("spectate_start", "spectate_stop"),
