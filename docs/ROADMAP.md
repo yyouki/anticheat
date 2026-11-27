@@ -23,6 +23,7 @@
 - [x] Add a bounded batch summary grouped by exact server/client/network build metadata, including per-scenario result counts; it does not estimate false-positive rates.
 - [x] Bind each schema-v2 manual review record to one exact staging capture SHA-256 and validate the capture contract locally; this does not authenticate log origin or prove scenario execution.
 - [x] Add pseudonymous server-side vehicle telemetry observations (maximum 2 Hz) and a bounded local per-model distribution report to prepare for trace-based envelope analysis without changing detector thresholds.
+- [x] Bind vehicle summaries to one schema-v2 review record and exact capture SHA-256 per input; enforce clean vehicle scenario review and identical server/client/network metadata across combined captures.
 - [ ] Complete interactive staging tests with supported game clients, including false-positive review.
 
 ## Milestone 1 — investigation and host adapters
