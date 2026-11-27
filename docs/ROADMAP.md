@@ -16,6 +16,7 @@
 - [x] Compile and package the staging AMX; verify headless boot on pinned open.mp `v1.6.7.3218` in PR #4 run #43.
 - [x] Add an in-server self-test for stale/mismatched/duplicate loads, timestamp restoration, persistence save and simulated session reconnect.
 - [x] Verify the staging session/persistence self-test compiles and passes CI source-contract checks in PR #5 run #51 and post-merge `main` run #52 (the in-server command still needs an interactive client run).
+- [x] Add staging commands for real interior, virtual-world, and player-spectating transitions, with pre-action notifications and context restoration; real-client observation remains a release gate.
 - [ ] Complete interactive staging tests with supported game clients, including false-positive review.
 
 ## Milestone 1 — investigation and host adapters
