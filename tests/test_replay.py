@@ -2,6 +2,7 @@
 """Unit tests for deterministic anti-cheat telemetry contract fixtures."""
 
 from __future__ import annotations
+
 import copy
 import json
 import sys
@@ -23,7 +24,7 @@ class TelemetryReplayTests(unittest.TestCase):
             with self.subTest(fixture=path.name):
                 replay_file(path)
 
-    def test_model_reads_numeric_thresholds_from_pawn_config(self) -> None:
+    def test_model_reads_numeric_thresholds_from_pawn_includes(self) -> None:
         constants = load_constants()
         self.assertEqual(constants["AC_SAMPLE_INTERVAL_MS"], 500)
         self.assertEqual(constants["AC_MAX_SAMPLE_GAP_MS"], 1750)
@@ -46,8 +47,9 @@ class TelemetryReplayTests(unittest.TestCase):
             "events": [{"type": "teleport-anywhere", "at_ms": 1000}],
             "expected": {},
         }
+        # Test schema validation directly; this must not depend on model initialization.
         with self.assertRaisesRegex(ValueError, "unsupported type"):
-            ReplayEngine().run(fixture)
+            validate_fixture(fixture)
 
     def test_reference_model_contract_matches_pawn_source_gates(self) -> None:
         movement = (ROOT / "include/ac/movement.inc").read_text(encoding="utf-8")
