@@ -81,6 +81,27 @@ stock AC_StageParseAccountId(const value[])
     return result;
 }
 
+stock AC_StageParsePlayerId(const value[])
+{
+    new length = strlen(value);
+    if (length == 0 || length > 10)
+        return -1;
+
+    new result;
+    for (new index; index < length; index++)
+    {
+        if (value[index] < '0' || value[index] > '9')
+            return -1;
+
+        new digit = value[index] - '0';
+        if (result > (2147483647 - digit) / 10)
+            return -1;
+
+        result = (result * 10) + digit;
+    }
+    return result;
+}
+
 stock AC_StageRequireLoaded(playerid)
 {
     if (!AC_IsValidPlayerId(playerid) || !IsPlayerConnected(playerid))
@@ -855,8 +876,8 @@ public OnPlayerCommandText(playerid, cmdtext[])
 
     if (strfind(cmdtext, "/acstagespectate ", true) == 0)
     {
-        new targetid = AC_StageParseAccountId(cmdtext[17]);
-        if (targetid <= 0 || !AC_IsValidPlayerId(targetid))
+        new targetid = AC_StageParsePlayerId(cmdtext[17]);
+        if (targetid < 0 || !AC_IsValidPlayerId(targetid))
         {
             SendClientMessage(playerid, 0xE05A5AFF, "[AC-STAGE] Target player ID is invalid.");
             return 1;
