@@ -219,11 +219,3 @@ PR #16, [Bind vehicle trace summaries to staging review captures](https://github
 - Staging artifact: `ac-staging-package`, ID `15197766625`, size 45,753 bytes, SHA-256 `a434fccb84166145e243c139ea369d041df98c8fabef9310a7f397833a4e4119`.
 
 PR #16 verifies that each vehicle trace is paired with the exact schema-v2 review capture and that review metadata is consistent across the set. It does not authenticate log origin, prove operator scenario execution, connect a game client, or establish detector accuracy. The Pawn detector and its thresholds remain unchanged.
-(https://github.com/yyouki/anticheat/pull/16), latest head `047aa601e1c04612dab8399988fdfc26d56dea05`, passed workflow run #93 (`45997527879`). All three jobs completed successfully:
-
-- Static repository audit, all 90 Python unit tests, and deterministic telemetry replay: PASSED.
-- Default, opt-in feature-gate, and staging Pawn compile targets: PASSED.
-- Staging artifact upload: PASSED (`ac-staging-package`, ID `15196916230`, size 45,753 bytes, SHA-256 `be81fbd42bd1a63a810512c33ad19aad6184e758c99d8bc30ce4a952981198f3`).
-- Pinned open.mp `v1.6.7.3218` headless runtime smoke: PASSED.
-
-PR #16 adds local capture-to-review consistency validation only. Bound reports verify exact file digests and matching operator-entered metadata, but do not authenticate log origin or prove that a human executed the scenarios. No interactive client tests or detector-threshold changes were made.
