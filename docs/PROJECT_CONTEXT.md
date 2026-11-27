@@ -47,8 +47,9 @@ Supporting validation lives in:
 
 - `tools/anticheat/replay.py`: Python reference model and fixture runner.
 - `tools/anticheat/openmp_runtime_smoke.py`: starts the pinned open.mp server and verifies that the staging gamemode loads.
-- `tests/test_replay.py`: unit tests for replay outcomes, schema/order checks and selected source contracts.
-- `tests/fixtures/`: version-1 synthetic JSON telemetry scenarios.
+- `tools/anticheat/staging_report.py`: validates one privacy-safe interactive staging capture.
+- `tests/test_replay.py` and `tests/test_staging_report.py`: tests for replay outcomes, telemetry contracts, staging-report parsing, and source invariants.
+- `tests/fixtures/`: synthetic JSON telemetry scenarios and a pseudonymous staging acceptance log.
 - `.github/workflows/`: static audit, Python tests/replays and Pawn smoke builds.
 - `docs/INTEGRATION.md`: host gamemode callback and persistence contract.
 - `docs/TELEMETRY_REPLAY.md`: fixture schema, semantics and local commands.
@@ -95,6 +96,11 @@ Always use a session token and account key to reject stale asynchronous loads an
   - Merge commit: `60a9b4d080034be41613959c369c8af1fcdef8d0`.
   - PR head `345f4cd5a9743c82a47b9c13706d0cb9f039b70f` passed Actions run #51 (`45955418806`); post-merge `main` run #52 (`45956905920`) passed all jobs.
   - The `ac-staging-package` artifact from post-merge run #52 is ID `15178982257`.
+- PR #7, live staging commands for legal state transitions, merged to `main`.
+  - PR: https://github.com/yyouki/anticheat/pull/7
+  - Merge commit: `da1464dbbe1c499eac074a5a7aa5d8d621b95bc4`.
+  - Post-merge Actions run #59 (`45962033428`) passed static audit, all Python tests/replay, all three Pawn compile targets, staging artifact upload, and pinned open.mp headless boot.
+  - Artifact: `ac-staging-package`, ID `15180944000`, SHA-256 `1914e4b4d0387ef7224a868d52dde8f20050e59f1943351c6093b013c130bc2d`.
 - PR #6, explicit legal transition notification hooks, merged to `main`.
   - PR: https://github.com/yyouki/anticheat/pull/6
   - Merge commit: `003793945a546c8eb25b67c8036ad19cf633301e`.
@@ -155,8 +161,8 @@ PR #7, [Add live staging commands for legal state transitions](https://github.co
 
 ## Remaining release gates
 
-1. Run `/acstagetest` on an isolated private open.mp server with an actual connected test client.
-2. Perform real disconnect/reconnect tests and normal gameplay on each supported desktop/Android client.
-3. Record legal teleports, interior/world/spectate changes, vehicle entry/exit, and false-positive outcomes.
+1. Run `/acstagetest` and one complete `/acstagelogbegin`–`/acstagelogend` capture on an isolated private open.mp server with two connected test clients; inspect the offline report.
+2. Perform real disconnect/reconnect tests and ordinary gameplay on each supported desktop/Android client.
+3. Record representative legal server transitions and review false-positive outcomes. Do not change thresholds based on synthetic reports alone.
 4. Benchmark runtime cost and review adversarial traces before changing detector thresholds.
 5. Replace the sample RAM adapter only in a host-specific integration package with a known persistence contract.
