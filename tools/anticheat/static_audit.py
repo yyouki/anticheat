@@ -2,6 +2,7 @@
 """Repository-level guardrails for the standalone Pawn anti-cheat core."""
 
 from pathlib import Path
+import json
 import re
 import sys
 
@@ -22,6 +23,9 @@ REQUIRED = [
     "include/ac/admin.inc",
     "examples/smoke.pwn",
     "examples/feature_gate_smoke.pwn",
+    "examples/staging.pwn",
+    "examples/staging/config.json",
+    "examples/staging/README.md",
     "tools/anticheat/replay.py",
     "tests/test_replay.py",
     "tests/fixtures/legal_movement_during_and_after_grace.json",
@@ -154,6 +158,33 @@ def main() -> int:
     assert "schema_version" in sources["docs/TELEMETRY_REPLAY.md"]
     assert "reference model" in sources["tools/anticheat/replay.py"]
     assert "unittest" in sources["tests/test_replay.py"]
+
+    # The staging sample must exercise the public lifecycle/persistence contract
+    # without adding a database, production auth provider, or automatic sanctions.
+    staging = sources["examples/staging.pwn"]
+    staging_readme = sources["examples/staging/README.md"]
+    staging_config = json.loads(sources["examples/staging/config.json"])
+    assert "AC_BeginAccountLoad" in staging
+    assert "AC_ApplyPersistentState" in staging
+    assert "AC_StageSavedLastStrikeAt" in staging
+    assert (
+        "public AC_OnPersistenceSave(playerid, accountid, score, strikes, "
+        "score_decay_at, strike_decay_at, last_strike_at)" in staging
+    )
+    assert "AC_NotifyLegitimateTeleport(playerid);" in staging
+    assert staging.index("AC_NotifyLegitimateTeleport(playerid);") < staging.index(
+        "SetPlayerPos(playerid, x + 8.0"
+    ), "staging gamemode must notify before its legal teleport"
+    assert "AC_NotifyLegitimateVehicleChange(playerid);" in staging
+    assert "AC_OnPlayerUpdate(playerid);" in staging
+    assert not re.search(r"\\b(?:Kick|Ban|BanEx)\\s*\\(", staging)
+    assert staging_config.get("announce") is False
+    assert staging_config.get("enable_query") is False
+    assert staging_config.get("rcon", {}).get("enable") is False
+    assert staging_config.get("pawn", {}).get("main_scripts") == ["ac-staging 1"]
+    assert "lost when the server process restarts" in staging_readme
+    assert "ac-staging.amx" in read(".github/workflows/ci.yml")
+    assert "actions/upload-artifact@v4" in read(".github/workflows/ci.yml")
 
     print(f"Anti-cheat static audit passed ({len(REQUIRED)} required files).")
     return 0
