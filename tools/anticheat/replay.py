@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Deterministic reference replay for anti-cheat telemetry fixtures.
+"""Deterministic reference model and replay tool for anti-cheat telemetry fixtures.
 
 This model validates the documented detector contract. It is not an open.mp
 runtime and does not execute Pawn bytecode; production behavior still requires
@@ -163,6 +163,8 @@ class ReplayEngine:
         self.account_id = 0
         self.loaded = False
         self.enabled = False
+        self.grace_started_tick = 0
+        self.grace_duration_ms = 0
         self.score = 0
         self.strikes = 0
         self.category_last_at = {name: 0 for name in CATEGORY_IDS}
