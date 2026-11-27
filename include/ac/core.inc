@@ -24,6 +24,14 @@ stock AC_GetVersion(destination[], size = sizeof(destination))
     return 1;
 }
 
+stock AC_AdvanceSessionToken(playerid)
+{
+    AC_SessionToken[playerid]++;
+    if (AC_SessionToken[playerid] <= 0)
+        AC_SessionToken[playerid] = 1;
+    return AC_SessionToken[playerid];
+}
+
 stock AC_GetSessionToken(playerid)
 {
     if (playerid < 0 || playerid >= MAX_PLAYERS)
@@ -33,10 +41,7 @@ stock AC_GetSessionToken(playerid)
 
 stock AC_OnPlayerConnect(playerid)
 {
-    AC_SessionToken[playerid]++;
-    if (AC_SessionToken[playerid] <= 0)
-        AC_SessionToken[playerid] = 1;
-
+    AC_AdvanceSessionToken(playerid);
     AC_ResetPlayer(playerid);
     return 1;
 }
@@ -46,20 +51,20 @@ stock AC_OnPlayerDisconnect(playerid)
     if (AC_PlayerLoaded[playerid] && AC_Dirty[playerid])
         AC_SavePersistentState(playerid);
 
-    AC_SessionToken[playerid]++;
-    if (AC_SessionToken[playerid] <= 0)
-        AC_SessionToken[playerid] = 1;
-
+    AC_AdvanceSessionToken(playerid);
     AC_ResetPlayer(playerid);
     return 1;
 }
 
-// Use when the gamemode has no persistence adapter.
+// Use when the gamemode has no persistence adapter. Advancing the token also
+// invalidates any earlier asynchronous load for this player slot.
+
 stock AC_SetIdentity(playerid, accountid)
 {
     if (!IsPlayerConnected(playerid) || accountid <= 0)
         return 0;
 
+    AC_AdvanceSessionToken(playerid);
     AC_ResetPlayer(playerid);
     AC_AccountKey[playerid] = accountid;
     AC_PlayerLoaded[playerid] = true;
@@ -77,6 +82,7 @@ stock AC_BeginAccountLoad(playerid, accountid)
     if (!IsPlayerConnected(playerid) || accountid <= 0)
         return 0;
 
+    AC_AdvanceSessionToken(playerid);
     AC_ResetPlayer(playerid);
     AC_AccountKey[playerid] = accountid;
     return AC_SessionToken[playerid];
