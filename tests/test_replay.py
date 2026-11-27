@@ -73,6 +73,21 @@ class TelemetryReplayTests(unittest.TestCase):
         self.assertEqual(config["pawn"]["main_scripts"], ["ac-staging 1"])
         self.assertIn("lost when the server process restarts", guide)
 
+    def test_staging_session_selftest_covers_persistence_guards(self) -> None:
+        staging = (ROOT / "examples" / "staging.pwn").read_text(encoding="utf-8")
+        guide = (ROOT / "examples" / "staging" / "README.md").read_text(encoding="utf-8")
+
+        self.assertIn('"/acstagetest"', staging)
+        self.assertIn("stale session token rejected", staging)
+        self.assertIn("account ID mismatch rejected", staging)
+        self.assertIn("duplicate account load rejected", staging)
+        self.assertIn("strike cooldown timestamp remains separate", staging)
+        self.assertIn("persistence callback saves score, strikes and cooldown timestamp", staging)
+        self.assertIn("saved state restored after simulated session reconnect", staging)
+        self.assertIn("original synthetic account restored", staging)
+        self.assertIn("real game client remains connected", guide)
+        self.assertIn("2000000000", guide)
+
     def test_openmp_runtime_smoke_script_checks_boot_and_stops_server(self) -> None:
         script = (ROOT / "tools" / "anticheat" / "openmp_runtime_smoke.py").read_text(
             encoding="utf-8"
