@@ -232,15 +232,13 @@ PR #17, [Add vehicle telemetry sample interval diagnostics](https://github.com/y
 
 PR #17 records elapsed milliseconds between accepted staging vehicle observations, with backward compatibility for schema-1 telemetry logs. The report describes collector cadence only; it does not establish detector accuracy, client timing, safe speed envelopes, or production readiness. No connected client test ran in run #99.
 
-## PR #18 — privacy-safe structured staging-log export (pre-merge)
+## PR #18 — privacy-safe structured staging-log export
 
-PR #18, [Add privacy-safe staging log export](https://github.com/yyouki/anticheat/pull/18), head `928f32baecc8740a56d418b3049f2fc3f14bff37`, passed Actions run #100 (`46005183503`) on 2026-11-27:
+PR #18, [Add privacy-safe staging log export](https://github.com/yyouki/anticheat/pull/18), merged to `main` as `4541b50e90d7017d4f80cbb5cf8bd3684304c184` on 2026-11-27. Post-merge Actions run #102 (`46007181657`) completed successfully on that exact merge commit:
 
-- Static repository audit: PASSED.
-- Python unit tests: PASSED (101 tests).
-- Deterministic telemetry replay: PASSED.
+- Static repository audit, 101 Python unit tests, and deterministic telemetry replay: PASSED.
 - Default, opt-in feature-gate, and staging Pawn compile targets: PASSED.
 - Pinned open.mp `v1.6.7.3218` headless runtime smoke: PASSED.
-- Staging artifact: `ac-staging-package`, ID `15202240154`, size 46,348 bytes, SHA-256 `2639a238840a6c93cc33a13af129bddcfe25c5c7af88ecd069762e752d52991b`.
+- Staging artifact: `ac-staging-package`, ID `15202502073`, size 46,348 bytes, SHA-256 `f14c77cfd99701879c8c41cf11bb28d1818fd731ba7916f698f0ee98cef8ac3d`.
 
-The sanitizer retains only one complete, parser-valid staging acceptance capture and valid vehicle telemetry records. It strips unrelated console metadata and writes a new local file. The review digest then binds that sanitized file, not the original raw console log. This checks format and record consistency only; run #100 did not connect an interactive game client.
+The sanitizer retains one complete, parser-valid staging acceptance capture and valid vehicle telemetry records. It strips unrelated console metadata and writes a new local file. Review digests bind the sanitized export, not the original raw console log. This validates format and record consistency only; run #102 did not connect an interactive game client or establish false-positive performance.
