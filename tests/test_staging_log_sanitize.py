@@ -126,7 +126,6 @@ class StagingLogSanitizeTests(unittest.TestCase):
                 self.assertEqual(main(["--log", str(link), "--output", str(output)]), 2)
             self.assertFalse(output.exists())
 
-
     def test_cli_rejects_source_replaced_with_symlink_during_open(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
