@@ -180,22 +180,40 @@ stock AC_StageRestoreSpectateContext(playerid)
     AC_StageSpectating[playerid] = false;
 
     // Restore the player's original interior before restoring their position.
+    new bool:restore_ok = true;
     AC_NotifyLegitimateInteriorChange(playerid);
-    SetPlayerInterior(playerid, AC_StageSpectateSavedInterior[playerid]);
+    if (!SetPlayerInterior(playerid, AC_StageSpectateSavedInterior[playerid]))
+        restore_ok = false;
 
     AC_NotifyLegitimateVirtualWorldChange(playerid);
-    SetPlayerVirtualWorld(playerid, AC_StageSpectateSavedWorld[playerid]);
+    if (!SetPlayerVirtualWorld(playerid, AC_StageSpectateSavedWorld[playerid]))
+        restore_ok = false;
 
     AC_NotifyLegitimateTeleport(playerid);
-    SetPlayerPos(
+    if (!SetPlayerPos(
         playerid,
         AC_StageSpectateSavedX[playerid],
         AC_StageSpectateSavedY[playerid],
         AC_StageSpectateSavedZ[playerid]
-    );
+    ))
+        restore_ok = false;
 
     if (was_spectating)
-        AC_StageLogEvent(playerid, "spectate_stop");
+    {
+        if (restore_ok)
+            AC_StageLogEvent(playerid, "spectate_stop");
+        else
+        {
+            AC_StageLogEvent(playerid, "run_abort", " reason=context_restore_failed");
+            AC_StageLogCaptureOwner = INVALID_PLAYER_ID;
+        }
+    }
+
+    if (!restore_ok)
+    {
+        SendClientMessage(playerid, 0xE05A5AFF, "[AC-STAGE] Spectate ended, but context restoration reported a failure.");
+        return 0;
+    }
 
     SendClientMessage(playerid, 0xD8D8D8FF, "[AC-STAGE] Spectating ended; your previous position and world were restored.");
     return 1;
@@ -1045,6 +1063,7 @@ public OnPlayerCommandText(playerid, cmdtext[])
         // Notify the detector before moving the player through a server-owned action.
         AC_NotifyLegitimateTeleport(playerid);
         SetPlayerPos(playerid, x + 8.0, y, z);
+        AC_StageLogEvent(playerid, "teleport");
         SendClientMessage(playerid, 0xD8D8D8FF, "[AC-STAGE] Legal teleport applied with a grace window.");
         return 1;
     }
@@ -1069,6 +1088,7 @@ public OnPlayerCommandText(playerid, cmdtext[])
         AC_StageVehicleId[playerid] = vehicleid;
         PutPlayerInVehicle(playerid, vehicleid, 0);
         AC_NotifyLegitimateVehicleChange(playerid);
+        AC_StageLogEvent(playerid, "vehicle_enter");
         SendClientMessage(playerid, 0xD8D8D8FF, "[AC-STAGE] Test vehicle created and server-placed.");
         return 1;
     }
@@ -1083,6 +1103,7 @@ public OnPlayerCommandText(playerid, cmdtext[])
         {
             RemovePlayerFromVehicle(playerid);
             AC_NotifyLegitimateVehicleChange(playerid);
+            AC_StageLogEvent(playerid, "vehicle_exit");
             SendClientMessage(playerid, 0xD8D8D8FF, "[AC-STAGE] Vehicle exit completed.");
         }
         else
