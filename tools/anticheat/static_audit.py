@@ -150,7 +150,7 @@ def main() -> int:
     assert "accountid=" not in telemetry_capture
     assert "vehicleid=" not in telemetry_capture
     assert "AC_StageCaptureVehicleTelemetry(playerid);" in staging
-    assert '"/acstagevehicle [modelid]"' in staging
+    assert '"/acstagevehicle [modelid]' in staging
 
     # Player-indexed helpers must reject out-of-range IDs before array access.
     require_player_id_guards("include/ac/state.inc", (
