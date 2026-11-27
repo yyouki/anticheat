@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 import argparse
-from collections import Counter, defaultdict
+from collections import Counter
 import json
 from pathlib import Path
 import sys
@@ -36,9 +36,7 @@ def _empty_group(environment: dict[str, Any]) -> dict[str, Any]:
     return {
         "environment": {field: environment[field] for field in GROUP_FIELDS},
         "run_count": 0,
-        "scenario_result_counts": {
-            scenario: Counter({result: 0 for result in RESULTS}) for scenario in ()
-        },
+        "scenario_result_counts": {},
         "result_counts": Counter({result: 0 for result in RESULTS}),
         "review_decision_counts": Counter({decision: 0 for decision in DECISIONS}),
         "evidence_category_counts": Counter({category: 0 for category in CATEGORIES}),
@@ -93,6 +91,12 @@ def aggregate_records(records: list[Any]) -> dict[str, Any]:
         group["confirmed_false_positive_count"] += report["confirmed_false_positive_count"]
         for name, count in report["scenario_counts"].items():
             group["result_counts"][name] += count
+        for observation in record["observations"]:
+            scenario_id = observation["scenario_id"]
+            scenario_counts = group["scenario_result_counts"].setdefault(
+                scenario_id, Counter({result: 0 for result in RESULTS})
+            )
+            scenario_counts[observation["result"]] += 1
         for name, count in report["review_counts"].items():
             group["review_decision_counts"][name] += count
         for name, count in report["evidence_category_counts"].items():
@@ -105,6 +109,10 @@ def aggregate_records(records: list[Any]) -> dict[str, Any]:
             "environment": group["environment"],
             "run_count": group["run_count"],
             "result_counts": dict(sorted(group["result_counts"].items())),
+            "scenario_result_counts": {
+                scenario: dict(sorted(counts.items()))
+                for scenario, counts in sorted(group["scenario_result_counts"].items())
+            },
             "review_decision_counts": dict(sorted(group["review_decision_counts"].items())),
             "evidence_category_counts": dict(sorted(group["evidence_category_counts"].items())),
             "confirmed_false_positive_count": group["confirmed_false_positive_count"],
