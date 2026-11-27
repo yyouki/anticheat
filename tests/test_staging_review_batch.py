@@ -99,6 +99,20 @@ class StagingReviewBatchTests(unittest.TestCase):
         oversized = [valid_record(f"run-{index:03d}") for index in range(501)]
         self.assertEqual(aggregate_records(oversized)["status"], "invalid")
 
+    def test_cli_rejects_oversized_record_file(self) -> None:
+        from contextlib import redirect_stdout
+        from io import StringIO
+
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "oversized.json"
+            path.write_text(" " * (1_048_577), encoding="utf-8")
+            output = StringIO()
+            with redirect_stdout(output):
+                exit_code = main(["--records-dir", directory])
+
+        self.assertEqual(exit_code, 1)
+        self.assertEqual(json.loads(output.getvalue())["status"], "invalid")
+
     def test_cli_reads_local_records_and_emits_json(self) -> None:
         from contextlib import redirect_stdout
         from io import StringIO
