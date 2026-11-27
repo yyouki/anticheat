@@ -50,6 +50,7 @@ class StagingReviewBatchTests(unittest.TestCase):
         self.assertEqual(report["group_count"], 1)
         self.assertEqual(report["groups"][0]["run_count"], 2)
         self.assertEqual(report["totals"]["result_counts"]["clean"], 22)
+        self.assertEqual(report["groups"][0]["scenario_result_counts"]["walk_idle"]["clean"], 2)
         self.assertFalse(report["claims"]["false_positive_free_certified"])
         self.assertFalse(report["interpretation"]["false_positive_rate_estimated"])
 
