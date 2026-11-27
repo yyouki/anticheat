@@ -221,15 +221,13 @@ PR #16, [Bind vehicle trace summaries to staging review captures](https://github
 PR #16 verifies that each vehicle trace is paired with the exact schema-v2 review capture and that review metadata is consistent across the set. It does not authenticate log origin, prove operator scenario execution, connect a game client, or establish detector accuracy. The Pawn detector and its thresholds remain unchanged.
 
 
-## PR #17 — measured vehicle sample intervals (pre-merge)
+## PR #17 — measured vehicle sample intervals
 
-PR #17, [Add vehicle telemetry sample interval diagnostics](https://github.com/yyouki/anticheat/pull/17), head `c439b9ee89e30c4abeb2c57fddce9d9e26af8d2a`, passed Actions run #97 (`46001052529`) on 2026-11-27:
+PR #17, [Add vehicle telemetry sample interval diagnostics](https://github.com/yyouki/anticheat/pull/17), merged to `main` as `4af2cd0994b8f6bc0d46cfc7aef077de4cf015c5` on 2026-11-27. Post-merge Actions run #99 (`46004415945`) completed successfully on that exact merge commit:
 
-- Static repository audit: PASSED.
-- Python unit tests: PASSED (93 tests).
-- Deterministic telemetry replay: PASSED.
-- Default, opt-in feature-gate, and staging Pawn compiles: PASSED.
+- Static repository audit, 93 Python unit tests, and deterministic telemetry replay: PASSED.
+- Default, opt-in feature-gate, and staging Pawn compile targets: PASSED.
 - Pinned open.mp `v1.6.7.3218` headless runtime smoke: PASSED.
-- Staging artifact: `ac-staging-package`, ID `15198191515`, size 46,093 bytes, SHA-256 `e75ba3abc7d1b297956e4e77f11d66f813fde27f0f8668069432d2c66d263bba`.
+- Staging artifact: `ac-staging-package`, ID `15199203857`, size 46,093 bytes, SHA-256 `8d9ae316fceb169899979703f8b885f4a0bf5342091c05b221edee35eb5d8a07`.
 
-This is a PR-branch validation result, not a post-merge `main` result. The headless runtime job does not connect interactive game clients. The new timing report describes intervals between accepted server-side observations only; no detector, threshold, evidence, score, or enforcement behavior changes are included.
+PR #17 records elapsed milliseconds between accepted staging vehicle observations, with backward compatibility for schema-1 telemetry logs. The report describes collector cadence only; it does not establish detector accuracy, client timing, safe speed envelopes, or production readiness. No connected client test ran in run #99.
