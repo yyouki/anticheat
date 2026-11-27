@@ -61,7 +61,9 @@ The raw server console log may contain unrelated host/server connection metadata
     python3 tools/anticheat/staging_report.py --log /path/to/staging-console.log
     ```
 
-    The report must show `PASS`. It requires the complete teleport, vehicle, interior callback, world, and spectating event sequence. Any evidence, review marker, missing callback, failed restoration, capture abort, or incomplete capture makes the report fail. The parser ignores ordinary console lines and only evaluates the structured records inside the capture window.
+    The parser also rejects malformed or duplicate fields, negative counters, unknown evidence categories, non-pseudonymous spectate targets, and event-specific records missing required transition fields. These checks validate the structured record contract; they do not authenticate who produced the log.
+
+The report must show `PASS`. It requires the complete teleport, vehicle, interior callback, world, and spectating event sequence. Any evidence, review marker, missing callback, failed restoration, capture abort, or incomplete capture makes the report fail. The parser ignores ordinary console lines and only evaluates the structured records inside the capture window.
 12. Outside the capture, run `/acstageevidence` and `/acstageclear` to inspect and clear the current review state. Then run `/acstagesave`, disconnect, reconnect, and authenticate again with the same synthetic account ID. This persistence test works only while the same server process remains running.
 
 Useful commands: `/acstagehelp`, `/acstageauth <accountid>`, `/acstageinfo`, `/acstagetest`, `/acstageevidence`, `/acstagetoggle`, `/acstagesave`, `/acstageclear`, `/acstageteleport`, `/acstagevehicle`, `/acstageexitvehicle`, `/acstageinterior`, `/acstageworld`, `/acstagespectate <playerid>`, `/acstageunspectate`, `/acstagelogbegin`, and `/acstagelogend`.
