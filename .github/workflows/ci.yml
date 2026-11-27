@@ -1,0 +1,60 @@
+name: Validate anti-cheat framework
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  static-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run repository audit
+        run: python3 tools/anticheat/static_audit.py
+
+  pawn-compile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout pinned open.mp standard includes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init omp-stdlib
+          git -C omp-stdlib remote add origin https://github.com/openmultiplayer/omp-stdlib.git
+          git -C omp-stdlib fetch --depth=1 origin 17c1b0191195cb0b59a820135fbca622c84129dd
+          git -C omp-stdlib checkout --detach FETCH_HEAD
+
+      - name: Install pinned Pawn compiler
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="$RUNNER_TEMP/pawnc-3.10.11-linux.tar.gz"
+          curl --fail --silent --show-error --location \
+            "https://github.com/openmultiplayer/compiler/releases/download/v3.10.11/pawnc-3.10.11-linux.tar.gz" \
+            --output "$archive"
+          echo "13977433acb1dfb23e3ec6354f622115d5073e97aced9395058a9db59d2564c2  $archive" | sha256sum --check
+          mkdir -p "$RUNNER_TEMP/pawnc"
+          tar -xzf "$archive" -C "$RUNNER_TEMP/pawnc"
+          compiler="$(find "$RUNNER_TEMP/pawnc" -type f -name pawncc -print -quit)"
+          library="$(find "$RUNNER_TEMP/pawnc" -type f -name libpawnc.so -print -quit)"
+          test -n "$compiler"
+          test -n "$library"
+          chmod +x "$compiler"
+          echo "PAWNCC=$compiler" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=$(dirname "$library"):\${LD_LIBRARY_PATH:-}" >> "$GITHUB_ENV"
+
+      - name: Compile standalone smoke gamemode
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/ac-build"
+          "$PAWNCC" -iinclude -iomp-stdlib -O2 -Z- \
+            "-o$RUNNER_TEMP/ac-build/smoke.amx" examples/smoke.pwn
+          test -s "$RUNNER_TEMP/ac-build/smoke.amx"
