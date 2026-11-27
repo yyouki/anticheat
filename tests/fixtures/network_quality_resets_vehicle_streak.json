@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "scenario_id": "network_quality_resets_vehicle_streak",
+  "description": "Ping above the vehicle sampling ceiling clears the vehicle ID and streak; post-recovery samples must rebuild the streak.",
+  "events": [
+    {
+      "type": "connect",
+      "at_ms": 100
+    },
+    {
+      "type": "load_begin",
+      "at_ms": 200,
+      "account_id": 41001
+    },
+    {
+      "type": "load_complete",
+      "at_ms": 300,
+      "account_id": 41001,
+      "session_token": 2
+    },
+    {
+      "type": "vehicle_sample",
+      "at_ms": 500,
+      "vehicle_id": 1,
+      "vehicle_model": 411,
+      "speed_kmh": 400,
+      "ping": 50
+    },
+    {
+      "type": "vehicle_sample",
+      "at_ms": 1000,
+      "vehicle_id": 1,
+      "vehicle_model": 411,
+      "speed_kmh": 400,
+      "ping": 50
+    },
+    {
+      "type": "vehicle_sample",
+      "at_ms": 1500,
+      "vehicle_id": 1,
+      "vehicle_model": 411,
+      "speed_kmh": 400,
+      "ping": 50
+    },
+    {
+      "type": "vehicle_sample",
+      "at_ms": 2000,
+      "vehicle_id": 1,
+      "vehicle_model": 411,
+      "speed_kmh": 400,
+      "ping": 401
+    },
+    {
+      "type": "vehicle_sample",
+      "at_ms": 2500,
+      "vehicle_id": 1,
+      "vehicle_model": 411,
+      "speed_kmh": 400,
+      "ping": 50
+    },
+    {
+      "type": "vehicle_sample",
+      "at_ms": 3000,
+      "vehicle_id": 1,
+      "vehicle_model": 411,
+      "speed_kmh": 400,
+      "ping": 50
+    },
+    {
+      "type": "vehicle_sample",
+      "at_ms": 3500,
+      "vehicle_id": 1,
+      "vehicle_model": 411,
+      "speed_kmh": 400,
+      "ping": 50
+    }
+  ],
+  "expected": {
+    "evidence_count": 0,
+    "evidence_categories": [],
+    "movement_evidence": 0,
+    "vehicle_evidence": 0,
+    "vehicle_over_limit_samples": 2,
+    "score": 0,
+    "strikes": 0,
+    "loaded": true,
+    "account_id": 41001,
+    "session_token": 2,
+    "load_completion_results": [
+      true
+    ]
+  }
+}
