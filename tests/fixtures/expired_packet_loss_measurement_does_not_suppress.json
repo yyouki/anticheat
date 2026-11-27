@@ -4,6 +4,21 @@
   "description": "A packet-loss measurement older than its TTL is ignored; valid sustained movement samples can progress normally.",
   "events": [
     {
+      "type": "connect",
+      "at_ms": 100
+    },
+    {
+      "type": "load_begin",
+      "at_ms": 200,
+      "account_id": 1007
+    },
+    {
+      "type": "load_complete",
+      "at_ms": 300,
+      "account_id": 1007,
+      "session_token": 2
+    },
+    {
       "type": "movement_sample",
       "at_ms": 1000,
       "x": 0,
@@ -47,6 +62,12 @@
     ],
     "movement_evidence": 1,
     "score": 14,
-    "strikes": 0
+    "strikes": 0,
+    "loaded": true,
+    "account_id": 1007,
+    "session_token": 2,
+    "load_completion_results": [
+      true
+    ]
   }
 }
