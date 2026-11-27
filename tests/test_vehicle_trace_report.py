@@ -46,11 +46,13 @@ def create_bound_capture(
     run_id: str = "run-001",
     network_profile: str = "stable",
     client_build: str = "test-build-1",
+    filename: str | None = None,
 ) -> tuple[Path, Path]:
     """Create a synthetic passing staging capture and matching schema-v2 review."""
     fixture = ROOT / "tests" / "fixtures" / "staging_acceptance_success.log"
     raw = fixture.read_bytes() + b"\n" + (line(model=model, speed=speed) + "\n").encode("utf-8")
-    capture_path = directory / f"{run_id}.log"
+    file_stem = filename or run_id
+    capture_path = directory / f"{file_stem}.log"
     capture_path.write_bytes(raw)
 
     template_path = ROOT / "docs" / "templates" / "staging-review-template.json"
@@ -74,7 +76,7 @@ def create_bound_capture(
         if observation["scenario_id"] == "spectate_roundtrip":
             observation["secondary_client_connected"] = True
 
-    record_path = directory / f"{run_id}.json"
+    record_path = directory / f"{file_stem}.json"
     record_path.write_text(json.dumps(record, indent=2), encoding="utf-8")
     return capture_path, record_path
 
@@ -333,7 +335,9 @@ class VehicleTraceReportTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             first_log, first_record = create_bound_capture(root, run_id="run-001", speed=1000)
-            second_log, second_record = create_bound_capture(root, run_id="run-001", speed=2000)
+            second_log, second_record = create_bound_capture(
+                root, run_id="run-001", speed=2000, filename="second-run-file"
+            )
             with self.assertRaisesRegex(ValueError, "duplicate review run ID"):
                 _load_bound_traces([first_log, second_log], [first_record, second_record])
 
