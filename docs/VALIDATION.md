@@ -2,15 +2,15 @@
 
 ## Current repository validation
 
-PR #3 fixes the replay-loader regression from PR #2. Its head commit `da672c628cc0b85c5116fa3b61b1041ee9543c80` passed GitHub Actions run #33 (`45945300237`):
+PR #3 fixed the replay-loader regression introduced in PR #2 and is now merged to `main`.
+
+Post-merge GitHub Actions run #37 (`45946672307`) for merge commit `5bf1443a87ec132ba6d93655b45f4b89427fa2e8` completed successfully:
 
 - Static repository audit: PASSED (31 required files).
 - Python unit tests: PASSED (5 tests).
 - Deterministic telemetry replay: PASSED (all 10 fixtures).
 - Default Pawn smoke compile: PASSED with Pawn compiler 3.10.11 and open.mp standard includes pinned to commit `17c1b0191195cb0b59a820135fbca622c84129dd`.
 - Opt-in feature-gate Pawn smoke compile: PASSED.
-
-The PR #3 changes are not yet merged to `main`; merge only after review. The currently merged PR #2 workflow had failed its Python test step, which this follow-up repairs.
 
 These checks validate static repository invariants, the Python reference contract, and compiler/include compatibility for the smoke gamemodes. They do not prove live detector accuracy, runtime correctness, resistance to bypasses, or production performance.
 
