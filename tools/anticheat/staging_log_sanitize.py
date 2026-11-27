@@ -92,19 +92,51 @@ def sanitize_capture(raw: bytes) -> tuple[bytes, dict[str, int | str]]:
 
 
 def _read_source(path: Path) -> bytes:
-    """Read one bounded regular file without following a symbolic link."""
+    """Read one bounded regular file without following or racing a symbolic link."""
+    descriptor: int | None = None
     try:
-        if path.is_symlink():
+        # Inspect the directory entry first, then verify the opened descriptor matches it.
+        before = path.lstat()
+        if stat.S_ISLNK(before.st_mode):
             raise ValueError("source log must not be a symlink")
-        metadata = path.stat()
-        if not stat.S_ISREG(metadata.st_mode):
+        if not stat.S_ISREG(before.st_mode):
             raise ValueError("source log must be a regular file")
-        if metadata.st_size > MAX_SOURCE_BYTES:
+        if before.st_size > MAX_SOURCE_BYTES:
             raise ValueError(f"source log exceeds the {MAX_SOURCE_BYTES}-byte limit")
-        with path.open("rb") as handle:
+
+        flags = os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NONBLOCK", 0)
+        flags |= getattr(os, "O_CLOEXEC", 0)
+        if hasattr(os, "O_NOFOLLOW"):
+            flags |= os.O_NOFOLLOW  # Prevent symlink traversal on platforms that support it.
+
+        descriptor = os.open(path, flags)
+        opened = os.fstat(descriptor)
+        after = path.lstat()
+
+        # Verify the same regular file still occupies the path after opening.
+        opened_identity = (opened.st_dev, opened.st_ino)
+        if (
+            not stat.S_ISREG(opened.st_mode)
+            or stat.S_ISLNK(after.st_mode)
+            or not stat.S_ISREG(after.st_mode)
+            or opened_identity != (before.st_dev, before.st_ino)
+            or opened_identity != (after.st_dev, after.st_ino)
+        ):
+            raise ValueError("source log changed while it was being opened")
+        if opened.st_size > MAX_SOURCE_BYTES:
+            raise ValueError(f"source log exceeds the {MAX_SOURCE_BYTES}-byte limit")
+
+        with os.fdopen(descriptor, "rb") as handle:
+            descriptor = None  # The file object now owns and closes the descriptor.
             raw = handle.read(MAX_SOURCE_BYTES + 1)
     except OSError as error:
-        raise ValueError("source log could not be read") from error
+        raise ValueError("source log could not be read safely") from error
+    finally:
+        if descriptor is not None:
+            try:
+                os.close(descriptor)
+            except OSError:
+                pass
 
     if len(raw) > MAX_SOURCE_BYTES:
         raise ValueError(f"source log exceeds the {MAX_SOURCE_BYTES}-byte limit")
