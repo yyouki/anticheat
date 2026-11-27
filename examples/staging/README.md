@@ -47,11 +47,11 @@ The supplied config disables server-list announcement, query visibility, and RCO
 2. Run `/acstageauth 424242`. Use a positive synthetic account ID; never use an actual account identifier.
 3. Run `/acstageinfo` and confirm that the account is loaded and monitoring is enabled.
 4. Connect a second test client. Keep both clients on foot in exterior interior 0 and the same virtual world. The second client should remain connected and stationary as the spectating target.
-5. Run `/acstagetest` before beginning the capture. It checks stale session-token rejection, account-ID mismatch rejection, duplicate load rejection, timestamp restoration, grace notifications, persistence save, and simulated framework-session restoration. It does not disconnect the real client.
+5. Run `/acstagetest` before beginning the capture. It checks stale session-token rejection, account-ID mismatch rejection, duplicate load rejection, timestamp restoration, grace notifications, persistence save, and simulated framework-session restoration. It exercises framework reset handlers while the real game client remains connected; it does not disconnect the real client.
 6. On the primary client, run `/acstagelogbegin`. This starts one bounded acceptance window. Do not begin a second capture until the first one has ended.
 7. During the capture, walk normally, then run `/acstageteleport`, `/acstagevehicle`, and `/acstageexitvehicle`.
 8. Run `/acstageinterior` twice to enter and leave the 24/7 interior (ID 17). Then run `/acstageworld` twice to enter and leave reserved virtual world 9000.
-9. Run `/acstagespectate <targetid>` on the primary client, then `/acstageunspectate`. The target is logged only as the pseudonymous role `secondary`; the report never needs either client's player ID.
+9. Run `/acstagespectate <targetid>` on the primary client, then `/acstageunspectate`. The target is logged only as the pseudonymous role `secondary`; the report never needs either client's player ID. The harness restores the spectator's previous position/context after spectating ends.
 10. On the primary client, run `/acstagelogend`. Copy the server console log to a local text file. The structured `[AC-STAGE-EVENT]` records contain only the fixed role labels `primary` and `secondary`, transition values, and detector category counters; they do not include player IDs, account IDs, IP addresses, or session tokens.
 11. Run the offline report checker from the repository root:
 
