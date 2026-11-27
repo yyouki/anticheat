@@ -99,7 +99,8 @@ stock AC_ApplyPersistentState(playerid, accountid, sessiontoken, score, strikes,
     if (!AC_IsValidPlayerId(playerid)
         || !IsPlayerConnected(playerid)
         || sessiontoken != AC_SessionToken[playerid]
-        || accountid != AC_AccountKey[playerid])
+        || accountid != AC_AccountKey[playerid]
+        || AC_PlayerLoaded[playerid])
     {
         return 0;
     }
