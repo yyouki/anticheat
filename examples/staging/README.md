@@ -47,7 +47,7 @@ The supplied config disables server-list announcement, query visibility, and RCO
 7. Run `/acstagesave`, disconnect, reconnect, and authenticate again with the same synthetic account ID. Confirm the in-memory values load while the same server process is still running.
 8. Run `/acstageevidence` and `/acstageclear` to inspect and clear the current review state.
 
-Before the manual reconnect test, run `/acstagetest`. It performs in-server checks for stale session-token rejection, account-ID mismatch rejection, duplicate load rejection, restoration of the independent strike-cooldown timestamp, legitimate-action grace notification, persistence callback save, and state restoration after a simulated framework-session reset. It saves the currently authenticated synthetic account first and restores it after the test.
+Before the manual reconnect test, run `/acstagetest`. It performs in-server checks for stale session-token rejection, account-ID mismatch rejection, duplicate load rejection, restoration of the independent strike-cooldown timestamp, generic/interior/virtual-world/spectating grace notifications, vehicle-change notification, persistence callback save, and state restoration after a simulated framework-session reset. It saves the currently authenticated synthetic account first and restores it after the test.
 
 The self-test uses a reserved synthetic account ID range beginning at `2000000000`. Do not use that range for manually assigned test accounts. It simulates the framework disconnect/connect handlers while the real game client remains connected; it is not a network reconnect test. The separate manual disconnect/reconnect step below remains required.
 
