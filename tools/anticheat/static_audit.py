@@ -21,6 +21,7 @@ REQUIRED = [
     "include/ac/integrity.inc",
     "include/ac/admin.inc",
     "examples/smoke.pwn",
+    "examples/feature_gate_smoke.pwn",
     "docs/ARCHITECTURE.md",
     "docs/INTEGRATION.md",
     "docs/VALIDATION.md",
@@ -67,8 +68,12 @@ def main() -> int:
     )
 
     config = sources["include/ac/config.inc"]
-    assert "AC_ENABLE_CLIENT_MEMORY_CHECKS       (0)" in config
-    assert "AC_ENABLE_COMBAT_CADENCE             (0)" in config
+    assert "#if !defined AC_ENABLE_CLIENT_MEMORY_CHECKS" in config
+    assert "#if !defined AC_ENABLE_COMBAT_CADENCE" in config
+    assert "AC_ENABLE_CLIENT_MEMORY_CHECKS   (0)" in config
+    assert "AC_ENABLE_COMBAT_CADENCE         (0)" in config
+    assert "#define AC_ENABLE_COMBAT_CADENCE (1)" in sources["examples/feature_gate_smoke.pwn"]
+    assert "feature-gate-smoke.amx" in read(".github/workflows/ci.yml")
     assert "AC_SAMPLE_INTERVAL_MS                (500)" in config
 
     umbrella = sources["include/ac.inc"]
@@ -105,6 +110,9 @@ def main() -> int:
     ), sources)
     require_player_id_guards("include/ac/player_state.inc", ("AC_OnPlayerDeath",), sources)
     require_player_id_guards("include/ac/integrity.inc", ("AC_GetClientIntegrityStatus",), sources)
+    assert "|| AC_PlayerLoaded[playerid])" in function_body(
+        sources["include/ac/core.inc"], "AC_ApplyPersistentState"
+    ), "duplicate account-load completions must be rejected"
 
     # The library must remain framework/database independent.
     forbidden = ("PlayerData[", "AccountData[", "mysql_tquery", "SQL_Connect", "PawnPlus", "pp-hooks")
