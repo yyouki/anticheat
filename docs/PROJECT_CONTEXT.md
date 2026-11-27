@@ -203,7 +203,7 @@ The sample adapter remains volatile RAM only. The staging report's synthetic suc
 
 ## Multi-run review summary
 
-The next optional workflow enhancement adds `tools/anticheat/staging_review_batch.py`. It validates every review JSON in a local directory and groups counts by exact server commit, artifact digest, open.mp version, client platform/build label, and network profile. It includes per-scenario counts and rejects invalid or duplicate-run records. It does not estimate a false-positive rate or independently verify operator-entered observations.
+The batch summary tool is `tools/anticheat/staging_review_batch.py`. It validates every review JSON in a local directory and groups counts by exact server commit, artifact digest, open.mp version, client platform/build label, and network profile. It includes per-scenario counts and rejects invalid or duplicate-run records. It does not estimate a false-positive rate or independently verify operator-entered observations.
 
 Batch command:
 
