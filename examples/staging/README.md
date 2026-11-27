@@ -83,3 +83,16 @@ The `/acstagetest` command reserves synthetic account IDs beginning at `20000000
 The harness does not provide a durable database adapter, a client-side test bot, an exploit simulator, an automatic punishment system, or a production authentication flow. The offline acceptance report verifies that expected staging callbacks and commands were observed without evidence or review markers during one bounded test window. It is not an exploit simulator and does not establish movement/vehicle threshold accuracy, mobile/desktop false-positive rates, real reconnect behavior, production performance, or release readiness. Actual runtime testing still requires supported connected clients and representative network conditions.
 
 Do not use the volatile adapter as a production persistence implementation. Keep client memory scans and experimental combat cadence scoring disabled.
+
+
+## Per-client false-positive review
+
+For repeatable observations, use the interactive staging and false-positive matrix in docs/STAGING_FALSE_POSITIVE_MATRIX.md. It defines the required benign scenarios and a privacy-safe review record for each client build/network profile.
+
+The review record template is docs/templates/staging-review-template.json. Copy it locally, fill in the server commit, staging artifact SHA-256, client build label, timezone-aware start time, and scenario outcomes. Validate it with:
+
+\`\`\`sh
+python3 tools/anticheat/staging_review.py --record /path/to/staging-review.json
+\`\`\`
+
+The validator checks record structure and whether scenario/evidence reviews are complete. It cannot prove that the scenarios were actually executed or that a run is false-positive-free. Its output always leaves independent verification and production readiness false. Keep review records and raw logs local and remove any accidental identifiers before sharing a summary.
