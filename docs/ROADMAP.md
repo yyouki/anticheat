@@ -34,6 +34,7 @@
 - [x] Provide evidence, strike, persistence and administrative-reset callbacks.
 - [ ] Add tested adapters for common command processors as optional packages.
 - [ ] Add an optional durable evidence storage adapter with retention controls.
+- [x] Add optional V2 evidence/strike callback envelopes with account, session, event timestamp, and per-session sequence context while preserving legacy callback signatures; durable storage and retention remain host-owned.
 - [x] Add versioned synthetic telemetry fixtures and a deterministic Python reference replay.
 - [x] Add CI regression tests for movement and vehicle grace, sustained anomalies, network suppressors, sampling resets, excluded vehicle models, evidence correlation, and stale/duplicate account loads.
 - [x] Repair replay/unit-test CI regression in PR #3; post-merge main run #37 passed all automated checks.
