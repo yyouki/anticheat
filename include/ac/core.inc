@@ -3,7 +3,7 @@
 #endif
 #define _AC_CORE_INCLUDED
 
-forward AC_OnPersistenceSave(playerid, accountid, score, strikes, score_decay_at, strike_decay_at);
+forward AC_OnPersistenceSave(playerid, accountid, score, strikes, score_decay_at, strike_decay_at, last_strike_at);
 forward AC_OnAdministrativeReset(adminid, targetid, accountid);
 forward AC_OnEvidence(playerid, category, points, ping, const reason[], Float:metric);
 forward AC_OnStrike(playerid, accountid, strikes, const reason[]);
@@ -94,7 +94,7 @@ stock AC_BeginAccountLoad(playerid, accountid)
     return AC_SessionToken[playerid];
 }
 
-stock AC_ApplyPersistentState(playerid, accountid, sessiontoken, score, strikes, score_decay_at, strike_decay_at)
+stock AC_ApplyPersistentState(playerid, accountid, sessiontoken, score, strikes, score_decay_at, strike_decay_at, last_strike_at)
 {
     new now = gettime();
     if (!AC_IsValidPlayerId(playerid)
@@ -115,14 +115,14 @@ stock AC_ApplyPersistentState(playerid, accountid, sessiontoken, score, strikes,
     AC_LastScoreDecayAt[playerid] = score_decay_at > 0 ? score_decay_at : gettime();
     AC_LastStrikeDecayAt[playerid] = strike_decay_at > 0 ? strike_decay_at : now;
     AC_LastStrikeAt[playerid] = 0;
-    // The persisted decay timestamp equals the latest strike time until the
-    // six-hour decay period elapses. Restore only a still-active five-minute cooldown.
+    // Persist this separately from the six-hour strike-decay timestamp so
+    // reconnects do not accidentally restart an expired cooldown.
     if (AC_StrikeCount[playerid] > 0
-        && strike_decay_at > 0
-        && strike_decay_at <= now
-        && (now - strike_decay_at) < AC_STRIKE_COOLDOWN_SECONDS)
+        && last_strike_at > 0
+        && last_strike_at <= now
+        && (now - last_strike_at) < AC_STRIKE_COOLDOWN_SECONDS)
     {
-        AC_LastStrikeAt[playerid] = strike_decay_at;
+        AC_LastStrikeAt[playerid] = last_strike_at;
     }
     AC_LastPersistAt[playerid] = now;
     AC_PlayerLoaded[playerid] = true;
@@ -207,13 +207,14 @@ stock AC_SavePersistentState(playerid)
     if (!AC_PlayerLoaded[playerid] || AC_AccountKey[playerid] <= 0)
         return 0;
 
-    new result = CallLocalFunction("AC_OnPersistenceSave", "dddddd",
+    new result = CallLocalFunction("AC_OnPersistenceSave", "ddddddd",
         playerid,
         AC_AccountKey[playerid],
         AC_SuspicionScore[playerid],
         AC_StrikeCount[playerid],
         AC_LastScoreDecayAt[playerid],
-        AC_LastStrikeDecayAt[playerid]
+        AC_LastStrikeDecayAt[playerid],
+        AC_LastStrikeAt[playerid]
     );
 
     // The adapter must return 1 after it has accepted the save request.
