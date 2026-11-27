@@ -19,6 +19,7 @@
 - [x] Add staging commands for real interior, virtual-world, and player-spectating transitions, with pre-action notifications and context restoration; real-client observation remains a release gate.
 - [x] Add privacy-safe structured staging event capture and an offline acceptance report that checks transition callbacks and flags evidence/review markers.
 - [x] Add versioned JSON report output that clearly separates structured-log validation from client runtime verification, log-origin authentication, and production readiness.
+- [x] Add a privacy-safe per-client/network-profile false-positive review matrix, record template, and structural validator; the validator does not certify executed tests or detector accuracy.
 - [ ] Complete interactive staging tests with supported game clients, including false-positive review.
 
 ## Milestone 1 — investigation and host adapters
