@@ -11,7 +11,13 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools" / "anticheat"))
-from replay import ReplayEngine, load_constants, replay_file, validate_fixture  # noqa: E402
+from replay import (
+    ReplayEngine,
+    load_constants,
+    load_excluded_vehicle_models,
+    replay_file,
+    validate_fixture,
+)  # noqa: E402
 
 FIXTURE_DIR = ROOT / "tests" / "fixtures"
 
@@ -221,8 +227,48 @@ class TelemetryReplayTests(unittest.TestCase):
         self.assertIn("stop_server(process)", script)
         self.assertIn("--server-root", script)
 
+    def test_reference_model_reads_vehicle_constants_and_exclusions_from_pawn(self) -> None:
+        constants = load_constants()
+        vehicle_source = (ROOT / "include" / "ac" / "vehicle.inc").read_text(encoding="utf-8")
+
+        self.assertEqual(constants["AC_VEHICLE_MAX_PING"], 400)
+        self.assertEqual(constants["AC_VEHICLE_REQUIRED_SAMPLES"], 3)
+        self.assertEqual(constants["AC_VEHICLE_SPEED_FACTOR"], 250.66667)
+        self.assertEqual(load_excluded_vehicle_models(), {
+            417, 425, 430, 446, 447, 452, 453, 454, 460, 464, 469, 472, 473,
+            476, 484, 487, 488, 493, 497, 500, 501, 502, 503, 511, 512, 513,
+            519, 520, 537, 538, 548, 553, 563, 577, 592, 593, 595,
+        })
+        self.assertIn("AC_IsExcludedVehicleModel", vehicle_source)
+
+    def test_vehicle_fixture_contract_rejects_invalid_speed_and_model(self) -> None:
+        fixture = {
+            "schema_version": 1,
+            "scenario_id": "invalid_vehicle_sample",
+            "description": "synthetic invalid vehicle event",
+            "events": [{
+                "type": "vehicle_sample",
+                "at_ms": 500,
+                "vehicle_id": 1,
+                "vehicle_model": 411,
+                "speed_kmh": 400.0,
+                "ping": 50,
+            }],
+            "expected": {},
+        }
+        invalid = copy.deepcopy(fixture)
+        invalid["events"][0]["speed_kmh"] = float("nan")
+        with self.assertRaisesRegex(ValueError, "finite non-negative"):
+            validate_fixture(invalid)
+
+        invalid = copy.deepcopy(fixture)
+        invalid["events"][0]["vehicle_model"] = 999
+        with self.assertRaisesRegex(ValueError, "GTA SA vehicle model"):
+            validate_fixture(invalid)
+
     def test_reference_model_contract_matches_pawn_source_gates(self) -> None:
         movement = (ROOT / "include/ac/movement.inc").read_text(encoding="utf-8")
+        vehicle = (ROOT / "include/ac/vehicle.inc").read_text(encoding="utf-8")
         network = (ROOT / "include/ac/network.inc").read_text(encoding="utf-8")
         evidence = (ROOT / "include/ac/evidence.inc").read_text(encoding="utf-8")
         core = (ROOT / "include/ac/core.inc").read_text(encoding="utf-8")
@@ -233,6 +279,10 @@ class TelemetryReplayTests(unittest.TestCase):
         self.assertIn("ping == 65535", network)
         self.assertIn("AC_NetworkPacketLoss[playerid] >= 15.0", network)
         self.assertIn("AC_NETWORK_QUALITY_TTL_MS", network)
+        self.assertIn("AC_VEHICLE_REQUIRED_SAMPLES", vehicle)
+        self.assertIn("AC_VEHICLE_MAX_SPEED_KMH", vehicle)
+        self.assertIn("AC_IsExcludedVehicleModel", vehicle)
+        self.assertIn("AC_IsNetworkSampleReliable(playerid, AC_VEHICLE_MAX_PING)", vehicle)
         self.assertIn("other_mask != 0", evidence)
         self.assertIn("AC_SCORE_STRIKE_THRESHOLD", evidence)
         self.assertIn("|| AC_PlayerLoaded[playerid])", core)
