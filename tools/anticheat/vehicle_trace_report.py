@@ -1,20 +1,25 @@
 #!/usr/bin/env python3
-"""Summarize privacy-safe vehicle observations from a local open.mp staging log."""
+"""Summarize local vehicle observations, optionally bound to staging review records."""
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 from pathlib import Path
 import re
+import stat
 import sys
 from collections import defaultdict
-from typing import Iterable
+from typing import Any, Iterable
+
+from staging_review_capture import validate_capture_binding
 
 PREFIX = "[AC-STAGE-VEHICLE] "
 MAX_LOG_BYTES = 32 * 1024 * 1024
 MAX_TOTAL_LOG_BYTES = 64 * 1024 * 1024
+MAX_RECORD_BYTES = 1_048_576
 MAX_SAMPLES = 100_000
 ALLOWED_TRACE_MODELS = frozenset({
     400, 401, 402, 404, 405, 410, 411, 415, 419, 421, 426, 429,
@@ -26,6 +31,14 @@ REQUIRED_FIELDS = {
     "schema", "actor", "model", "speed_centi_kmh", "ping",
     "packet_loss_centi_pct",
 }
+ENVIRONMENT_GROUP_FIELDS = (
+    "server_commit",
+    "staging_artifact_sha256",
+    "openmp_version",
+    "client_platform",
+    "client_build",
+    "network_profile",
+)
 FIELD_NAME = re.compile(r"^[a-z][a-z0-9_]*$")
 UNSIGNED_INTEGER = re.compile(r"^(?:0|[1-9][0-9]*)$")
 PACKET_LOSS_INTEGER = re.compile(r"^(?:-1|0|[1-9][0-9]*)$")
@@ -115,7 +128,175 @@ def _distribution(values: list[int], scale: int = 1) -> dict[str, float | int]:
     }
 
 
-def build_report(observations: list[dict[str, int]]) -> dict[str, object]:
+def _read_regular_file(path: Path, maximum_bytes: int, label: str) -> bytes:
+    """Read one bounded regular file and reject symlink inputs."""
+    try:
+        if path.is_symlink():
+            raise ValueError(f"{label} must not be a symlink")
+        metadata = path.stat()
+        if not stat.S_ISREG(metadata.st_mode):
+            raise ValueError(f"{label} must be a regular file")
+        if metadata.st_size > maximum_bytes:
+            raise ValueError(f"{label} exceeds the {maximum_bytes}-byte limit")
+        with path.open("rb") as handle:
+            raw = handle.read(maximum_bytes + 1)
+    except OSError as error:
+        raise ValueError(f"{label} could not be read") from error
+    if len(raw) > maximum_bytes:
+        raise ValueError(f"{label} exceeds the {maximum_bytes}-byte limit")
+    return raw
+
+
+def _read_log(path: Path) -> tuple[list[dict[str, int]], str]:
+    raw = _read_regular_file(path, MAX_LOG_BYTES, "capture log")
+    digest = hashlib.sha256(raw).hexdigest()
+    text = raw.decode("utf-8", errors="replace")
+    return parse_vehicle_observations(text.splitlines()), digest
+
+
+def _read_review_record(path: Path) -> dict[str, Any]:
+    raw = _read_regular_file(path, MAX_RECORD_BYTES, "review record")
+    try:
+        data = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise ValueError("review record could not be read as JSON") from error
+    if not isinstance(data, dict):
+        raise ValueError("review record root must be an object")
+    return data
+
+
+def _load_bound_traces(
+    log_paths: list[Path],
+    record_paths: list[Path],
+) -> tuple[list[dict[str, int]], dict[str, Any]]:
+    """Verify one schema-v2 review record against every exact source capture."""
+    if len(log_paths) != len(record_paths):
+        raise ValueError("provide exactly one --record for each --log, in matching order")
+
+    observations: list[dict[str, int]] = []
+    run_ids: set[str] = set()
+    capture_digests: set[str] = set()
+    common_environment: dict[str, str] | None = None
+    source_runs: list[dict[str, Any]] = []
+
+    for log_path, record_path in zip(log_paths, record_paths, strict=True):
+        record = _read_review_record(record_path)
+        environment = record.get("environment")
+        if not isinstance(environment, dict):
+            raise ValueError("review record environment must be an object")
+
+        binding, _ = validate_capture_binding(record, log_path)
+        if binding.get("status") != "valid" or binding.get("binding_verified") is not True:
+            raise ValueError("a review record failed exact capture binding or staging log validation")
+
+        digest = binding.get("capture_sha256")
+        run_id = binding.get("run_id")
+        if not isinstance(digest, str) or not isinstance(run_id, str):
+            raise ValueError("validated review record is missing its run ID or capture digest")
+        if digest in capture_digests:
+            raise ValueError("duplicate capture digest detected; each input must be a distinct run")
+        if run_id in run_ids:
+            raise ValueError("duplicate review run ID detected")
+        capture_digests.add(digest)
+        run_ids.add(run_id)
+
+        # Re-read the exact bytes used for telemetry parsing and compare the digest.
+        # This guards against a file changing between the binding check and parsing.
+        samples, parsed_digest = _read_log(log_path)
+        if parsed_digest != digest:
+            raise ValueError("capture file changed while the bound trace report was being built")
+        if not samples:
+            raise ValueError("a bound capture contains no vehicle telemetry observations")
+
+        model_ids = {sample["model"] for sample in samples}
+        if len(model_ids) != 1:
+            raise ValueError("each bound capture must contain exactly one approved vehicle model")
+
+        observation = next(
+            (
+                item for item in record.get("observations", [])
+                if isinstance(item, dict) and item.get("scenario_id") == "vehicle_enter_drive_exit"
+            ),
+            None,
+        )
+        if not isinstance(observation, dict) or observation.get("result") != "clean":
+            raise ValueError("vehicle_enter_drive_exit must be recorded as clean in each bound review")
+
+        environment_group = {
+            field: environment.get(field)
+            for field in ENVIRONMENT_GROUP_FIELDS
+        }
+        if common_environment is None:
+            common_environment = environment_group
+        elif environment_group != common_environment:
+            raise ValueError(
+                "bound captures have mismatched server, artifact, open.mp, client build, or network metadata"
+            )
+
+        observations.extend(samples)
+        if len(observations) > MAX_SAMPLES:
+            raise ValueError(f"combined traces exceed the {MAX_SAMPLES}-sample limit")
+        source_runs.append({
+            "run_id": run_id,
+            "capture_sha256": digest,
+            "model_id": next(iter(model_ids)),
+            "sample_count": len(samples),
+        })
+
+    return observations, {
+        "binding_status": "verified",
+        "review_record_count": len(record_paths),
+        "environment": common_environment,
+        "source_runs": source_runs,
+    }
+
+
+def _load_unbound_traces(log_paths: list[Path]) -> tuple[list[dict[str, int]], dict[str, Any]]:
+    """Load exploratory traces without claiming that review records were checked."""
+    observations: list[dict[str, int]] = []
+    capture_digests: set[str] = set()
+    source_runs: list[dict[str, Any]] = []
+
+    total_log_bytes = 0
+    for index, log_path in enumerate(log_paths, start=1):
+        try:
+            total_log_bytes += log_path.stat().st_size
+        except OSError as error:
+            raise ValueError("capture log could not be read") from error
+        if total_log_bytes > MAX_TOTAL_LOG_BYTES:
+            raise ValueError(f"combined logs exceed the {MAX_TOTAL_LOG_BYTES}-byte limit")
+
+        samples, digest = _read_log(log_path)
+        if digest in capture_digests:
+            raise ValueError("duplicate capture file detected; do not count one run more than once")
+        capture_digests.add(digest)
+        if not samples:
+            continue
+        model_ids = {sample["model"] for sample in samples}
+        if len(model_ids) != 1:
+            raise ValueError("each input capture must contain exactly one approved vehicle model")
+        observations.extend(samples)
+        if len(observations) > MAX_SAMPLES:
+            raise ValueError(f"combined traces exceed the {MAX_SAMPLES}-sample limit")
+        source_runs.append({
+            "source_index": index,
+            "capture_sha256": digest,
+            "model_id": next(iter(model_ids)),
+            "sample_count": len(samples),
+        })
+
+    return observations, {
+        "binding_status": "not_provided",
+        "review_record_count": 0,
+        "environment": None,
+        "source_runs": source_runs,
+    }
+
+
+def build_report(
+    observations: list[dict[str, int]],
+    provenance: dict[str, Any] | None = None,
+) -> dict[str, object]:
     grouped: dict[int, list[dict[str, int]]] = defaultdict(list)
     for observation in observations:
         grouped[observation["model"]].append(observation)
@@ -138,44 +319,55 @@ def build_report(observations: list[dict[str, int]]) -> dict[str, object]:
             "packet_loss_percent": _distribution(known_loss, scale=100) if known_loss else None,
         }
 
+    trace_provenance = provenance or {
+        "binding_status": "not_provided",
+        "review_record_count": 0,
+        "environment": None,
+        "source_runs": [],
+    }
+    binding_verified = trace_provenance["binding_status"] == "verified"
     return {
-        "report_schema_version": 1,
+        "report_schema_version": 2,
         "report_type": "openmp_vehicle_telemetry_summary",
         "status": "observations_found" if observations else "empty",
         "validation_scope": "descriptive_server_side_staging_observations",
         "sample_count": len(observations),
         "models": models,
+        "provenance": trace_provenance,
         "runtime_validation": {
+            "capture_file_binding_verified": binding_verified,
             "log_origin_authenticated": False,
+            "operator_scenario_execution_verified": False,
             "detector_accuracy_verified": False,
             "safe_speed_envelope_established": False,
             "production_ready": False,
         },
         "limitations": [
-            "Percentiles describe this capture only; they are not safe speed limits.",
+            "Percentiles describe the supplied captures; they are not safe speed limits.",
             "Observations do not establish whether an action is legitimate or anomalous.",
-            "Packet loss is -1 when no fresh host-supplied measurement was available.",
-            "The report cannot authenticate log origin or prove that the operator ran the stated scenario.",
+            "A verified binding checks exact file bytes and the review schema, not log origin or actual scenario execution.",
+            "Packet loss is unknown when no fresh host-supplied measurement was available.",
         ],
     }
 
 
-def _read_log(path: Path) -> list[dict[str, int]]:
-    if path.is_symlink():
-        raise ValueError("symlink log inputs are not accepted")
-    if not path.is_file():
-        raise ValueError("log input must be a regular file")
-    if path.stat().st_size > MAX_LOG_BYTES:
-        raise ValueError(f"log exceeds the {MAX_LOG_BYTES}-byte limit")
-    with path.open("r", encoding="utf-8", errors="replace") as handle:
-        return parse_vehicle_observations(handle)
-
-
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Summarize local privacy-safe open.mp staging vehicle observations."
+        description="Summarize local open.mp staging vehicle observations."
     )
-    parser.add_argument("--log", required=True, action="append", type=Path, help="local server console log; repeat for additional model runs")
+    parser.add_argument(
+        "--log",
+        required=True,
+        action="append",
+        type=Path,
+        help="local server console log; repeat for additional model captures",
+    )
+    parser.add_argument(
+        "--record",
+        action="append",
+        type=Path,
+        help="matching schema-v2 review JSON; repeat once per --log in the same order to verify SHA-256 bindings",
+    )
     parser.add_argument(
         "--json",
         action="store_true",
@@ -184,27 +376,22 @@ def main() -> int:
     args = parser.parse_args()
 
     try:
-        observations: list[dict[str, int]] = []
-        total_log_bytes = 0
-        for log_path in args.log:
-            if log_path.is_symlink() or not log_path.is_file():
-                raise ValueError("log input must be a regular, non-symlink file")
-            total_log_bytes += log_path.stat().st_size
-            if total_log_bytes > MAX_TOTAL_LOG_BYTES:
-                raise ValueError(f"combined logs exceed the {MAX_TOTAL_LOG_BYTES}-byte limit")
-            observations.extend(_read_log(log_path))
-            if len(observations) > MAX_SAMPLES:
-                raise ValueError(f"combined traces exceed the {MAX_SAMPLES}-sample limit")
+        if args.record:
+            observations, provenance = _load_bound_traces(args.log, args.record)
+        else:
+            observations, provenance = _load_unbound_traces(args.log)
     except (OSError, UnicodeError, ValueError) as error:
         print(f"Could not validate vehicle trace: {error}", file=sys.stderr)
         return 2
 
-    report = build_report(observations)
+    report = build_report(observations, provenance)
     if args.json:
         print(json.dumps(report, indent=2, sort_keys=True))
     elif not observations:
-        print("No vehicle telemetry observations found in the supplied log.")
+        print("No vehicle telemetry observations found in the supplied logs.")
         print("Start /acstagelogbegin, drive an approved staging road car, then end the capture.")
+        if provenance["binding_status"] == "not_provided":
+            print("No review records were supplied; capture bindings were not checked.")
     else:
         print(
             f"Vehicle observations: {len(observations)} across "
@@ -220,6 +407,7 @@ def main() -> int:
                 f"ping ms min/p50/p95/max="
                 f"{ping['min']}/{ping['p50']}/{ping['p95']}/{ping['max']}"
             )
+        print(f"Capture binding: {provenance['binding_status']}.")
         print("Scope: descriptive observations only; no safe envelope or detector verdict.")
     return 0 if observations else 1
 
