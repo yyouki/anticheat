@@ -154,7 +154,7 @@ The replay coverage mirrors the current generic vehicle detector contract and sy
 
 ## Vehicle trace collection status
 
-The staging harness is being extended with bounded, pseudonymous vehicle observations and a local per-model summary tool. The intended collector records model, quantized speed, ping, and fresh host-supplied packet loss when available, at no more than 2 Hz. This is observational staging instrumentation, not an additional detector input. No real client traces have been collected yet; model-aware detector thresholds remain blocked on representative real staging evidence.
+PR #15, [Add bounded staging vehicle telemetry traces](https://github.com/yyouki/anticheat/pull/15), adds a bounded staging collector and local per-model summary tool. It records an approved road-car model, quantized server-side speed, ping, and a fresh host-supplied packet-loss value when available; the stock harness leaves packet loss unknown. The collector is limited to 2 Hz and 3,600 records per capture. This is observational staging instrumentation, not an additional detector input. No real client traces have been collected yet; model-aware detector thresholds remain blocked on representative staging evidence.
 
 ## Working and merge workflow preference
 
@@ -240,3 +240,10 @@ PR #12, [Add multi-run staging review summaries](https://github.com/yyouki/antic
 ## PR #13 — staging capture digest binding
 
 Schema-v2 staging review records require `environment.capture_sha256`. The local `staging_review_capture.py` command validates the structured event contract against the exact bounded file bytes, writes or verifies the SHA-256 binding, and never uploads the log. The batch validator rejects duplicate capture digests. This provides file-to-record consistency only: it does not authenticate log origin or prove a human executed each scenario.
+
+
+## PR #15 — staging vehicle telemetry traces
+
+PR #15 is open on `feat/staging-vehicle-telemetry-traces`, based on PR #14 merge commit `650fa4fb4eb1dc29ca54a276b6ec98c57657aa70`. Head `59f13bfff954cda534f6d5d5a15201f8218ded33` passed workflow run #86 (`45991708681`): static audit and 77 Python tests, default/feature-gate/staging Pawn compiles, staging artifact upload, and pinned open.mp headless boot. Artifact `ac-staging-package` ID `15192894648`, size 45,484 bytes, SHA-256 `dd97f0b151c1b513e7d784984529b9553573c3dbe9a71a44bea8ea5f9742f2db`.
+
+The PR does not change detector behavior or thresholds. It only collects approved road-car observations at up to 2 Hz and provides a local descriptive per-model summary. The default staging gamemode has no packet-loss provider; packet loss remains unknown unless a host adapter supplies it. No connected-client test or real vehicle trace has been run.
