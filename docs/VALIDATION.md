@@ -98,6 +98,17 @@ The headless run still did not connect game clients or execute staging commands.
 
 The next staging increment adds pseudonymous structured events and an offline report checker. A successful report requires the expected teleport, vehicle, interior callback, virtual-world, and spectating sequence with no evidence/review markers in the bounded capture. This tool is intended to make a future real-client test auditable; the synthetic success fixture is only a parser regression test and is not runtime evidence.
 
+PR #8, [Add privacy-safe staging acceptance report](https://github.com/yyouki/anticheat/pull/8), tested head `8d781806751783bc86b7077c09191374442947d3` passed GitHub Actions run #62 (`45963399362`):
+
+- Static repository audit: PASSED (38 required files).
+- Python unit tests: PASSED (18 tests).
+- Deterministic telemetry replay: PASSED (all existing fixtures).
+- Default, opt-in feature-gate, and staging Pawn compiles: PASSED.
+- Staging package: uploaded as `ac-staging-package` (artifact ID `15181702026`, SHA-256 `dc7e2ee2f92c19e18c762beef4dede469abad342419bb0bf9ad9bb5c8ee10a40`).
+- Pinned open.mp `v1.6.7.3218` headless boot: PASSED.
+
+An earlier run #60 (`45963167850`) failed because two existing source-contract tests expected wording removed during README restructuring. The guide was updated to retain the tested contract statements; run #62 passed. Neither run connects a real client. The synthetic success fixture validates only the parser and is not evidence of runtime correctness.
+
 ## Required release suite
 
 | Area | Required cases |
