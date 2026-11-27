@@ -1,44 +1,51 @@
 # open.mp Anti-Cheat Framework
 
-A modular, server-side anti-cheat framework for open.mp gamemodes.
+A modular, server-side anti-cheat framework for open.mp gamemodes, written in Pawn.
 
-## Status
+## Project status
 
-Initial repository bootstrap. The first production target is a portable Pawn core that can be integrated by different gamemodes without depending on a particular account schema, command processor, database plugin, or roleplay framework.
+The repository contains a modular Pawn core, host-facing callbacks, an evidence-first review policy, and a Python reference model with synthetic telemetry fixtures. The project is still under development and is **not production-ready**: no staging-server runtime suite, desktop/mobile false-positive corpus, expected-capacity benchmark, or independent adversarial review has been completed.
 
-The framework is evidence-first: detectors report observations, the core correlates independent evidence, and administrators make enforcement decisions. No detector automatically kicks, bans, freezes, or rewinds players.
+A successful Pawn smoke compile proves compiler/include compatibility for the smoke gamemode. A successful Python replay proves only that the reference model matches its synthetic fixtures. Neither result proves live detector accuracy or bypass resistance.
 
-## Planned modules
+## Implemented components
 
-- Movement and player-state telemetry
-- Vehicle telemetry
-- Combat event telemetry
-- Network-quality context
-- Client-integrity capability checks (disabled until client/version profiles are validated)
-- Evidence ring buffer and cross-detector correlation
-- Suspicion scoring, strike policy, and configurable decay
-- Gamemode adapter API for legitimate server-side actions
-- Optional persistence and admin investigation adapters
-- Isolated experiments for native plugins, ML, packet polling, and pathfinding
+- Modular includes for configuration, state, networking, core lifecycle, evidence, player state, movement, vehicle, combat, integrity, and admin helpers.
+- Session-token and account-key guards for asynchronous persistence callbacks.
+- Grace-window support for server-authoritative transitions.
+- Conservative on-foot movement sampling and driver-only vehicle sampling.
+- Evidence ring buffer, per-category cooldown, cross-family correlation, score/strike review markers, and decay.
+- Optional host callbacks for persistence, evidence, strikes, and administrative resets.
+- Synthetic JSON fixtures, a deterministic Python reference replay, unit tests, static audit, and Pawn smoke-compilation CI jobs.
+
+## Safety and enforcement policy
+
+Detectors emit evidence; they do not directly punish players. A strike is an investigation marker, not an automatic punishment. The core must not automatically kick, ban, freeze, rewind, or otherwise sanction a player.
+
+Client-originated synchronization is not treated as authoritative by itself. Server-controlled teleports, spawns, world/interior transitions, vehicle placement, and scripted movement should be reported through the host adapter so expected transitions are not misclassified.
+
+Client memory scans are disabled by default. Combat cadence scoring is disabled by default until representative client traces validate it. Do not enable experimental detectors merely because they compile.
 
 ## Integration philosophy
 
-The framework must not assume that client-synchronized position, velocity, weapon, or damage callbacks are inherently trustworthy. Server-side state and decisions are authoritative; client-originated synchronization is treated as evidence input that must be corroborated.
+The framework is gamemode-neutral. It must not assume a particular account schema, database engine, command processor, roleplay framework, or hosting provider. The host gamemode owns authentication, authorization, persistence implementation, and admin permissions.
 
-All legitimate server-controlled teleports, spawns, world/interior transitions, vehicle placement, scripted movement, and health/armour changes should be reported to the adapter so detectors can suppress expected transitions.
+See [docs/INTEGRATION.md](docs/INTEGRATION.md) before connecting host callbacks. In particular, persist `last_strike_at` independently from `strike_decay_at`; they represent different clocks.
 
-## Development gates
+## Development and release gates
 
-Every production feature must pass:
+Every production candidate must pass:
 
-1. Repository and API audit
-2. Pawn compilation against the supported open.mp include/compiler
-3. Runtime testing on a staging open.mp server
-4. False-positive tests across desktop and mobile clients and variable network conditions
-5. Performance tests at expected player capacity
-6. Adversarial review, including gradual and correlated manipulation
+1. Repository/API and static audit.
+2. Default and opt-in Pawn compilation against the pinned supported compiler and open.mp includes.
+3. Deterministic Python fixture replay and unit tests.
+4. Runtime testing on a staging open.mp server.
+5. False-positive tests across supported desktop and Android clients and variable network conditions.
+6. Performance tests at expected player capacity.
+7. Independent adversarial review, including gradual and correlated manipulation.
+8. A reviewed host adapter and administrator-visible evidence trail.
 
-See `docs/ROADMAP.md` and `docs/VALIDATION.md`.
+See [docs/ROADMAP.md](docs/ROADMAP.md), [docs/VALIDATION.md](docs/VALIDATION.md), and [docs/PROJECT_CONTEXT.md](docs/PROJECT_CONTEXT.md).
 
 ## License
 
