@@ -14,7 +14,14 @@ from typing import Iterable
 
 PREFIX = "[AC-STAGE-VEHICLE] "
 MAX_LOG_BYTES = 32 * 1024 * 1024
+MAX_TOTAL_LOG_BYTES = 64 * 1024 * 1024
 MAX_SAMPLES = 100_000
+ALLOWED_TRACE_MODELS = frozenset({
+    400, 401, 402, 404, 405, 410, 411, 415, 419, 421, 426, 429,
+    436, 439, 445, 451, 458, 477, 489, 496, 506, 517, 518, 526,
+    527, 533, 541, 546, 547, 550, 555, 560, 562, 565, 566, 567,
+    575, 576, 580, 585, 587, 589, 602, 603,
+})
 REQUIRED_FIELDS = {
     "schema", "actor", "model", "speed_centi_kmh", "ping",
     "packet_loss_centi_pct",
@@ -62,6 +69,8 @@ def _parse_observation(payload: str, line_number: int) -> dict[str, int]:
 
     if not 400 <= model <= 611:
         raise ValueError(f"line {line_number}: model is outside the GTA vehicle ID range")
+    if model not in ALLOWED_TRACE_MODELS:
+        raise ValueError(f"line {line_number}: model is not approved for staging traces")
     if speed > 1_000_000:
         raise ValueError(f"line {line_number}: speed_centi_kmh exceeds the safety bound")
     if ping > 65_535:
@@ -158,7 +167,7 @@ def _read_log(path: Path) -> list[dict[str, int]]:
         raise ValueError("log input must be a regular file")
     if path.stat().st_size > MAX_LOG_BYTES:
         raise ValueError(f"log exceeds the {MAX_LOG_BYTES}-byte limit")
-    with path.open("r", encoding="utf-8", errors="strict") as handle:
+    with path.open("r", encoding="utf-8", errors="replace") as handle:
         return parse_vehicle_observations(handle)
 
 
@@ -176,7 +185,13 @@ def main() -> int:
 
     try:
         observations: list[dict[str, int]] = []
+        total_log_bytes = 0
         for log_path in args.log:
+            if log_path.is_symlink() or not log_path.is_file():
+                raise ValueError("log input must be a regular, non-symlink file")
+            total_log_bytes += log_path.stat().st_size
+            if total_log_bytes > MAX_TOTAL_LOG_BYTES:
+                raise ValueError(f"combined logs exceed the {MAX_TOTAL_LOG_BYTES}-byte limit")
             observations.extend(_read_log(log_path))
             if len(observations) > MAX_SAMPLES:
                 raise ValueError(f"combined traces exceed the {MAX_SAMPLES}-sample limit")
