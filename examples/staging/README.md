@@ -73,29 +73,29 @@ The raw server console log may contain unrelated host/server connection metadata
 
     The parser also rejects malformed or duplicate fields, negative counters, unknown evidence categories, non-pseudonymous spectate targets, and event-specific records missing required transition fields. These checks validate the structured record contract; they do not authenticate who produced the log.
 
-13. For an exploratory summary without review binding, run the supplemental local tool. Repeat \`--log\` for each separate model capture:
+13. For an exploratory summary without review binding, run the supplemental local tool. Repeat `--log` for each separate model capture:
 
-    \`\`\`sh
+    ```sh
     python3 tools/anticheat/vehicle_trace_report.py --log /path/to/model-411-console.log
-    \`\`\`
+    ```
 
     For an evidence-bound summary, first finish the schema-v2 review record and bind it to the exact raw capture:
 
-    \`\`\`sh
+    ```sh
     python3 tools/anticheat/staging_review_capture.py --record /path/to/model-411-review.json --capture-log /path/to/model-411-console.log --write-digest
-    \`\`\`
+    ```
 
-    Then provide one \`--record\` for every \`--log\`, in matching order:
+    Then provide one `--record` for every `--log`, in matching order:
 
-    \`\`\`sh
+    ```sh
     python3 tools/anticheat/vehicle_trace_report.py \\
       --log /path/to/model-411-console.log --record /path/to/model-411-review.json \\
       --log /path/to/model-560-console.log --record /path/to/model-560-review.json --json
-    \`\`\`
+    ```
 
-    Bound mode verifies each review record against the exact capture bytes and staging event contract. It requires a clean \`vehicle_enter_drive_exit\` observation, distinct run IDs and capture digests, one approved vehicle model per file, and matching server commit, artifact digest, open.mp version, client platform/build, and network profile across all inputs. Each capture must contain vehicle telemetry samples. It rejects more than 500 captures, 64 MiB combined logs, 8 MiB combined review records, and 100,000 samples.
+    Bound mode verifies each review record against the exact capture bytes and staging event contract. It requires a clean `vehicle_enter_drive_exit` observation, distinct run IDs and capture digests, one approved vehicle model per file, and matching server commit, artifact digest, open.mp version, client platform/build, and network profile across all inputs. Each capture must contain vehicle telemetry samples. It rejects more than 500 captures, 64 MiB combined logs, 8 MiB combined review records, and 100,000 samples.
 
-    The report marks \`provenance.binding_status=verified\` only when those checks pass. This binds file bytes to operator-entered review metadata; it does not authenticate who produced a log or prove that a human actually performed the scenarios. Without \`--record\`, the report says \`not_provided\` and remains exploratory. Percentiles are not safe speed limits. Keep source logs and review records local.
+    The report marks `provenance.binding_status=verified` only when those checks pass. This binds file bytes to operator-entered review metadata; it does not authenticate who produced a log or prove that a human actually performed the scenarios. Without `--record`, the report says `not_provided` and remains exploratory. Percentiles are not safe speed limits. Keep source logs and review records local.
 
 The report must show `PASS`. It requires the complete teleport, vehicle, interior callback, world, and spectating event sequence. Any evidence, review marker, missing callback, failed restoration, capture abort, or incomplete capture makes the report fail. The parser ignores ordinary console lines and only evaluates the structured records inside the capture window.
 14. Outside the capture, run `/acstageevidence` and `/acstageclear` to inspect and clear the current review state. Then run `/acstagesave`, disconnect, reconnect, and authenticate again with the same synthetic account ID. This persistence test works only while the same server process remains running.
@@ -117,9 +117,9 @@ For repeatable observations, use the interactive staging and false-positive matr
 
 The review record template is docs/templates/staging-review-template.json. Copy it locally, fill in the server commit, staging artifact SHA-256, client build label, timezone-aware start time, and scenario outcomes. Validate it with:
 
-\`\`\`sh
+```sh
 python3 tools/anticheat/staging_review.py --record /path/to/staging-review.json
-\`\`\`
+```
 
 The validator checks record structure and whether scenario/evidence reviews are complete. It cannot prove that the scenarios were actually executed or that a run is false-positive-free. Its output always leaves independent verification and production readiness false. Keep review records and raw logs local and remove any accidental identifiers before sharing a summary.
 
