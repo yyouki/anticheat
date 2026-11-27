@@ -2,17 +2,17 @@
 
 ## Current repository validation
 
-The most recent PR #2 workflow at head commit `4484a25b5b320d1c953e964a87e83dde84a1e75f` was GitHub Actions run #31:
+PR #3 fixes the replay-loader regression from PR #2. Its head commit `da672c628cc0b85c5116fa3b61b1041ee9543c80` passed GitHub Actions run #33 (`45945300237`):
 
-- Static repository audit: PASSED.
-- Default Pawn smoke compile: PASSED.
+- Static repository audit: PASSED (31 required files).
+- Python unit tests: PASSED (5 tests).
+- Deterministic telemetry replay: PASSED (all 10 fixtures).
+- Default Pawn smoke compile: PASSED with Pawn compiler 3.10.11 and open.mp standard includes pinned to commit `17c1b0191195cb0b59a820135fbca622c84129dd`.
 - Opt-in feature-gate Pawn smoke compile: PASSED.
-- Python unit tests: FAILED before the follow-up fix. The replay loader searched for `AC_NETWORK_QUALITY_TTL_MS` only in `include/ac/config.inc`, although the constant is defined in `include/ac/network.inc`.
-- Replay fixture command: SKIPPED because the unit-test step failed.
 
-The current follow-up PR fixes the source-file lookup and isolates schema validation from replay-model initialization. Its CI result must be checked before treating the Python validation gate as passed.
+The PR #3 changes are not yet merged to `main`; merge only after review. The currently merged PR #2 workflow had failed its Python test step, which this follow-up repairs.
 
-The compile result proves source/include compatibility for the smoke gamemode. It does not prove runtime correctness, detector accuracy, resistance to bypasses, or production performance.
+These checks validate static repository invariants, the Python reference contract, and compiler/include compatibility for the smoke gamemodes. They do not prove live detector accuracy, runtime correctness, resistance to bypasses, or production performance.
 
 ## Required release suite
 
