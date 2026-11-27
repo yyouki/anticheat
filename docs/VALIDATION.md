@@ -14,6 +14,9 @@ Post-merge GitHub Actions run #37 (`45946672307`) for merge commit `5bf1443a87ec
 
 These checks validate static repository invariants, the Python reference contract, and compiler/include compatibility for the smoke gamemodes. They do not prove live detector accuracy, runtime correctness, resistance to bypasses, or production performance.
 
+PR #4 adds a staging gamemode compile/package job and a headless open.mp boot smoke against pinned server release `v1.6.7.3218`. Its final workflow result must be recorded here after verification. The headless boot check does not connect a game client and is not a substitute for interactive runtime testing.
+
+
 ## Required release suite
 
 | Area | Required cases |
