@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "purpose": "Required benign scenarios for per-client and per-network-profile staging observations.",
+  "scenarios": [
+    {
+      "id": "walk_idle",
+      "title": "Idle and ordinary walking",
+      "expected": "No movement evidence during standing, walking and ordinary sprint movement."
+    },
+    {
+      "id": "jump_fall_land",
+      "title": "Jump, fall and landing",
+      "expected": "No movement evidence for ordinary jumping, falling and landing."
+    },
+    {
+      "id": "admin_teleport",
+      "title": "Server-authorized teleport",
+      "expected": "No movement evidence after the host reports the legal teleport before changing position."
+    },
+    {
+      "id": "spawn_death_respawn",
+      "title": "Spawn, death and respawn",
+      "expected": "No evidence caused solely by the normal spawn/death lifecycle."
+    },
+    {
+      "id": "interior_roundtrip",
+      "title": "Interior enter and exit",
+      "expected": "No evidence during both directions of the notified interior transition."
+    },
+    {
+      "id": "virtual_world_roundtrip",
+      "title": "Virtual-world enter and exit",
+      "expected": "No evidence during both directions of the notified virtual-world transition."
+    },
+    {
+      "id": "vehicle_enter_drive_exit",
+      "title": "Vehicle enter, drive and exit",
+      "expected": "No vehicle evidence for ordinary driver entry, travel and exit."
+    },
+    {
+      "id": "vehicle_switch_collision",
+      "title": "Vehicle switch and ordinary collision",
+      "expected": "No evidence for representative legal vehicle switching and normal collision impulses."
+    },
+    {
+      "id": "spectate_roundtrip",
+      "title": "Spectate and restore context",
+      "expected": "No evidence from a legal spectate start/stop and context restoration; requires a second connected test client.",
+      "requires_secondary_client": true
+    },
+    {
+      "id": "disconnect_reconnect",
+      "title": "Real disconnect and reconnect",
+      "expected": "No stale-session evidence after an actual client disconnect/reconnect; do not substitute the simulated /acstagetest reset."
+    },
+    {
+      "id": "network_condition_sample",
+      "title": "Ordinary activity under the selected network profile",
+      "expected": "No false evidence from ordinary movement/vehicle activity under the selected stable, high-ping, jitter, packet-loss or low-FPS profile."
+    }
+  ]
+}
