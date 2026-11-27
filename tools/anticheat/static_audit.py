@@ -178,7 +178,7 @@ def main() -> int:
     ), "staging gamemode must notify before its legal teleport"
     assert "AC_NotifyLegitimateVehicleChange(playerid);" in staging
     assert "AC_OnPlayerUpdate(playerid);" in staging
-    assert not re.search(r"\\b(?:Kick|Ban|BanEx)\\s*\\(", staging)
+    assert not re.search(r"\b(?:Kick|Ban|BanEx)\s*\(", staging)
     assert staging_config.get("announce") is False
     assert staging_config.get("enable_query") is False
     assert staging_config.get("rcon", {}).get("enable") is False
