@@ -209,6 +209,230 @@ stock AC_StageDestroyVehicle(playerid)
     return 1;
 }
 
+#define AC_STAGE_SELFTEST_ACCOUNT_BASE (2000000000)
+
+stock AC_StageSelfTestCheck(playerid, bool:condition, const label[])
+{
+    new message[112];
+
+    if (condition)
+    {
+        format(message, sizeof(message), "[AC-STAGE-TEST] PASS: %s", label);
+        printf("%s", message);
+        SendClientMessage(playerid, 0x70D890FF, message);
+        return 1;
+    }
+
+    format(message, sizeof(message), "[AC-STAGE-TEST] FAIL: %s", label);
+    printf("%s", message);
+    SendClientMessage(playerid, 0xE05A5AFF, message);
+    return 0;
+}
+
+stock AC_StageRestoreAccountAfterSelfTest(playerid, accountid)
+{
+    // Simulate a fresh framework session without disconnecting the real game client.
+    AC_OnPlayerDisconnect(playerid);
+    AC_OnPlayerConnect(playerid);
+    return AC_StageAuthenticate(playerid, accountid);
+}
+
+stock AC_StageRunPersistenceSelfTest(playerid)
+{
+    if (!AC_StageRequireLoaded(playerid))
+        return 0;
+
+    new original_accountid = AC_AccountKey[playerid];
+    new selftest_accountid = AC_STAGE_SELFTEST_ACCOUNT_BASE + playerid;
+    if (selftest_accountid == original_accountid)
+        selftest_accountid++;
+
+    // Reserve both records before mutating the active player session.
+    if (AC_StageGetOrCreateSavedSlot(original_accountid) == -1
+        || AC_StageGetOrCreateSavedSlot(selftest_accountid) == -1)
+    {
+        SendClientMessage(playerid, 0xE05A5AFF, "[AC-STAGE-TEST] Not enough in-memory account slots.");
+        return 0;
+    }
+
+    if (!AC_SavePersistentState(playerid))
+    {
+        SendClientMessage(playerid, 0xE05A5AFF, "[AC-STAGE-TEST] Could not preserve your current test account.");
+        return 0;
+    }
+
+    new passed;
+    new failed;
+    new now = gettime();
+    new score = 27;
+    new strikes = 3;
+    new score_decay_at = now;
+    new strike_decay_at = now;
+    new last_strike_at = now - 60;
+    new sessiontoken = AC_BeginAccountLoad(playerid, selftest_accountid);
+
+    if (sessiontoken <= 0)
+    {
+        SendClientMessage(playerid, 0xE05A5AFF, "[AC-STAGE-TEST] Could not begin synthetic self-test load.");
+        AC_StageRestoreAccountAfterSelfTest(playerid, original_accountid);
+        return 0;
+    }
+
+    new stale_token = sessiontoken - 1;
+    if (stale_token <= 0)
+        stale_token = sessiontoken + 1;
+
+    if (AC_StageSelfTestCheck(
+        playerid,
+        !AC_ApplyPersistentState(
+            playerid, selftest_accountid, stale_token,
+            score, strikes, score_decay_at, strike_decay_at, last_strike_at
+        ),
+        "stale session token rejected"
+    ))
+        passed++;
+    else
+        failed++;
+
+    if (AC_StageSelfTestCheck(
+        playerid,
+        !AC_ApplyPersistentState(
+            playerid, selftest_accountid + 1, sessiontoken,
+            score, strikes, score_decay_at, strike_decay_at, last_strike_at
+        ),
+        "account ID mismatch rejected"
+    ))
+        passed++;
+    else
+        failed++;
+
+    if (!AC_ApplyPersistentState(
+        playerid,
+        selftest_accountid,
+        sessiontoken,
+        score,
+        strikes,
+        score_decay_at,
+        strike_decay_at,
+        last_strike_at
+    ))
+    {
+        AC_StageSelfTestCheck(playerid, false, "valid account state accepted");
+        failed++;
+        AC_StageRestoreAccountAfterSelfTest(playerid, original_accountid);
+        return 0;
+    }
+
+    if (AC_StageSelfTestCheck(
+        playerid,
+        AC_PlayerLoaded[playerid] && AC_PlayerEnabled[playerid],
+        "valid account load enables monitoring"
+    ))
+        passed++;
+    else
+        failed++;
+
+    if (AC_StageSelfTestCheck(
+        playerid,
+        !AC_ApplyPersistentState(
+            playerid, selftest_accountid, sessiontoken,
+            score, strikes, score_decay_at, strike_decay_at, last_strike_at
+        ),
+        "duplicate account load rejected"
+    ))
+        passed++;
+    else
+        failed++;
+
+    if (AC_StageSelfTestCheck(
+        playerid,
+        AC_LastStrikeAt[playerid] == last_strike_at
+            && AC_LastStrikeAt[playerid] != AC_LastStrikeDecayAt[playerid],
+        "strike cooldown timestamp remains separate"
+    ))
+        passed++;
+    else
+        failed++;
+
+    AC_NotifyLegitimateTeleport(playerid);
+    if (AC_StageSelfTestCheck(playerid, AC_IsInGrace(playerid), "legal transition starts grace window"))
+        passed++;
+    else
+        failed++;
+
+    AC_NotifyLegitimateVehicleChange(playerid);
+    if (AC_StageSelfTestCheck(playerid, true, "vehicle transition notification accepted"))
+        passed++;
+    else
+        failed++;
+
+    if (AC_SavePersistentState(playerid))
+    {
+        if (AC_StageSelfTestCheck(
+            playerid,
+            AC_StageSavedScore[AC_StageFindSavedSlot(selftest_accountid)] == score
+                && AC_StageSavedStrikes[AC_StageFindSavedSlot(selftest_accountid)] == strikes
+                && AC_StageSavedLastStrikeAt[AC_StageFindSavedSlot(selftest_accountid)] == last_strike_at,
+            "persistence callback saves score, strikes and cooldown timestamp"
+        ))
+            passed++;
+        else
+            failed++;
+    }
+    else
+    {
+        AC_StageSelfTestCheck(playerid, false, "persistence callback accepts save");
+        failed++;
+    }
+
+    // Exercise the framework's disconnect/connect reset path while keeping this
+    // client connected; this is not a substitute for a real network reconnect.
+    AC_OnPlayerDisconnect(playerid);
+    AC_OnPlayerConnect(playerid);
+    if (AC_StageAuthenticate(playerid, selftest_accountid))
+    {
+        new restored = AC_StageSelfTestCheck(
+            playerid,
+            AC_GetSuspicionScore(playerid) == score
+                && AC_GetStrikeCount(playerid) == strikes
+                && AC_LastStrikeAt[playerid] == last_strike_at,
+            "saved state restored after simulated session reconnect"
+        );
+        if (restored)
+            passed++;
+        else
+            failed++;
+    }
+    else
+    {
+        AC_StageSelfTestCheck(playerid, false, "saved state restored after simulated session reconnect");
+        failed++;
+    }
+
+    if (!AC_StageRestoreAccountAfterSelfTest(playerid, original_accountid))
+    {
+        AC_StageSelfTestCheck(playerid, false, "original synthetic account restored");
+        failed++;
+    }
+    else
+    {
+        if (AC_StageSelfTestCheck(
+            playerid,
+            AC_PlayerLoaded[playerid] && AC_AccountKey[playerid] == original_accountid,
+            "original synthetic account restored"
+        ))
+            passed++;
+        else
+            failed++;
+    }
+
+    new summary[96];
+    format(summary, sizeof(summary), "[AC-STAGE-TEST] Finished: %d passed, %d failed.", passed, failed);
+    SendClientMessage(playerid, failed == 0 ? 0x70D890FF : 0xE05A5AFF, summary);
+    printf("%s", summary);
+    return failed == 0;
+}
+
 public OnGameModeInit()
 {
     AC_Init();
@@ -269,6 +493,7 @@ public OnPlayerCommandText(playerid, cmdtext[])
         SendClientMessage(playerid, 0xE05A5AFF, "Anti-Cheat staging commands:");
         SendClientMessage(playerid, 0xD8D8D8FF, "/acstageauth <accountid> - load a synthetic test account");
         SendClientMessage(playerid, 0xD8D8D8FF, "/acstageinfo - show monitoring and score state");
+        SendClientMessage(playerid, 0xD8D8D8FF, "/acstagetest - run session and persistence self-tests");
         SendClientMessage(playerid, 0xD8D8D8FF, "/acstageevidence - show current evidence records");
         SendClientMessage(playerid, 0xD8D8D8FF, "/acstagetoggle - enable or disable monitoring");
         SendClientMessage(playerid, 0xD8D8D8FF, "/acstagesave - save to the temporary memory adapter");
@@ -295,6 +520,12 @@ public OnPlayerCommandText(playerid, cmdtext[])
         }
 
         AC_StageAuthenticate(playerid, accountid);
+        return 1;
+    }
+
+    if (!strcmp(cmdtext, "/acstagetest", true))
+    {
+        AC_StageRunPersistenceSelfTest(playerid);
         return 1;
     }
 
