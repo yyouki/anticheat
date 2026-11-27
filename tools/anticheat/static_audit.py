@@ -36,6 +36,7 @@ REQUIRED = [
     "tools/anticheat/staging_review_scenarios.json",
     "tools/anticheat/openmp_runtime_smoke.py",
     "tests/test_replay.py",
+    "tests/test_evidence_callback_contracts.py",
     "tests/test_staging_report.py",
     "tests/test_staging_review.py",
     "tests/test_staging_review_batch.py",
@@ -124,6 +125,15 @@ def main() -> int:
 
     assert "AC_EVIDENCE_WINDOW_SECONDS" in sources["include/ac/evidence.inc"]
     assert "other_mask != 0" in sources["include/ac/evidence.inc"]
+    evidence_core = sources["include/ac/evidence.inc"]
+    evidence_state = sources["include/ac/state.inc"]
+    evidence_contract_tests = sources["tests/test_evidence_callback_contracts.py"]
+    assert "AC_EvidenceSequence[playerid]++" in evidence_core
+    assert "AC_EvidenceSequence[playerid] = 0;" in evidence_state
+    assert '"AC_OnEvidenceV2", "ddddddddsf"' in evidence_core
+    assert '"AC_OnStrikeV2", "dddddds"' in evidence_core
+    assert "AC_OnEvidenceV2" in evidence_contract_tests
+    assert "test_legacy_callbacks_remain_unchanged" in evidence_contract_tests
     assert "AC_OnPersistenceSave" in sources["include/ac/core.inc"]
     assert "AC_SessionToken" in sources["include/ac/core.inc"]
     assert "AC_NETWORK_QUALITY_TTL_MS" in sources["include/ac/network.inc"]

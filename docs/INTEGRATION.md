@@ -79,9 +79,31 @@ Use [examples/staging/README.md](../examples/staging/README.md) and `examples/st
 
 Optional public callbacks:
 
-- AC_OnEvidence: a detector has emitted one evidence record.
-- AC_OnStrike: correlated evidence crossed the review threshold.
-- AC_OnPersistenceSave: the core asks the host to save account-keyed score/strike state.
-- AC_OnAdministrativeReset: an administrator cleared review state.
+- `AC_OnEvidence`: legacy evidence notification; its signature remains unchanged.
+- `AC_OnStrike`: legacy correlated-review-strike notification; its signature remains unchanged.
+- `AC_OnEvidenceV2`: evidence notification with account, session, sequence, and event timestamp context.
+- `AC_OnStrikeV2`: strike notification with the same context and the sequence of the evidence that triggered the strike.
+- `AC_OnPersistenceSave`: the core asks the host to save account-keyed score/strike state.
+- `AC_OnAdministrativeReset`: an administrator cleared review state.
+
+The V2 callback signatures are:
+
+```pawn
+public AC_OnEvidenceV2(
+    playerid, accountid, sessiontoken, sequence, timestamp,
+    category, points, ping, const reason[], Float:metric
+);
+
+public AC_OnStrikeV2(
+    playerid, accountid, sessiontoken, sequence, timestamp,
+    strikes, const reason[]
+);
+```
+
+`timestamp` is Unix time in seconds from `gettime()`. `sequence` starts at 1 and increases for each accepted evidence event in the current loaded player session. A strike callback repeats the sequence and timestamp of the evidence event that caused it. The sequence resets when the player state is reset for a new session; it is not a globally unique database key and does not survive a server restart.
+
+`sessiontoken` is the framework's in-memory player-slot generation token. It is useful as event context for correlating callbacks within the running server, but it is not an authentication credential, secret, or globally unique session ID. The host should assign its own durable event ID and, when needed, attach a server-instance identifier.
+
+The core invokes the legacy callbacks and then their V2 counterparts for the same event. Existing integrations can keep the legacy signatures unchanged. The callback return value is not used by the core. A host that stores events should copy the supplied values into its own bounded queue and perform database or file I/O outside the detector path; define retention, access control, and deletion in the host-owned storage layer. The core does not impose a database schema or automatically persist individual evidence records.
 
 A strike is an investigation marker, not an automatic punishment.
