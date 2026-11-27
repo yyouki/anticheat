@@ -13,7 +13,7 @@
 - [x] Reject duplicate asynchronous account-load completions after the active session has already been loaded.
 - [x] Restore an active strike cooldown from the persisted `last_strike_at` timestamp; keep it separate from the six-hour `strike_decay_at` timestamp.
 - [x] Add a neutral staging gamemode with a volatile persistence adapter and legal transition test commands.
-- [x] Compile and package the staging AMX in CI; run a headless boot check against a pinned open.mp server release.
+- [ ] Verify the CI staging AMX package and headless boot check against the pinned open.mp server release.
 - [ ] Complete interactive staging tests with supported game clients, including false-positive review.
 - [ ] Complete staging-server runtime and false-positive testing.
 
