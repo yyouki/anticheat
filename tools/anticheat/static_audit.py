@@ -28,9 +28,14 @@ REQUIRED = [
     "examples/staging/README.md",
     "tools/anticheat/replay.py",
     "tools/anticheat/staging_report.py",
+    "tools/anticheat/staging_review.py",
+    "tools/anticheat/staging_review_scenarios.json",
     "tools/anticheat/openmp_runtime_smoke.py",
     "tests/test_replay.py",
     "tests/test_staging_report.py",
+    "tests/test_staging_review.py",
+    "docs/STAGING_FALSE_POSITIVE_MATRIX.md",
+    "docs/templates/staging-review-template.json",
     "tests/fixtures/staging_acceptance_success.log",
     "tests/fixtures/legal_movement_during_and_after_grace.json",
     "tests/fixtures/sustained_onfoot_speed_anomaly.json",
@@ -254,6 +259,17 @@ def main() -> int:
     assert "python3 tools/anticheat/staging_report.py --log" in staging_readme
     assert "--json" in staging_readme
     assert "staging_acceptance_success.log" in sources["tests/test_staging_report.py"]
+
+    # The manual review ledger validates operator records only; it never certifies detector quality.
+    review_tool = sources["tools/anticheat/staging_review.py"]
+    review_manifest = json.loads(sources["tools/anticheat/staging_review_scenarios.json"])
+    review_template = json.loads(sources["docs/templates/staging-review-template.json"])
+    assert "false_positive_free_certified" in review_tool
+    assert '"production_ready": False' in review_tool
+    assert "requires_secondary_client" in review_tool
+    assert len(review_template["observations"]) == len(review_manifest["scenarios"])
+    assert "scenario_execution_complete" in review_tool
+    assert "false-positive matrix" in staging_readme.lower()
 
     player_id_parser = function_body(staging, "AC_StageParsePlayerId")
     assert "return -1;" in player_id_parser
