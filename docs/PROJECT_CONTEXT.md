@@ -77,24 +77,31 @@ public AC_OnPersistenceSave(playerid, accountid, score, strikes,
 
 Always use a session token and account key to reject stale asynchronous loads and reused player slots. Only one matching load completion should activate a session.
 
-## Current merged history and known CI state
+## Merged history and verified CI
 
 - PR #1, modular Pawn bootstrap, merged to `main`.
   - Merge commit: `9ad5af6bf5c4ad33f24b207dbab9042eb6f03380`.
 - PR #2, deterministic telemetry replay suite, merged to `main`.
   - Merge commit: `c288eec29042b509156fa0e48b481098074403cc`.
-  - PR head commit: `4484a25b5b320d1c953e964a87e83dde84a1e75f`.
-- PR #2's latest reviewed workflow was run #31 (`45941496807`).
-  - Static audit and both Pawn smoke compile jobs passed.
-  - Python tests failed because the loader expected `AC_NETWORK_QUALITY_TTL_MS` in the wrong include.
-  - The replay command was skipped after the Python test failure.
-- PR #3: [Fix telemetry replay CI and add durable project context](https://github.com/yyouki/anticheat/pull/3).
-  - Branch: `fix/replay-ci-and-project-context`.
-  - Verified head commit: `da672c628cc0b85c5116fa3b61b1041ee9543c80`.
-  - GitHub Actions run #33 (`45945300237`) passed static audit, all 5 Python unit tests, all 10 replay fixtures, and both default/opt-in Pawn smoke compile jobs.
-  - PR #3 is open and ready for review; it is not yet merged to `main`. The final documentation snapshot was verified again in GitHub Actions run #35 (`45945431019`), with static audit, all 5 Python unit tests, all 10 replay fixtures, and both Pawn smoke compile jobs passing.
+  - Its original Python CI failed because the replay loader searched in the wrong include file.
+- PR #3, replay CI repair and durable project context, merged to `main`.
+  - PR: https://github.com/yyouki/anticheat/pull/3
+  - Merge commit: `5bf1443a87ec132ba6d93655b45f4b89427fa2e8`.
+  - PR head: `18b2c211257318e90377d807b2e5a60fb0c22f9b`.
+  - PR Actions run #36 (`45945528117`) passed all checks.
+  - Post-merge `main` Actions run #37 (`45946672307`) also passed: static audit, 5 Python unit tests, all 10 replay fixtures, default Pawn smoke compile, and opt-in feature-gate compile.
 
-A PR being merged does not imply every CI job passed. Never describe the repository as fully green unless the current workflow for the relevant commit confirms it.
+A PR being merged does not imply every CI job passed. Always verify the latest workflow for the resulting `main` commit.
+
+## Working and merge workflow preference
+
+The repository owner prefers a low-friction merge process and does not want routine manual line-by-line PR review as a required step.
+
+- Before proposing a merge, perform the code/diff inspection and run the full relevant CI suite yourself.
+- When CI is green and no unresolved blocker is known, provide a concise summary, test results, and remaining limitations. Do not ask the owner to repeat a manual review just to proceed.
+- Keep PR descriptions clear and mark the PR ready when its checks pass.
+- Do not merge on the owner's behalf unless the owner explicitly asks you to do so.
+- If CI fails, a security-sensitive change is involved, or the diff contains an unresolved risk, explain that specific blocker instead of treating manual review as a generic checklist.
 
 ## Local validation commands
 
@@ -107,19 +114,18 @@ python3 tools/anticheat/replay.py
 
 CI also performs the repository static audit and default/opt-in Pawn smoke compilation with the pinned compiler and open.mp standard include revision. Confirm the workflow YAML for the exact pinned versions; do not silently update toolchain pins as part of an unrelated task.
 
-## Work sequence and review rules
+## Work sequence and project rules
 
 1. Read this file, `README.md`, `docs/ROADMAP.md`, `docs/VALIDATION.md`, and the relevant implementation/tests before editing.
-2. Work on a dedicated feature/fix branch based on the latest `main`; do not push broad changes directly to `main`.
-3. Keep changes scoped, preserve public callback signatures unless the compatibility impact is explicitly documented, and update tests/docs with behavior changes.
-4. Run the narrowest relevant tests, then the full CI workflow. Inspect failure logs instead of guessing.
-5. Never change fixture expectations merely to make a test pass. Explain and verify any intended behavior change first.
+2. Work on a dedicated branch based on the latest `main`, unless a small documentation-only correction is clearly safer directly on `main`.
+3. Keep changes scoped, preserve public callback signatures unless compatibility impact is explicitly documented, and update tests/docs with behavior changes.
+4. Run focused tests, then the full CI workflow. Inspect failed logs instead of guessing.
+5. Never change fixture expectations merely to silence a regression.
 6. Do not mark a feature production-ready because it compiles or passes synthetic replay.
-7. Update this document whenever merged PRs, public API contracts, known CI status, release gates, or core design constraints change.
+7. Update this document whenever merged PRs, public API contracts, known CI state, release gates, or project preferences change.
 
-## Next work after replay CI repair
+## Next work
 
-1. Review and merge PR #3 after checking its final head CI and diff.
-2. Plan staging-server integration with a neutral sample gamemode and a minimal persistence adapter.
-3. Collect representative desktop/mobile traces and legal-transition cases before tightening movement/vehicle/combat thresholds.
-4. Add only host-neutral optional adapters after their public API and failure behavior are tested.
+1. Design staging-server integration with a neutral sample gamemode and a minimal persistence adapter.
+2. Collect representative desktop/mobile traces and legal-transition cases before tightening movement/vehicle/combat thresholds.
+3. Add only host-neutral optional adapters after their public API and failure behavior are tested.
