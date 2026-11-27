@@ -20,6 +20,8 @@ stock bool:AC_IsExcludedVehicleModel(modelid)
 
 stock AC_OnVehicleSample(playerid)
 {
+    if (!AC_IsValidPlayerId(playerid))
+        return 0;
     if (!AC_IsMonitored(playerid) || GetPlayerState(playerid) != PLAYER_STATE_DRIVER)
     {
         AC_VehicleOverLimitSamples[playerid] = 0;
