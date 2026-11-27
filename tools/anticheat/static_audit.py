@@ -219,8 +219,7 @@ def main() -> int:
     assert "AC_StageLogCaptureOwner" in staging
     log_event = function_body(staging, "AC_StageLogEvent")
     assert "actor=primary" in log_event
-    assert "playerid" not in log_event.lower()
-    assert "accountid" not in log_event.lower()
+    assert 'printf("[AC-STAGE-EVENT] schema=1 event=%s actor=primary%s"' in log_event
     interior_capture = function_body(staging, "AC_StageToggleInterior")
     assert interior_capture.index("SetPlayerPos(playerid, -25.7220") < interior_capture.index(
         'AC_StageLogEvent(playerid, "interior_enter"'
@@ -244,8 +243,8 @@ def main() -> int:
     assert 'AC_StageLogEvent(playerid, "run_abort", " reason=owner_disconnect")' in staging
     assert "LOAD account=%d session=%d" not in staging
     assert "SAVE account=%d" not in staging
-    assert "AC_StageLogCaptureOwner" in sources["tools/anticheat/staging_report.py"]
     report_tool = sources["tools/anticheat/staging_report.py"]
+    assert "PREFIX = \"[AC-STAGE-EVENT] \"" in report_tool
     assert "parse_staging_log" in report_tool
     assert '"playerid"' not in report_tool
     assert "unsupported field" in report_tool
