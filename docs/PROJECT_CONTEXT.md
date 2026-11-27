@@ -46,6 +46,7 @@ The public include surface is `include/ac.inc`. The modular implementation is un
 Supporting validation lives in:
 
 - `tools/anticheat/replay.py`: Python reference model and fixture runner.
+- `tools/anticheat/openmp_runtime_smoke.py`: starts the pinned open.mp server and verifies that the staging gamemode loads.
 - `tests/test_replay.py`: unit tests for replay outcomes, schema/order checks and selected source contracts.
 - `tests/fixtures/`: version-1 synthetic JSON telemetry scenarios.
 - `.github/workflows/`: static audit, Python tests/replays and Pawn smoke builds.
@@ -53,6 +54,7 @@ Supporting validation lives in:
 - `docs/TELEMETRY_REPLAY.md`: fixture schema, semantics and local commands.
 - `docs/VALIDATION.md`: current validation evidence and release gates.
 - `docs/ROADMAP.md`: milestone tracking.
+- `examples/staging.pwn` and `examples/staging/`: isolated staging gamemode, private config, and manual player-test instructions. The adapter is volatile RAM only.
 
 ## Persistence contract: keep timestamps distinct
 
@@ -124,8 +126,15 @@ CI also performs the repository static audit and default/opt-in Pawn smoke compi
 6. Do not mark a feature production-ready because it compiles or passes synthetic replay.
 7. Update this document whenever merged PRs, public API contracts, known CI state, release gates, or project preferences change.
 
+## Current staging work
+
+The branch `feat/staging-integration-harness` adds an isolated staging gamemode with a bounded in-memory persistence adapter. It exercises account load/save using all three timestamps, reconnect restoration within one server process, lifecycle callback forwarding, and server-owned legal teleport/vehicle transitions. It is not a production auth or database adapter.
+
+CI compiles the sample, publishes an `ac-staging-package` artifact, then downloads the pinned open.mp Linux server release `v1.6.7.3218` and checks that the staging gamemode boot marker appears. A successful headless boot is not interactive runtime validation; no game client connects during that job.
+
 ## Next work
 
-1. Design staging-server integration with a neutral sample gamemode and a minimal persistence adapter.
-2. Collect representative desktop/mobile traces and legal-transition cases before tightening movement/vehicle/combat thresholds.
-3. Add only host-neutral optional adapters after their public API and failure behavior are tested.
+1. Complete the PR CI checks, including the open.mp headless boot smoke.
+2. Run the manual player test sequence in `examples/staging/README.md` on a private staging server with supported game clients.
+3. Collect representative desktop/mobile traces and legal-transition cases before tightening movement/vehicle/combat thresholds.
+4. Replace the volatile adapter only in a host-specific integration package after the host's real persistence contract is known.
