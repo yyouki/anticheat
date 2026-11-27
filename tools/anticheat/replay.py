@@ -405,6 +405,13 @@ class ReplayEngine:
             self.last_vehicle_id = 0
             return
 
+        # The outer OnPlayerUpdate gate uses the movement ping ceiling and
+        # resets the streak without invalidating the current vehicle ID.
+        if not self._network_reliable(event, int(self.c["AC_MOVEMENT_MAX_PING"])):
+            self.vehicle_over_limit_samples = 0
+            return
+
+        # The vehicle-specific gate is stricter and invalidates the vehicle baseline.
         if not self._network_reliable(event, int(self.c["AC_VEHICLE_MAX_PING"])):
             self.vehicle_over_limit_samples = 0
             self.last_vehicle_id = 0
