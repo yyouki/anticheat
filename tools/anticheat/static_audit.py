@@ -139,6 +139,9 @@ def main() -> int:
     assert "AC_IsMonitored(playerid)" in telemetry_capture
     assert "PLAYER_STATE_DRIVER" in telemetry_capture
     assert "AC_SAMPLE_INTERVAL_MS" in telemetry_capture
+    assert "AC_STAGE_MAX_VEHICLE_TRACE_SAMPLES" in telemetry_capture
+    assert "AC_StageVehicleTraceSampleCount++" in telemetry_capture
+    assert "Vehicle trace sample limit reached" in telemetry_capture
     assert "AC_VEHICLE_SPEED_FACTOR" in telemetry_capture
     assert "[AC-STAGE-VEHICLE] schema=1 actor=primary model=%d" in telemetry_capture
     assert "playerid=" not in telemetry_capture
