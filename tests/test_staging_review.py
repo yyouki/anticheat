@@ -126,6 +126,25 @@ class StagingReviewTests(unittest.TestCase):
         report = validate_review_record(data)
         self.assertEqual(report["record_status"], "invalid")
 
+    def test_wrong_json_value_types_are_rejected_without_crashing(self) -> None:
+        data = valid_record()
+        data["environment"]["client_platform"] = []
+        data["environment"]["network_profile"] = {}
+        data["observations"][0]["result"] = []
+        report = validate_review_record(data)
+        self.assertEqual(report["record_status"], "invalid")
+
+        data = valid_record()
+        data["observations"][0].update({
+            "result": "blocked",
+            "block_reason": [],
+        })
+        self.assertEqual(validate_review_record(data)["record_status"], "invalid")
+
+        data = valid_record()
+        data["observations"][0]["review_decision"] = {}
+        self.assertEqual(validate_review_record(data)["record_status"], "invalid")
+
     def test_invalid_commit_and_timezone_are_rejected(self) -> None:
         data = valid_record()
         data["environment"]["server_commit"] = "main"
