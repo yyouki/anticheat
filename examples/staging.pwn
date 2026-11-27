@@ -360,6 +360,36 @@ stock AC_StageRunPersistenceSelfTest(playerid)
     else
         failed++;
 
+    new interior_notice = AC_NotifyLegitimateInteriorChange(playerid);
+    if (AC_StageSelfTestCheck(
+        playerid,
+        interior_notice && AC_IsInGrace(playerid),
+        "interior change notification starts grace window"
+    ))
+        passed++;
+    else
+        failed++;
+
+    new world_notice = AC_NotifyLegitimateVirtualWorldChange(playerid);
+    if (AC_StageSelfTestCheck(
+        playerid,
+        world_notice && AC_IsInGrace(playerid),
+        "virtual world change notification starts grace window"
+    ))
+        passed++;
+    else
+        failed++;
+
+    new spectate_notice = AC_NotifyLegitimateSpectateChange(playerid);
+    if (AC_StageSelfTestCheck(
+        playerid,
+        spectate_notice && AC_IsInGrace(playerid),
+        "spectate change notification starts grace window"
+    ))
+        passed++;
+    else
+        failed++;
+
     new vehicle_notice = AC_NotifyLegitimateVehicleChange(playerid);
     if (AC_StageSelfTestCheck(playerid, vehicle_notice != 0, "vehicle transition notification accepted"))
         passed++;
@@ -495,7 +525,7 @@ public OnPlayerCommandText(playerid, cmdtext[])
         SendClientMessage(playerid, 0xE05A5AFF, "Anti-Cheat staging commands:");
         SendClientMessage(playerid, 0xD8D8D8FF, "/acstageauth <accountid> - load a synthetic test account");
         SendClientMessage(playerid, 0xD8D8D8FF, "/acstageinfo - show monitoring and score state");
-        SendClientMessage(playerid, 0xD8D8D8FF, "/acstagetest - run session and persistence self-tests");
+        SendClientMessage(playerid, 0xD8D8D8FF, "/acstagetest - run session, persistence and transition self-tests");
         SendClientMessage(playerid, 0xD8D8D8FF, "/acstageevidence - show current evidence records");
         SendClientMessage(playerid, 0xD8D8D8FF, "/acstagetoggle - enable or disable monitoring");
         SendClientMessage(playerid, 0xD8D8D8FF, "/acstagesave - save to the temporary memory adapter");

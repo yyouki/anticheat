@@ -85,8 +85,52 @@ class TelemetryReplayTests(unittest.TestCase):
         self.assertIn("persistence callback saves score, strikes and cooldown timestamp", staging)
         self.assertIn("saved state restored after simulated session reconnect", staging)
         self.assertIn("original synthetic account restored", staging)
+        self.assertIn("interior change notification starts grace window", staging)
+        self.assertIn("virtual world change notification starts grace window", staging)
+        self.assertIn("spectate change notification starts grace window", staging)
         self.assertIn("real game client remains connected", guide)
         self.assertIn("2000000000", guide)
+
+    def test_legal_transition_helpers_validate_and_share_grace_reset(self) -> None:
+        core = (ROOT / "include" / "ac" / "core.inc").read_text(encoding="utf-8")
+        integration = (ROOT / "docs" / "INTEGRATION.md").read_text(encoding="utf-8")
+
+        def pawn_stock_body(name: str) -> str:
+            # Match nested Pawn blocks by brace depth instead of a fragile regex.
+            start = core.index(f"stock {name}(")
+            opening = core.index("{", start)
+            depth = 0
+            for index in range(opening, len(core)):
+                if core[index] == "{":
+                    depth += 1
+                elif core[index] == "}":
+                    depth -= 1
+                    if depth == 0:
+                        return core[opening + 1:index]
+            self.fail(f"unterminated Pawn stock function: {name}")
+
+        state_change = pawn_stock_body("AC_NotifyLegitimateStateChange")
+        self.assertIn("AC_IsValidPlayerId(playerid)", state_change)
+        self.assertIn("IsPlayerConnected(playerid)", state_change)
+        self.assertIn("AC_NotifyLegitimateTeleport(playerid, milliseconds)", state_change)
+
+        helpers = (
+            "AC_NotifyLegitimateInteriorChange",
+            "AC_NotifyLegitimateVirtualWorldChange",
+            "AC_NotifyLegitimateSpectateChange",
+        )
+        for helper in helpers:
+            with self.subTest(helper=helper):
+                body = pawn_stock_body(helper)
+                self.assertIn("AC_IsValidPlayerId(playerid)", body)
+                self.assertIn("IsPlayerConnected(playerid)", body)
+                self.assertIn("AC_NotifyLegitimateStateChange(playerid, milliseconds)", body)
+                self.assertIn(helper, integration)
+
+        self.assertIn("SetPlayerInterior", integration)
+        self.assertIn("SetPlayerVirtualWorld", integration)
+        self.assertIn("TogglePlayerSpectating", integration)
+        self.assertIn("Only server-controlled legal actions", integration)
 
     def test_openmp_runtime_smoke_script_checks_boot_and_stops_server(self) -> None:
         script = (ROOT / "tools" / "anticheat" / "openmp_runtime_smoke.py").read_text(

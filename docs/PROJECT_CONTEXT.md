@@ -90,6 +90,11 @@ Always use a session token and account key to reject stale asynchronous loads an
   - PR: https://github.com/yyouki/anticheat/pull/4
   - Merge commit: `c0591531c02dc7829e5b0964081f8d177c2d100b`.
   - Post-merge Actions run #46 (`45951716621`) passed audit, Python tests/replay, all three Pawn compile targets, artifact upload, and headless open.mp boot.
+- PR #5, staging persistence and session self-tests, merged to `main`.
+  - PR: https://github.com/yyouki/anticheat/pull/5
+  - Merge commit: `60a9b4d080034be41613959c369c8af1fcdef8d0`.
+  - PR head `345f4cd5a9743c82a47b9c13706d0cb9f039b70f` passed Actions run #51 (`45955418806`); post-merge `main` run #52 (`45956905920`) passed all jobs.
+  - The `ac-staging-package` artifact from post-merge run #52 is ID `15178982257`.
 - PR #3, replay CI repair and durable project context, merged to `main`.
   - PR: https://github.com/yyouki/anticheat/pull/3
   - Merge commit: `5bf1443a87ec132ba6d93655b45f4b89427fa2e8`.
@@ -132,26 +137,21 @@ CI also performs the repository static audit and default/opt-in Pawn smoke compi
 
 ## Current staging work and verified CI
 
-- PR #4: [Add open.mp staging integration harness](https://github.com/yyouki/anticheat/pull/4).
-- Branch: `feat/staging-integration-harness`.
-- Verified head commit: `b830c90509c38e64da977b34e664c4da75854a6b`.
-- GitHub Actions run #43 (`45949652586`) passed static audit (35 required files), 7 Python unit tests, all 10 telemetry fixtures, default/feature-gate/staging Pawn compiles, artifact upload, and headless open.mp boot.
-- The staging AMX is published as the `ac-staging-package` artifact (ID `15176187949`).
-- The open.mp server smoke uses the official Linux x86 release `v1.6.7.3218`, verifies its SHA-256, and confirms that the staging gamemode initialization marker is logged.
-- This is a headless process/gamemode-load check only. It does not connect a player client or establish detector accuracy.
-- Persistence in the sample is RAM-only, bounded to `MAX_PLAYERS` test accounts, and lost after server restart. Do not use it in production.
+- PR #4: [Add open.mp staging integration harness](https://github.com/yyouki/anticheat/pull/4), merged as `c0591531c02dc7829e5b0964081f8d177c2d100b`.
+- Its post-merge Actions run #46 (`45951716621`) passed static audit, Python tests/replay, all three Pawn compile targets, staging artifact upload, and pinned open.mp headless boot.
+- PR #5: [Add staging persistence and session self-tests](https://github.com/yyouki/anticheat/pull/5), merged as `60a9b4d080034be41613959c369c8af1fcdef8d0`.
+- PR #5 final head `345f4cd5a9743c82a47b9c13706d0cb9f039b70f` passed Actions run #51 (`45955418806`); post-merge `main` run #52 (`45956905920`) also passed static audit, 8 Python unit tests, all 10 fixtures, all three Pawn compile targets, artifact upload, and pinned open.mp headless boot.
+- Latest merged staging artifact: `ac-staging-package`, ID `15178982257`.
+- The harness and `/acstagetest` use a bounded RAM-only synthetic persistence adapter. The self-test simulates framework lifecycle reset while a client remains connected; it is not a real network reconnect and does not prove client movement detector accuracy.
 
-## Current follow-up: staging self-test
+## Current implementation focus
 
-PR #5: [Add staging persistence and session self-tests](https://github.com/yyouki/anticheat/pull/5), branch `test/staging-persistence-selftest`. The self-test implementation is in commit `ff9a1aa715e6ae52228ef7ab5d3698fe08eab3cb`; the latest PR head is `4f28ec393b65c382a47b9c13706d0cb9f039b70f`. Latest Actions run #49 (`45952346617`) passed audit, 8 Python unit tests, all 10 fixtures, all three Pawn compile targets, staging artifact upload (ID `15177417527`), and pinned open.mp headless boot. The `/acstagetest` command is compiled and source-contract checked, but still requires a connected game client to execute.
+PR #6, [Add explicit legal transition notification hooks](https://github.com/yyouki/anticheat/pull/6), is open on branch `feat/legal-transition-hooks`. It adds explicit notifications for server-owned interior, virtual-world, and spectating transitions. The helpers validate the player and share the conservative sampling/grace reset path; do not treat PR #6 as merged until its merge is verified. Its tested head `5cde5fa8b368ae93f31794f6a346b768489eaa03` passed Actions run #54 (`45957558835`): 9 Python unit tests, all 10 telemetry fixtures, static audit, three Pawn compile targets, staging artifact upload (ID `15178978161`), and pinned open.mp headless boot. The self-test hooks are compiled/source-checked; live player transition checks remain manual.
 
-The added `/acstagetest` command checks stale session-token rejection, account-ID mismatch rejection, duplicate account-load rejection, independent restoration of `last_strike_at`, grace notification, persistence callback save, and restoration after simulating the framework disconnect/connect reset path while the game client remains connected. It uses reserved synthetic account IDs beginning at `2000000000`, saves the current synthetic account first, and restores it at the end.
+## Remaining release gates
 
-CI compiles this command and source-contract tests cover its assertions, but the headless runtime job does not connect a client or issue `/acstagetest`. Run the command on a private staging server with a real connected client. It is not a real network reconnect and does not test client movement synchronization. The manual reconnect and live-client false-positive checks remain separate.
-
-## Next work
-
-1. Install the `ac-staging-package` artifact on an isolated private open.mp server and follow `examples/staging/README.md` with supported game clients.
-2. Record outcomes for normal movement, legal teleport, vehicle entry/exit, reconnect persistence, evidence display, and review-state reset.
-3. Collect representative desktop/mobile traces and legal-transition cases before tightening movement/vehicle/combat thresholds.
-4. Replace the volatile adapter only in a host-specific integration package after the host's real persistence contract is known.
+1. Run `/acstagetest` on an isolated private open.mp server with an actual connected test client.
+2. Perform real disconnect/reconnect tests and normal gameplay on each supported desktop/Android client.
+3. Record legal teleports, interior/world/spectate changes, vehicle entry/exit, and false-positive outcomes.
+4. Benchmark runtime cost and review adversarial traces before changing detector thresholds.
+5. Replace the sample RAM adapter only in a host-specific integration package with a known persistence contract.

@@ -31,18 +31,40 @@ This headless boot check proves that the server process can start and load the s
 
 PR #4 was merged to `main` as commit `c0591531c02dc7829e5b0964081f8d177c2d100b`. Post-merge run #46 (`45951716621`) passed static audit, Python tests/replay, all three Pawn compile targets, artifact upload, and the headless open.mp boot.
 
-PR #5 adds the in-server `/acstagetest` command. Its implementation commit is `ff9a1aa715e6ae52228ef7ab5d3698fe08eab3cb`; the latest PR head `4f28ec393b65c382a47b9c13706d0cb9f039b70f` passed run #49 (`45952346617`):
+PR #5 adds the in-server `/acstagetest` command. Its final PR head `345f4cd5a9743c82a47b9c13706d0cb9f039b70f` passed run #51 (`45955418806`):
 
 - Static repository audit: PASSED (35 required files).
 - Python unit tests: PASSED (8 tests).
 - Deterministic telemetry replay: PASSED (all 10 fixtures).
 - Default, opt-in feature-gate, and staging Pawn compiles: PASSED without Pawn compiler diagnostics.
-- Staging package upload: PASSED (artifact ID `15177417527`).
+- Staging package upload: PASSED (artifact ID `15178342714`).
 - Pinned open.mp `v1.6.7.3218` headless boot: PASSED.
 
 The `/acstagetest` command itself is compiled and source-contract checked in CI but is not invoked by the headless job because that job does not connect a game client. Its in-server runtime assertions still need to be run on a private staging server by connecting a player and issuing the command. The command simulates framework session reset functions; it does not replace a real network reconnect.
 
+PR #5 was merged to `main` as `60a9b4d080034be41613959c369c8af1fcdef8d0`. Post-merge Actions run #52 (`45956905920`) completed successfully on that commit:
 
+- Static repository audit: PASSED (35 required files).
+- Python unit tests: PASSED (8 tests).
+- Deterministic telemetry replay: PASSED (all 10 fixtures).
+- Default, opt-in feature-gate, and staging Pawn compiles: PASSED.
+- Staging package: uploaded as `ac-staging-package` (artifact ID `15178982257`).
+- Pinned open.mp `v1.6.7.3218` headless boot: PASSED.
+
+This remains a headless gamemode-load result. It does not execute `/acstagetest` or connect a game client.
+
+
+
+PR #6 adds explicit server-owned interior, virtual-world, and spectating notifications. Its tested head `5cde5fa8b368ae93f31794f6a346b768489eaa03` passed GitHub Actions run #54 (`45957558835`):
+
+- Static repository audit: PASSED (35 required files).
+- Python unit tests: PASSED (9 tests).
+- Deterministic telemetry replay: PASSED (all 10 fixtures).
+- Default, opt-in feature-gate, and staging Pawn compiles: PASSED.
+- Staging package upload: PASSED (`ac-staging-package`, artifact ID `15178978161`).
+- Pinned open.mp `v1.6.7.3218` headless boot: PASSED.
+
+These checks verify compilation, source contracts, and gamemode startup. They do not execute `/acstagetest` with a connected client or prove that actual live interior/world/spectating transitions are false-positive free.
 
 ## Required release suite
 

@@ -15,7 +15,7 @@
 - [x] Add a neutral staging gamemode with a volatile persistence adapter and legal transition test commands.
 - [x] Compile and package the staging AMX; verify headless boot on pinned open.mp `v1.6.7.3218` in PR #4 run #43.
 - [x] Add an in-server self-test for stale/mismatched/duplicate loads, timestamp restoration, persistence save and simulated session reconnect.
-- [x] Verify the staging session/persistence self-test compiles and passes CI source-contract checks in PR #5 latest run #49 (the in-server command still needs an interactive client run).
+- [x] Verify the staging session/persistence self-test compiles and passes CI source-contract checks in PR #5 run #51 and post-merge `main` run #52 (the in-server command still needs an interactive client run).
 - [ ] Complete interactive staging tests with supported game clients, including false-positive review.
 
 ## Milestone 1 — investigation and host adapters
@@ -31,7 +31,7 @@
 ## Milestone 2 — detection coverage
 
 - [ ] Add model-aware vehicle envelopes from staging traces.
-- [ ] Add server action provenance helpers for all common legal transitions.
+- [x] Add explicit pre-action notifications for server-owned teleports, interior changes, virtual-world changes, spectating changes, spawn/death and vehicle transitions; retain a generic state-change helper for host-specific scripted transitions.
 - [ ] Add combat heuristics only after mobile/desktop false-positive evidence.
 - [ ] Add network packet-loss context only through a validated low-cost source.
 - [ ] Add explicit player-state anomaly evidence after defining legal state transitions.
