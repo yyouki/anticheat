@@ -261,12 +261,6 @@ Artifact `ac-staging-package`: ID `15197766625`, 45,753 bytes, SHA-256 `a434fccb
 
 Bound mode pairs each vehicle trace log with one schema-v2 review record and verifies the exact capture digest and structured staging event contract. It requires a clean vehicle scenario review, one approved vehicle model per capture, unique run IDs/digests, and common server/artifact/open.mp/client/network metadata. This proves local file-to-record consistency only. It does not authenticate log origin or verify that a human performed the scenarios. No live connected-client test or detector-threshold change was included in run #95.
 
+## PR #17 — measured staging vehicle sample intervals
 
-
-PR #16, [Bind vehicle trace summaries to staging review captures](https://github.com/yyouki/anticheat/pull/16), is open on `feat/bind-vehicle-traces-to-review-records`. Latest head `047aa601e1c04612dab8399988fdfc26d56dea05` passed workflow run #93 (`45997527879`): static audit, 90 Python unit tests, deterministic telemetry replay, all Pawn compile targets, staging artifact upload, and pinned open.mp headless boot. Artifact `ac-staging-package` ID `15196916230`, size 45,753 bytes, SHA-256 `be81fbd42bd1a63a810512c33ad19aad6184e758c99d8bc30ce4a952981198f3`.
-
-The report supports matching each local capture to one schema-v2 review record. Bound mode verifies the capture SHA-256 and staging transition contract, requires a clean vehicle-drive scenario review, one model per capture, unique run IDs/digests, and identical server/artifact/open.mp/client/network metadata. This proves file-to-record consistency only; it cannot authenticate log origin or prove that the human performed the scenario. Exploratory mode without review records remains explicitly unbound. No Pawn detector or threshold changes are included.
-
-## Next staging telemetry increment
-
-The staging collector currently emits one observation at most every 500 ms, but prior records do not include the observed interval between accepted samples. The next bounded change adds per-sample cadence metadata and descriptive interval summaries while retaining schema-1 log compatibility. This is collection diagnostics only: it must not change Pawn detector behavior, establish safe vehicle limits, or be presented as live-client validation.
+The PR #17 branch adds a per-observation `sample_interval_ms` field to vehicle telemetry schema 2. The first accepted sample in a capture records zero; later samples record elapsed time since the preceding accepted observation. The offline report retains schema-1 compatibility and emits report schema 3 with per-model interval distributions. These are collector-cadence diagnostics only; they are not detector inputs, client timing measurements, safe speed limits, or live-client validation.
