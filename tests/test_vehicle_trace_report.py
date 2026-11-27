@@ -139,6 +139,8 @@ class VehicleTraceReportTests(unittest.TestCase):
         self.assertIn("PLAYER_STATE_DRIVER", body)
         self.assertIn("AC_SAMPLE_INTERVAL_MS", body)
         self.assertIn("AC_VEHICLE_SPEED_FACTOR", body)
+        self.assertIn("AC_STAGE_MAX_VEHICLE_TRACE_SAMPLES", body)
+        self.assertIn("AC_StageVehicleTraceSampleCount++", body)
         self.assertIn("packet_loss_centi_pct = -1", body)
         self.assertIn(
             "[AC-STAGE-VEHICLE] schema=1 actor=primary model=%d",
@@ -188,6 +190,25 @@ class VehicleTraceReportTests(unittest.TestCase):
             payload = json.loads(output.getvalue())
             self.assertEqual(payload["sample_count"], 1)
             self.assertNotIn(directory, output.getvalue())
+
+    def test_cli_combines_multiple_logs_by_model(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            first = Path(directory) / "model-411.log"
+            second = Path(directory) / "model-560.log"
+            first.write_text(line(411, 1000, 40, 0) + "\\n", encoding="utf-8")
+            second.write_text(line(560, 2500, 70, -1) + "\\n", encoding="utf-8")
+            output = StringIO()
+            with patch(
+                "sys.argv",
+                ["vehicle_trace_report.py", "--log", str(first), "--log", str(second), "--json"],
+            ):
+                with redirect_stdout(output):
+                    exit_code = main()
+            self.assertEqual(exit_code, 0)
+            report = json.loads(output.getvalue())
+            self.assertEqual(report["sample_count"], 2)
+            self.assertEqual(set(report["models"]), {"411", "560"})
+            self.assertEqual(report["models"]["560"]["speed_kmh"]["max"], 25.0)
 
     def test_cli_rejects_symlink_input(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
