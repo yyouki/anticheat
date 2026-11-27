@@ -62,9 +62,37 @@ def _parse_record(payload: str, line_number: int) -> dict[str, str]:
 
     for name in INTEGER_FIELDS.intersection(fields):
         try:
-            int(fields[name], 10)
+            number = int(fields[name], 10)
         except ValueError as error:
             raise ValueError(f"line {line_number}: {name} must be an integer") from error
+        if number < 0:
+            raise ValueError(f"line {line_number}: {name} must not be negative")
+
+    if "reason" in fields and event != "run_abort":
+        raise ValueError(f"line {line_number}: reason is only valid for run_abort")
+    if "target" in fields and fields["target"] != "secondary":
+        raise ValueError(f"line {line_number}: target must use the secondary test role")
+
+    required_fields = {
+        "interior_enter": {"from", "to"},
+        "interior_exit": {"from", "to"},
+        "interior_callback": {"old", "new"},
+        "world_enter": {"from", "to"},
+        "world_exit": {"from", "to"},
+        "spectate_start": {"target"},
+        "evidence": {"category", "points", "ping"},
+        "review_marker": {"strikes"},
+    }.get(event, set())
+    missing = required_fields.difference(fields)
+    if missing:
+        raise ValueError(
+            f"line {line_number}: {event} missing required field(s): {', '.join(sorted(missing))}"
+        )
+
+    if event == "evidence" and fields["category"] not in {
+        "movement", "vehicle", "combat", "integrity", "state"
+    }:
+        raise ValueError(f"line {line_number}: unsupported evidence category")
     return fields
 
 
