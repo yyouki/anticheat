@@ -249,7 +249,9 @@ PR #15, [Add bounded staging vehicle telemetry traces](https://github.com/yyouki
 
 The staging collector records approved road-car model, quantized speed, ping, and optional fresh packet loss at up to 2 Hz and 3,600 samples per capture. The standard harness has no packet-loss provider. The report is descriptive only; no model-aware detector threshold was changed, and no real client trace has been collected.
 
-## Vehicle trace evidence binding — current work
+## PR #16 — vehicle trace evidence binding
 
-The next step extends `vehicle_trace_report.py` with an optional one-to-one pairing of `--log` and schema-v2 `--record` inputs. Bound mode checks each review record's exact capture SHA-256 and staging event contract, requires a clean vehicle-drive observation, and rejects mixed server/client/network metadata across captures. This binds local files to operator-entered metadata but does not authenticate log origin or prove scenario execution. Exploratory mode without review records remains explicitly unbound.
+PR #16, [Bind vehicle trace summaries to staging review captures](https://github.com/yyouki/anticheat/pull/16), is open on `feat/bind-vehicle-traces-to-review-records`. Head `dbd8dfc5bcad2ca18dff77cfc97845e24c794055` passed workflow run #92 (`45997360443`): static audit, 90 Python unit tests, deterministic telemetry replay, all Pawn compile targets, staging artifact upload, and pinned open.mp headless boot. Artifact `ac-staging-package` ID `15195659656`, size 45,753 bytes, SHA-256 `0669d424bb0f50aa9ed34e39ad8472a7c3f6dcd1eb5eefd5972f42ad9ca575f2`.
+
+The report supports matching each local capture to one schema-v2 review record. Bound mode verifies the capture SHA-256 and staging transition contract, requires a clean vehicle-drive scenario review, one model per capture, unique run IDs/digests, and identical server/artifact/open.mp/client/network metadata. This proves file-to-record consistency only; it cannot authenticate log origin or prove that the human performed the scenario. Exploratory mode without review records remains explicitly unbound. No Pawn detector or threshold changes are included.
 
