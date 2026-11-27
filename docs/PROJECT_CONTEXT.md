@@ -242,8 +242,14 @@ PR #12, [Add multi-run staging review summaries](https://github.com/yyouki/antic
 Schema-v2 staging review records require `environment.capture_sha256`. The local `staging_review_capture.py` command validates the structured event contract against the exact bounded file bytes, writes or verifies the SHA-256 binding, and never uploads the log. The batch validator rejects duplicate capture digests. This provides file-to-record consistency only: it does not authenticate log origin or prove a human executed each scenario.
 
 
-## PR #15 — staging vehicle telemetry traces
 
-PR #15 is open on `feat/staging-vehicle-telemetry-traces`, based on PR #14 merge commit `650fa4fb4eb1dc29ca54a276b6ec98c57657aa70`. Head `59f13bfff954cda534f6d5d5a15201f8218ded33` passed workflow run #86 (`45991708681`): static audit and 77 Python tests, default/feature-gate/staging Pawn compiles, staging artifact upload, and pinned open.mp headless boot. Artifact `ac-staging-package` ID `15192894648`, size 45,484 bytes, SHA-256 `dd97f0b151c1b513e7d784984529b9553573c3dbe9a71a44bea8ea5f9742f2db`.
+## PR #15 — bounded staging vehicle telemetry traces
 
-The PR does not change detector behavior or thresholds. It only collects approved road-car observations at up to 2 Hz and provides a local descriptive per-model summary. The default staging gamemode has no packet-loss provider; packet loss remains unknown unless a host adapter supplies it. No connected-client test or real vehicle trace has been run.
+PR #15, [Add bounded staging vehicle telemetry traces](https://github.com/yyouki/anticheat/pull/15), merged to `main` as `3437bca25682efb01c0bed559d510d9853c65074` on 2026-11-27. Post-merge workflow run #90 (`45996487757`) passed all three jobs: static audit/Python tests/replay, all Pawn compile targets and staging artifact upload, and pinned open.mp headless boot. Artifact `ac-staging-package` ID `15195404151`, size 45,484 bytes, SHA-256 `26edf768a6d41783ba20a977fc3161aa04a5787d6a7df98aa30ba35ad2770ea2`.
+
+The staging collector records approved road-car model, quantized speed, ping, and optional fresh packet loss at up to 2 Hz and 3,600 samples per capture. The standard harness has no packet-loss provider. The report is descriptive only; no model-aware detector threshold was changed, and no real client trace has been collected.
+
+## Vehicle trace evidence binding — current work
+
+The next step extends `vehicle_trace_report.py` with an optional one-to-one pairing of `--log` and schema-v2 `--record` inputs. Bound mode checks each review record's exact capture SHA-256 and staging event contract, requires a clean vehicle-drive observation, and rejects mixed server/client/network metadata across captures. This binds local files to operator-entered metadata but does not authenticate log origin or prove scenario execution. Exploratory mode without review records remains explicitly unbound.
+
