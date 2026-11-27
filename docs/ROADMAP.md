@@ -11,6 +11,7 @@
 - [x] Validate default and compile-only opt-in feature-gate builds with the pinned CI compiler and open.mp includes (GitHub Actions run #14 passed).
 - [x] Add defensive player-ID validation to per-player state, lifecycle, network and evidence helpers.
 - [x] Reject duplicate asynchronous account-load completions after the active session has already been loaded.
+- [x] Restore an active strike cooldown from the persisted strike-decay timestamp after reconnect.
 - [ ] Runtime and false-positive testing on staging server.
 
 ## Milestone 1 — investigation and host adapters
@@ -19,7 +20,8 @@
 - [x] Provide evidence, strike, persistence and administrative-reset callbacks.
 - [ ] Add tested adapters for common command processors as optional packages.
 - [ ] Add an optional durable evidence storage adapter with retention controls.
-- [ ] Add a replayable telemetry fixture format for regression tests.
+- [x] Add versioned synthetic telemetry fixtures and a deterministic Python reference replay.
+- [x] Add CI regression tests for movement grace, sustained anomalies, network suppressors, sampling resets, evidence correlation, and stale/duplicate account loads.
 
 ## Milestone 2 — detection coverage
 

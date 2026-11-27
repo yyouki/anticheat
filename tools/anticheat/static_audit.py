@@ -22,6 +22,19 @@ REQUIRED = [
     "include/ac/admin.inc",
     "examples/smoke.pwn",
     "examples/feature_gate_smoke.pwn",
+    "tools/anticheat/replay.py",
+    "tests/test_replay.py",
+    "tests/fixtures/legal_movement_during_and_after_grace.json",
+    "tests/fixtures/sustained_onfoot_speed_anomaly.json",
+    "tests/fixtures/network_quality_resets_movement_streak.json",
+    "tests/fixtures/sample_gap_and_world_transition_reset.json",
+    "tests/fixtures/single_category_threshold_does_not_strike.json",
+    "tests/fixtures/cross_category_evidence_can_create_review_strike.json",
+    "tests/fixtures/expired_packet_loss_measurement_does_not_suppress.json",
+    "tests/fixtures/stale_and_duplicate_account_loads_are_rejected.json",
+    "tests/fixtures/strike_cooldown_survives_reconnect.json",
+    "tests/fixtures/expired_strike_cooldown_not_restarted_by_decay_timestamp.json",
+    "docs/TELEMETRY_REPLAY.md",
     "docs/ARCHITECTURE.md",
     "docs/INTEGRATION.md",
     "docs/VALIDATION.md",
@@ -110,9 +123,19 @@ def main() -> int:
     ), sources)
     require_player_id_guards("include/ac/player_state.inc", ("AC_OnPlayerDeath",), sources)
     require_player_id_guards("include/ac/integrity.inc", ("AC_GetClientIntegrityStatus",), sources)
+    for admin_function in ("AC_AdminStatus", "AC_AdminEvidence", "AC_AdminClear"):
+        admin_body = function_body(sources["include/ac/admin.inc"], admin_function)
+        assert "AC_IsValidPlayerId(adminid)" in admin_body
+        assert "AC_IsValidPlayerId(targetid)" in admin_body
+    require_player_id_guards("include/ac/vehicle.inc", ("AC_OnVehicleSample",), sources)
+    require_player_id_guards("include/ac/movement.inc", ("AC_UpdateMovementBaseline",), sources)
     assert "|| AC_PlayerLoaded[playerid])" in function_body(
         sources["include/ac/core.inc"], "AC_ApplyPersistentState"
     ), "duplicate account-load completions must be rejected"
+    assert "AC_LastStrikeAt[playerid] = last_strike_at" in function_body(
+        sources["include/ac/core.inc"], "AC_ApplyPersistentState"
+    ), "active strike cooldown must be restored from its own persisted timestamp"
+    assert '"AC_OnPersistenceSave", "ddddddd"' in sources["include/ac/core.inc"]
 
     # The library must remain framework/database independent.
     forbidden = ("PlayerData[", "AccountData[", "mysql_tquery", "SQL_Connect", "PawnPlus", "pp-hooks")
@@ -127,6 +150,10 @@ def main() -> int:
     # Admin helpers intentionally do not decide permissions.
     assert "MUST" in sources["include/ac/admin.inc"]
     assert "permission" in sources["docs/INTEGRATION.md"].lower()
+
+    assert "schema_version" in sources["docs/TELEMETRY_REPLAY.md"]
+    assert "reference model" in sources["tools/anticheat/replay.py"]
+    assert "unittest" in sources["tests/test_replay.py"]
 
     print(f"Anti-cheat static audit passed ({len(REQUIRED)} required files).")
     return 0

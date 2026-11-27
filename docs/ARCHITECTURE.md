@@ -63,7 +63,7 @@ AC_ENABLE_CLIENT_MEMORY_CHECKS is disabled. No generic SendClientCheck address/o
 - A strike requires a high score, at least one other recently active detector family, and a strike cooldown.
 - Suspicion decays by one point every five minutes.
 - Strikes decay by one every six hours, beginning from the most recent strike.
-- The core does not store a database schema. The host receives AC_OnPersistenceSave and decides how to store account-keyed state.
+- The core does not store a database schema. The host receives AC_OnPersistenceSave and decides how to store account-keyed state, including the distinct strike-decay and last-strike timestamps needed to restore cooldown semantics after reconnect.
 - Evidence details are session-local in v1. Hosts needing durable forensic history should implement AC_OnEvidence persistence with retention and privacy controls.
 
 ## Admin tooling

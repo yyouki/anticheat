@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "scenario_id": "network_quality_resets_movement_streak",
+  "description": "High packet loss, the 65535 ping sentinel, and over-limit ping suppress and reset movement sampling.",
+  "events": [
+    {
+      "type": "connect",
+      "at_ms": 100
+    },
+    {
+      "type": "load_begin",
+      "at_ms": 200,
+      "account_id": 1003
+    },
+    {
+      "type": "load_complete",
+      "at_ms": 300,
+      "account_id": 1003,
+      "session_token": 2
+    },
+    {
+      "type": "movement_sample",
+      "at_ms": 1000,
+      "x": 0,
+      "y": 0,
+      "ping": 50,
+      "packet_loss": 0
+    },
+    {
+      "type": "movement_sample",
+      "at_ms": 1500,
+      "x": 20,
+      "y": 0,
+      "ping": 50,
+      "packet_loss": 0
+    },
+    {
+      "type": "movement_sample",
+      "at_ms": 2000,
+      "x": 40,
+      "y": 0,
+      "ping": 50,
+      "packet_loss": 0
+    },
+    {
+      "type": "movement_sample",
+      "at_ms": 2500,
+      "x": 60,
+      "y": 0,
+      "ping": 50,
+      "packet_loss": 20
+    },
+    {
+      "type": "movement_sample",
+      "at_ms": 3000,
+      "x": 80,
+      "y": 0,
+      "ping": 50,
+      "packet_loss": 0
+    },
+    {
+      "type": "movement_sample",
+      "at_ms": 3500,
+      "x": 100,
+      "y": 0,
+      "ping": 50,
+      "packet_loss": 0
+    },
+    {
+      "type": "movement_sample",
+      "at_ms": 4000,
+      "x": 120,
+      "y": 0,
+      "ping": 50,
+      "packet_loss": 0
+    },
+    {
+      "type": "movement_sample",
+      "at_ms": 4500,
+      "x": 140,
+      "y": 0,
+      "ping": 65535,
+      "packet_loss": 0
+    },
+    {
+      "type": "movement_sample",
+      "at_ms": 5000,
+      "x": 1000,
+      "y": 0,
+      "ping": 451,
+      "packet_loss": 0
+    },
+    {
+      "type": "movement_sample",
+      "at_ms": 5500,
+      "x": 1010,
+      "y": 0,
+      "ping": 50,
+      "packet_loss": 0
+    }
+  ],
+  "expected": {
+    "evidence_count": 0,
+    "evidence_categories": [],
+    "movement_evidence": 0,
+    "score": 0,
+    "strikes": 0,
+    "loaded": true,
+    "account_id": 1003,
+    "session_token": 2,
+    "load_completion_results": [
+      true
+    ]
+  }
+}

@@ -7,7 +7,8 @@
 // verify the administrator's permission before calling them.
 stock AC_AdminStatus(adminid, targetid)
 {
-    if (!IsPlayerConnected(adminid) || !IsPlayerConnected(targetid) || !AC_PlayerLoaded[targetid])
+    if (!AC_IsValidPlayerId(adminid) || !AC_IsValidPlayerId(targetid)
+        || !IsPlayerConnected(adminid) || !IsPlayerConnected(targetid) || !AC_PlayerLoaded[targetid])
         return 0;
 
     new message[144];
@@ -24,7 +25,8 @@ stock AC_AdminStatus(adminid, targetid)
 
 stock AC_AdminEvidence(adminid, targetid)
 {
-    if (!IsPlayerConnected(adminid) || !IsPlayerConnected(targetid) || !AC_PlayerLoaded[targetid])
+    if (!AC_IsValidPlayerId(adminid) || !AC_IsValidPlayerId(targetid)
+        || !IsPlayerConnected(adminid) || !IsPlayerConnected(targetid) || !AC_PlayerLoaded[targetid])
         return 0;
 
     new message[192];
@@ -53,7 +55,8 @@ stock AC_AdminEvidence(adminid, targetid)
 
 stock AC_AdminClear(adminid, targetid)
 {
-    if (!IsPlayerConnected(adminid) || !IsPlayerConnected(targetid))
+    if (!AC_IsValidPlayerId(adminid) || !AC_IsValidPlayerId(targetid)
+        || !IsPlayerConnected(adminid) || !IsPlayerConnected(targetid))
         return 0;
 
     new accountid = AC_AccountKey[targetid];

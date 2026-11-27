@@ -5,6 +5,8 @@
 
 stock AC_UpdateMovementBaseline(playerid, Float:x, Float:y, PLAYER_STATE:player_state, tick)
 {
+    if (!AC_IsValidPlayerId(playerid))
+        return 0;
     AC_LastMovementX[playerid] = x;
     AC_LastMovementY[playerid] = y;
     AC_LastMovementTick[playerid] = tick;

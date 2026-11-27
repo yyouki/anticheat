@@ -16,6 +16,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: Run repository audit
         run: python3 tools/anticheat/static_audit.py
+      - name: Run deterministic telemetry contract tests
+        run: python3 -m unittest discover -s tests -v
+      - name: Replay telemetry fixtures
+        run: python3 tools/anticheat/replay.py
 
   pawn-compile:
     runs-on: ubuntu-latest
