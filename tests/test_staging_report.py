@@ -72,6 +72,43 @@ class StagingReportTests(unittest.TestCase):
         self.assertFalse(report.passed)
         self.assertTrue(any("world_enter must occur before world_exit" in error for error in report.errors))
 
+    def test_duplicate_fields_are_rejected(self) -> None:
+        lines = (FIXTURES / "staging_acceptance_success.log").read_text(encoding="utf-8").splitlines()
+        lines.insert(1, "[AC-STAGE-EVENT] schema=1 event=evidence actor=primary category=movement category=vehicle points=1 ping=50")
+        report = parse_staging_log(lines)
+        self.assertFalse(report.passed)
+        self.assertTrue(any("duplicate field category" in error for error in report.errors))
+
+    def test_negative_counters_are_rejected(self) -> None:
+        lines = (FIXTURES / "staging_acceptance_success.log").read_text(encoding="utf-8").splitlines()
+        lines.insert(1, "[AC-STAGE-EVENT] schema=1 event=evidence actor=primary category=movement points=-1 ping=50")
+        report = parse_staging_log(lines)
+        self.assertFalse(report.passed)
+        self.assertTrue(any("points must not be negative" in error for error in report.errors))
+
+    def test_unknown_spectate_target_role_is_rejected(self) -> None:
+        lines = (FIXTURES / "staging_acceptance_success.log").read_text(encoding="utf-8").splitlines()
+        index = next(i for i, line in enumerate(lines) if "event=spectate_start" in line)
+        lines[index] = lines[index].replace("target=secondary", "target=playerid7")
+        report = parse_staging_log(lines)
+        self.assertFalse(report.passed)
+        self.assertTrue(any("target must use the secondary test role" in error for error in report.errors))
+
+    def test_reason_is_rejected_on_non_abort_event(self) -> None:
+        lines = (FIXTURES / "staging_acceptance_success.log").read_text(encoding="utf-8").splitlines()
+        lines.insert(1, "[AC-STAGE-EVENT] schema=1 event=teleport actor=primary reason=owner_disconnect")
+        report = parse_staging_log(lines)
+        self.assertFalse(report.passed)
+        self.assertTrue(any("reason is only valid for run_abort" in error for error in report.errors))
+
+    def test_required_transition_fields_are_enforced(self) -> None:
+        lines = (FIXTURES / "staging_acceptance_success.log").read_text(encoding="utf-8").splitlines()
+        index = next(i for i, line in enumerate(lines) if "event=world_enter" in line)
+        lines[index] = "[AC-STAGE-EVENT] schema=1 event=world_enter actor=primary from=0"
+        report = parse_staging_log(lines)
+        self.assertFalse(report.passed)
+        self.assertTrue(any("world_enter missing required field" in error for error in report.errors))
+
     def test_source_registers_capture_commands_and_keeps_records_pseudonymous(self) -> None:
         staging = (ROOT / "examples" / "staging.pwn").read_text(encoding="utf-8")
         self.assertIn('"/acstagelogbegin"', staging)
