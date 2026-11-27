@@ -64,7 +64,8 @@ class TelemetryReplayTests(unittest.TestCase):
         self.assertIn("other_mask != 0", evidence)
         self.assertIn("AC_SCORE_STRIKE_THRESHOLD", evidence)
         self.assertIn("|| AC_PlayerLoaded[playerid])", core)
-        self.assertIn("AC_LastStrikeAt[playerid] = strike_decay_at", core)
+        self.assertIn("AC_LastStrikeAt[playerid] = last_strike_at", core)
+        self.assertIn('"AC_OnPersistenceSave", "ddddddd"', core)
 
 
 if __name__ == "__main__":
