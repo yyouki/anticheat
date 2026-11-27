@@ -9,6 +9,7 @@
 - Desktop/mobile false-positive suite: not run.
 - Performance measurements: not run.
 - Independent adversarial review: not run.
+- Deterministic telemetry contract replays: pending first CI run. These are reference-model tests, not Pawn runtime tests.
 
 The compile result proves source/include compatibility for the smoke gamemode. It does not prove runtime correctness, detector accuracy, resistance to bypasses, or production performance.
 
