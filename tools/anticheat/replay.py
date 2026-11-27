@@ -51,12 +51,6 @@ CONSTANT_NAMES = (
 # Keep constants tied to the Pawn include that owns their definitions.
 CONSTANT_SOURCE_FILES = {
     "AC_NETWORK_QUALITY_TTL_MS": "network.inc",
-    "AC_VEHICLE_MAX_PING": "vehicle.inc",
-    "AC_VEHICLE_MAX_SPEED_KMH": "vehicle.inc",
-    "AC_VEHICLE_PING_TOLERANCE": "vehicle.inc",
-    "AC_VEHICLE_MAX_PING_TOLERANCE": "vehicle.inc",
-    "AC_VEHICLE_REQUIRED_SAMPLES": "vehicle.inc",
-    "AC_VEHICLE_SPEED_FACTOR": "vehicle.inc",
 }
 
 
