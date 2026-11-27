@@ -87,6 +87,17 @@ PR #7 adds live staging commands for interior, virtual-world, and spectating tra
 
 The headless job does not connect players or issue staging commands. The interior, virtual-world, and spectating commands therefore still require interactive validation with supported game clients. Spectating requires a second connected player. The staging adapter remains RAM-only.
 
+PR #7 was merged to `main` as `da1464dbbe1c499eac074a5a7aa5d8d621b95bc4`. Post-merge GitHub Actions run #59 (`45962033428`) completed successfully:
+
+- Static audit and deterministic Python tests/replay: PASSED.
+- Default, opt-in feature-gate, and staging Pawn compiles: PASSED.
+- Staging package upload: PASSED (`ac-staging-package`, artifact ID `15180944000`).
+- Pinned open.mp `v1.6.7.3218` headless boot: PASSED.
+
+The headless run still did not connect game clients or execute staging commands.
+
+The next staging increment adds pseudonymous structured events and an offline report checker. A successful report requires the expected teleport, vehicle, interior callback, virtual-world, and spectating sequence with no evidence/review markers in the bounded capture. This tool is intended to make a future real-client test auditable; the synthetic success fixture is only a parser regression test and is not runtime evidence.
+
 ## Required release suite
 
 | Area | Required cases |
