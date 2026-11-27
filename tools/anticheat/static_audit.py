@@ -33,6 +33,7 @@ REQUIRED = [
     "tests/fixtures/expired_packet_loss_measurement_does_not_suppress.json",
     "tests/fixtures/stale_and_duplicate_account_loads_are_rejected.json",
     "tests/fixtures/strike_cooldown_survives_reconnect.json",
+    "tests/fixtures/expired_strike_cooldown_not_restarted_by_decay_timestamp.json",
     "docs/TELEMETRY_REPLAY.md",
     "docs/ARCHITECTURE.md",
     "docs/INTEGRATION.md",
