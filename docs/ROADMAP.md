@@ -8,7 +8,9 @@
 - [x] Implement evidence ring, category correlation, score/strike policy and decay.
 - [x] Implement conservative movement and driver-only vehicle sampling.
 - [x] Keep memory scans and combat cadence scoring disabled by default.
-- [x] Validate module compilation with the pinned CI compiler and open.mp includes (smoke AMX build passed).
+- [x] Validate default and compile-only opt-in feature-gate builds with the pinned CI compiler and open.mp includes (GitHub Actions run #14 passed).
+- [x] Add defensive player-ID validation to per-player state, lifecycle, network and evidence helpers.
+- [x] Reject duplicate asynchronous account-load completions after the active session has already been loaded.
 - [ ] Runtime and false-positive testing on staging server.
 
 ## Milestone 1 — investigation and host adapters
