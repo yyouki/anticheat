@@ -251,7 +251,22 @@ The staging collector records approved road-car model, quantized speed, ping, an
 
 ## PR #16 — vehicle trace evidence binding
 
+PR #16, [Bind vehicle trace summaries to staging review captures](https://github.com/yyouki/anticheat/pull/16), merged to `main` as `849e2defb16ea908cb7fa54ceb393071a495069f` on 2026-11-27. Post-merge Actions run #95 (`45999875860`) passed all three jobs on that exact merge commit:
+
+- Static repository audit, 90 Python unit tests, and deterministic telemetry replay.
+- Default, opt-in feature-gate, and staging Pawn compile targets.
+- Pinned open.mp `v1.6.7.3218` headless runtime boot.
+
+Artifact `ac-staging-package`: ID `15197766625`, 45,753 bytes, SHA-256 `a434fccb84166145e243c139ea369d041df98c8fabef9310a7f397833a4e4119`.
+
+Bound mode pairs each vehicle trace log with one schema-v2 review record and verifies the exact capture digest and structured staging event contract. It requires a clean vehicle scenario review, one approved vehicle model per capture, unique run IDs/digests, and common server/artifact/open.mp/client/network metadata. This proves local file-to-record consistency only. It does not authenticate log origin or verify that a human performed the scenarios. No live connected-client test or detector-threshold change was included in run #95.
+
+
+
 PR #16, [Bind vehicle trace summaries to staging review captures](https://github.com/yyouki/anticheat/pull/16), is open on `feat/bind-vehicle-traces-to-review-records`. Latest head `047aa601e1c04612dab8399988fdfc26d56dea05` passed workflow run #93 (`45997527879`): static audit, 90 Python unit tests, deterministic telemetry replay, all Pawn compile targets, staging artifact upload, and pinned open.mp headless boot. Artifact `ac-staging-package` ID `15196916230`, size 45,753 bytes, SHA-256 `be81fbd42bd1a63a810512c33ad19aad6184e758c99d8bc30ce4a952981198f3`.
 
 The report supports matching each local capture to one schema-v2 review record. Bound mode verifies the capture SHA-256 and staging transition contract, requires a clean vehicle-drive scenario review, one model per capture, unique run IDs/digests, and identical server/artifact/open.mp/client/network metadata. This proves file-to-record consistency only; it cannot authenticate log origin or prove that the human performed the scenario. Exploratory mode without review records remains explicitly unbound. No Pawn detector or threshold changes are included.
 
+## Next staging telemetry increment
+
+The staging collector currently emits one observation at most every 500 ms, but prior records do not include the observed interval between accepted samples. The next bounded change adds per-sample cadence metadata and descriptive interval summaries while retaining schema-1 log compatibility. This is collection diagnostics only: it must not change Pawn detector behavior, establish safe vehicle limits, or be presented as live-client validation.
