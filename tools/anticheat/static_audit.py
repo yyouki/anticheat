@@ -27,6 +27,7 @@ REQUIRED = [
     "examples/staging/config.json",
     "examples/staging/README.md",
     "tools/anticheat/replay.py",
+    "tools/anticheat/openmp_runtime_smoke.py",
     "tests/test_replay.py",
     "tests/fixtures/legal_movement_during_and_after_grace.json",
     "tests/fixtures/sustained_onfoot_speed_anomaly.json",
@@ -184,7 +185,15 @@ def main() -> int:
     assert staging_config.get("pawn", {}).get("main_scripts") == ["ac-staging 1"]
     assert "lost when the server process restarts" in staging_readme
     assert "ac-staging.amx" in read(".github/workflows/ci.yml")
-    assert "actions/upload-artifact@v4" in read(".github/workflows/ci.yml")
+    workflow = read(".github/workflows/ci.yml")
+    assert "actions/upload-artifact@v4" in workflow
+    assert "openmp-runtime-smoke" in workflow
+    assert "actions/download-artifact@v4" in workflow
+    assert "v1.6.7.3218" in workflow
+
+    runtime_smoke = sources["tools/anticheat/openmp_runtime_smoke.py"]
+    assert "[AC-STAGE] Staging gamemode initialized." in runtime_smoke
+    assert "stop_server(process)" in runtime_smoke
 
     print(f"Anti-cheat static audit passed ({len(REQUIRED)} required files).")
     return 0
