@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "scenario_id": "sustained_onfoot_speed_anomaly",
+  "description": "Three consecutive valid samples over the source-derived speed envelope emit one movement evidence record.",
+  "events": [
+    {
+      "type": "movement_sample",
+      "at_ms": 1000,
+      "x": 0,
+      "y": 0,
+      "ping": 50,
+      "packet_loss": 0
+    },
+    {
+      "type": "movement_sample",
+      "at_ms": 1500,
+      "x": 20,
+      "y": 0,
+      "ping": 50,
+      "packet_loss": 0
+    },
+    {
+      "type": "movement_sample",
+      "at_ms": 2000,
+      "x": 40,
+      "y": 0,
+      "ping": 50,
+      "packet_loss": 0
+    },
+    {
+      "type": "movement_sample",
+      "at_ms": 2500,
+      "x": 60,
+      "y": 0,
+      "ping": 50,
+      "packet_loss": 0
+    }
+  ],
+  "expected": {
+    "evidence_count": 1,
+    "evidence_categories": [
+      "movement"
+    ],
+    "movement_evidence": 1,
+    "score": 14,
+    "strikes": 0
+  }
+}
