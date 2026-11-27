@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "scenario_id": "sample_gap_and_world_transition_reset",
+  "description": "A long sampling gap and a virtual-world transition each establish a new baseline instead of carrying anomaly samples across transitions.",
+  "events": [
+    {
+      "type": "movement_sample",
+      "at_ms": 1000,
+      "x": 0,
+      "y": 0,
+      "ping": 50
+    },
+    {
+      "type": "movement_sample",
+      "at_ms": 1500,
+      "x": 20,
+      "y": 0,
+      "ping": 50
+    },
+    {
+      "type": "movement_sample",
+      "at_ms": 4000,
+      "x": 120,
+      "y": 0,
+      "ping": 50
+    },
+    {
+      "type": "movement_sample",
+      "at_ms": 4500,
+      "x": 140,
+      "y": 0,
+      "ping": 50
+    },
+    {
+      "type": "movement_sample",
+      "at_ms": 5000,
+      "x": 160,
+      "y": 0,
+      "ping": 50
+    },
+    {
+      "type": "movement_sample",
+      "at_ms": 5500,
+      "x": 180,
+      "y": 0,
+      "ping": 50,
+      "world": 1
+    },
+    {
+      "type": "movement_sample",
+      "at_ms": 6000,
+      "x": 200,
+      "y": 0,
+      "ping": 50,
+      "world": 1
+    },
+    {
+      "type": "movement_sample",
+      "at_ms": 6500,
+      "x": 220,
+      "y": 0,
+      "ping": 50,
+      "world": 1
+    }
+  ],
+  "expected": {
+    "evidence_count": 0,
+    "evidence_categories": [],
+    "movement_evidence": 0,
+    "score": 0,
+    "strikes": 0
+  }
+}
