@@ -170,7 +170,7 @@ class VehicleTraceReportTests(unittest.TestCase):
 
         allowed = {
             int(value)
-            for value in __import__("re").findall(r"\\b(\\d{3})\\b", body)
+            for value in __import__("re").findall(r"\b(\d{3})\b", body)
         }
         self.assertGreaterEqual(len(allowed), 30)
         self.assertTrue(all(400 <= model <= 611 for model in allowed))
