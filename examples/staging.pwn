@@ -11,6 +11,7 @@ new AC_StageSavedLastStrikeAt[AC_STAGE_STORE_CAPACITY];
 new AC_StageVehicleId[MAX_PLAYERS];
 new AC_StageLastVehicleTraceTick[MAX_PLAYERS];
 new AC_StageVehicleTraceSampleCount;
+new bool:AC_StageVehicleTraceLimitNotified;
 new AC_StageLogCaptureOwner = INVALID_PLAYER_ID;
 
 #define AC_STAGE_MAX_VEHICLE_TRACE_SAMPLES (3600)
