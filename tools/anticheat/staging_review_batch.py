@@ -13,6 +13,7 @@ from typing import Any
 from staging_review import validate_review_record
 
 MAX_RECORDS = 500
+MAX_RECORD_BYTES = 1_048_576
 GROUP_FIELDS = (
     "server_commit",
     "staging_artifact_sha256",
@@ -165,7 +166,10 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     try:
-        paths = sorted(path for path in args.records_dir.glob("*.json") if path.is_file())
+        paths = sorted(
+            path for path in args.records_dir.glob("*.json")
+            if path.is_file() and not path.is_symlink()
+        )
     except OSError:
         paths = []
 
@@ -181,6 +185,9 @@ def main(argv: list[str] | None = None) -> int:
     records: list[Any] = []
     for path in paths:
         try:
+            if path.stat().st_size > MAX_RECORD_BYTES:
+                records.append(None)
+                continue
             with path.open("r", encoding="utf-8") as handle:
                 records.append(json.load(handle))
         except (OSError, UnicodeDecodeError, json.JSONDecodeError):
