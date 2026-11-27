@@ -128,9 +128,10 @@ def main() -> int:
     assert "|| AC_PlayerLoaded[playerid])" in function_body(
         sources["include/ac/core.inc"], "AC_ApplyPersistentState"
     ), "duplicate account-load completions must be rejected"
-    assert "AC_LastStrikeAt[playerid] = strike_decay_at" in function_body(
+    assert "AC_LastStrikeAt[playerid] = last_strike_at" in function_body(
         sources["include/ac/core.inc"], "AC_ApplyPersistentState"
-    ), "active strike cooldown must be restored after reconnect"
+    ), "active strike cooldown must be restored from its own persisted timestamp"
+    assert '"AC_OnPersistenceSave", "ddddddd"' in sources["include/ac/core.inc"]
 
     # The library must remain framework/database independent.
     forbidden = ("PlayerData[", "AccountData[", "mysql_tquery", "SQL_Connect", "PawnPlus", "pp-hooks")
