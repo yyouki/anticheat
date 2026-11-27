@@ -1,0 +1,40 @@
+# Roadmap
+
+## Milestone 0 — standalone Pawn core
+
+- [x] Establish independent repository and public module layout.
+- [x] Avoid Pylance Roleplay symbols and database assumptions.
+- [x] Implement lifecycle, identity/session token, grace-window and persistence callbacks.
+- [x] Implement evidence ring, category correlation, score/strike policy and decay.
+- [x] Implement conservative movement and driver-only vehicle sampling.
+- [x] Keep memory scans and combat cadence scoring disabled by default.
+- [x] Validate default and compile-only opt-in feature-gate builds with the pinned CI compiler and open.mp includes (GitHub Actions run #14 passed).
+- [x] Add defensive player-ID validation to per-player state, lifecycle, network and evidence helpers.
+- [x] Reject duplicate asynchronous account-load completions after the active session has already been loaded.
+- [ ] Runtime and false-positive testing on staging server.
+
+## Milestone 1 — investigation and host adapters
+
+- [x] Provide framework-neutral admin status/evidence/reset helpers.
+- [x] Provide evidence, strike, persistence and administrative-reset callbacks.
+- [ ] Add tested adapters for common command processors as optional packages.
+- [ ] Add an optional durable evidence storage adapter with retention controls.
+- [ ] Add a replayable telemetry fixture format for regression tests.
+
+## Milestone 2 — detection coverage
+
+- [ ] Add model-aware vehicle envelopes from staging traces.
+- [ ] Add server action provenance helpers for all common legal transitions.
+- [ ] Add combat heuristics only after mobile/desktop false-positive evidence.
+- [ ] Add network packet-loss context only through a validated low-cost source.
+- [ ] Add explicit player-state anomaly evidence after defining legal state transitions.
+
+## Milestone 3 — experiments (non-production)
+
+- [ ] C/C++ native profiling experiment.
+- [ ] Rust sidecar/FFI feasibility experiment.
+- [ ] ML evaluation using labelled, anonymised and representative traces.
+- [ ] Path plausibility/pathfinding evaluation with bounded compute.
+- [ ] Version-specific client integrity profiles.
+
+Experiments cannot be promoted based solely on a successful compile. They must satisfy the release gates in docs/VALIDATION.md.
