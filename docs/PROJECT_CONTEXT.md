@@ -140,13 +140,13 @@ CI also performs the repository static audit and default/opt-in Pawn smoke compi
 - PR #4: [Add open.mp staging integration harness](https://github.com/yyouki/anticheat/pull/4), merged as `c0591531c02dc7829e5b0964081f8d177c2d100b`.
 - Its post-merge Actions run #46 (`45951716621`) passed static audit, Python tests/replay, all three Pawn compile targets, staging artifact upload, and pinned open.mp headless boot.
 - PR #5: [Add staging persistence and session self-tests](https://github.com/yyouki/anticheat/pull/5), merged as `60a9b4d080034be41613959c369c8af1fcdef8d0`.
-- PR #5 final head `345f4cd5a9743c82a47b9c13706d0cb9f039b70f) passed Actions run #51 (`45955418806`); post-merge `main` run #52 (`45956905920`) also passed static audit, 8 Python unit tests, all 10 fixtures, all three Pawn compile targets, artifact upload, and pinned open.mp headless boot.
+- PR #5 final head `345f4cd5a9743c82a47b9c13706d0cb9f039b70f` passed Actions run #51 (`45955418806`); post-merge `main` run #52 (`45956905920`) also passed static audit, 8 Python unit tests, all 10 fixtures, all three Pawn compile targets, artifact upload, and pinned open.mp headless boot.
 - Latest merged staging artifact: `ac-staging-package`, ID `15178982257`.
 - The harness and `/acstagetest` use a bounded RAM-only synthetic persistence adapter. The self-test simulates framework lifecycle reset while a client remains connected; it is not a real network reconnect and does not prove client movement detector accuracy.
 
 ## Current implementation focus
 
-The next API extension is being developed on branch `feat/legal-transition-hooks`: explicit notifications for server-owned interior, virtual-world, and spectating transitions. All such hooks must validate the player and share the conservative sampling/grace reset path.
+PR #6, [Add explicit legal transition notification hooks](https://github.com/yyouki/anticheat/pull/6), is open on branch `feat/legal-transition-hooks`. It adds explicit notifications for server-owned interior, virtual-world, and spectating transitions. The helpers validate the player and share the conservative sampling/grace reset path; do not treat PR #6 as merged until its merge is verified.
 
 ## Remaining release gates
 
