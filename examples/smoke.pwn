@@ -37,9 +37,9 @@ public OnPlayerDeath(playerid, killerid, WEAPON:reason)
     return 1;
 }
 
-public OnPlayerStateChange(playerid, PLAYER_STATE:new_state, PLAYER_STATE:old_state)
+public OnPlayerStateChange(playerid, PLAYER_STATE:newstate, PLAYER_STATE:oldstate)
 {
-    AC_OnPlayerStateChange(playerid, new_state, old_state);
+    AC_OnPlayerStateChange(playerid, newstate, oldstate);
     return 1;
 }
 
@@ -56,9 +56,9 @@ public OnPlayerGiveDamage(playerid, damagedid, Float:amount, WEAPON:weaponid, bo
     return 1;
 }
 
-public OnPlayerWeaponShot(playerid, WEAPON:weaponid, BULLET_HIT_TYPE:hittype, hitid, Float:x, Float:y, Float:z)
+public OnPlayerWeaponShot(playerid, WEAPON:weaponid, BULLET_HIT_TYPE:hittype, hitid, Float:fX, Float:fY, Float:fZ)
 {
-    #pragma unused x, y, z
+    #pragma unused fX, fY, fZ
     AC_OnPlayerWeaponShot(playerid, weaponid, hittype, hitid);
     return 1;
 }
