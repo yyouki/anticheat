@@ -159,6 +159,11 @@ class TelemetryReplayTests(unittest.TestCase):
             with self.subTest(command=command):
                 self.assertIn(command, staging)
 
+        player_id_parser = pawn_stock_body("AC_StageParsePlayerId")
+        self.assertIn("return -1;", player_id_parser)
+        self.assertIn("new targetid = AC_StageParsePlayerId(cmdtext[17]);", staging)
+        self.assertIn("if (targetid < 0 || !AC_IsValidPlayerId(targetid))", staging)
+
         interior = pawn_stock_body("AC_StageToggleInterior")
         self.assertLess(
             interior.index("AC_NotifyLegitimateInteriorChange(playerid);"),
