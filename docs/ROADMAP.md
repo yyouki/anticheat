@@ -11,6 +11,7 @@
 - [x] Validate default and compile-only opt-in feature-gate builds with the pinned CI compiler and open.mp includes (GitHub Actions run #14 passed).
 - [x] Add defensive player-ID validation to per-player state, lifecycle, network and evidence helpers.
 - [x] Reject duplicate asynchronous account-load completions after the active session has already been loaded.
+- [x] Restore an active strike cooldown from the persisted strike-decay timestamp after reconnect.
 - [ ] Runtime and false-positive testing on staging server.
 
 ## Milestone 1 — investigation and host adapters
