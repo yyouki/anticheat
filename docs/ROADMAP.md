@@ -21,6 +21,7 @@
 - [x] Add versioned JSON report output that clearly separates structured-log validation from client runtime verification, log-origin authentication, and production readiness.
 - [x] Add a privacy-safe per-client/network-profile false-positive review matrix, record template, and structural validator; the validator does not certify executed tests or detector accuracy.
 - [x] Add a bounded batch summary grouped by exact server/client/network build metadata, including per-scenario result counts; it does not estimate false-positive rates.
+- [x] Bind each schema-v2 manual review record to one exact staging capture SHA-256 and validate the capture contract locally; this does not authenticate log origin or prove scenario execution.
 - [ ] Complete interactive staging tests with supported game clients, including false-positive review.
 
 ## Milestone 1 — investigation and host adapters
