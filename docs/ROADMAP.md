@@ -8,7 +8,7 @@
 - [x] Implement evidence ring, category correlation, score/strike policy and decay.
 - [x] Implement conservative movement and driver-only vehicle sampling.
 - [x] Keep memory scans and combat cadence scoring disabled by default.
-- [ ] Validate all modules with CI compiler and open.mp includes.
+- [x] Validate module compilation with the pinned CI compiler and open.mp includes (smoke AMX build passed).
 - [ ] Runtime and false-positive testing on staging server.
 
 ## Milestone 1 — investigation and host adapters
