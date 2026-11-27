@@ -129,7 +129,7 @@ stock AC_StageRequireOnFoot(playerid)
     return 1;
 }
 
-stock AC_StageLogEvent(playerid, const event[], const details[] = "")
+stock AC_StageLogEvent(playerid, const event[], const details[])
 {
     if (playerid != AC_StageLogCaptureOwner)
         return 0;
@@ -151,7 +151,7 @@ stock AC_StageBeginLogCapture(playerid)
     }
 
     AC_StageLogCaptureOwner = playerid;
-    AC_StageLogEvent(playerid, "run_begin");
+    AC_StageLogEvent(playerid, "run_begin", "");
     SendClientMessage(playerid, 0xD8D8D8FF, "[AC-STAGE] Acceptance log capture started.");
     return 1;
 }
@@ -164,7 +164,7 @@ stock AC_StageEndLogCapture(playerid)
         return 0;
     }
 
-    AC_StageLogEvent(playerid, "run_end");
+    AC_StageLogEvent(playerid, "run_end", "");
     AC_StageLogCaptureOwner = INVALID_PLAYER_ID;
     SendClientMessage(playerid, 0xD8D8D8FF, "[AC-STAGE] Acceptance log capture ended.");
     return 1;
@@ -201,7 +201,7 @@ stock AC_StageRestoreSpectateContext(playerid)
     if (was_spectating)
     {
         if (restore_ok)
-            AC_StageLogEvent(playerid, "spectate_stop");
+            AC_StageLogEvent(playerid, "spectate_stop", "");
         else
         {
             AC_StageLogEvent(playerid, "run_abort", " reason=context_restore_failed");
@@ -881,9 +881,9 @@ public OnPlayerStateChange(playerid, PLAYER_STATE:newstate, PLAYER_STATE:oldstat
     if (playerid == AC_StageLogCaptureOwner)
     {
         if (newstate == PLAYER_STATE_SPECTATING)
-            AC_StageLogEvent(playerid, "spectate_state_enter");
+            AC_StageLogEvent(playerid, "spectate_state_enter", "");
         else if (oldstate == PLAYER_STATE_SPECTATING)
-            AC_StageLogEvent(playerid, "spectate_state_exit");
+            AC_StageLogEvent(playerid, "spectate_state_exit", "");
     }
     return 1;
 }
@@ -1063,7 +1063,7 @@ public OnPlayerCommandText(playerid, cmdtext[])
         // Notify the detector before moving the player through a server-owned action.
         AC_NotifyLegitimateTeleport(playerid);
         SetPlayerPos(playerid, x + 8.0, y, z);
-        AC_StageLogEvent(playerid, "teleport");
+        AC_StageLogEvent(playerid, "teleport", "");
         SendClientMessage(playerid, 0xD8D8D8FF, "[AC-STAGE] Legal teleport applied with a grace window.");
         return 1;
     }
@@ -1088,7 +1088,7 @@ public OnPlayerCommandText(playerid, cmdtext[])
         AC_StageVehicleId[playerid] = vehicleid;
         PutPlayerInVehicle(playerid, vehicleid, 0);
         AC_NotifyLegitimateVehicleChange(playerid);
-        AC_StageLogEvent(playerid, "vehicle_enter");
+        AC_StageLogEvent(playerid, "vehicle_enter", "");
         SendClientMessage(playerid, 0xD8D8D8FF, "[AC-STAGE] Test vehicle created and server-placed.");
         return 1;
     }
@@ -1103,7 +1103,7 @@ public OnPlayerCommandText(playerid, cmdtext[])
         {
             RemovePlayerFromVehicle(playerid);
             AC_NotifyLegitimateVehicleChange(playerid);
-            AC_StageLogEvent(playerid, "vehicle_exit");
+            AC_StageLogEvent(playerid, "vehicle_exit", "");
             SendClientMessage(playerid, 0xD8D8D8FF, "[AC-STAGE] Vehicle exit completed.");
         }
         else
