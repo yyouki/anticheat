@@ -73,6 +73,15 @@ class TelemetryReplayTests(unittest.TestCase):
         self.assertEqual(config["pawn"]["main_scripts"], ["ac-staging 1"])
         self.assertIn("lost when the server process restarts", guide)
 
+    def test_openmp_runtime_smoke_script_checks_boot_and_stops_server(self) -> None:
+        script = (ROOT / "tools" / "anticheat" / "openmp_runtime_smoke.py").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("[AC-STAGE] Staging gamemode initialized.", script)
+        self.assertIn("subprocess.Popen", script)
+        self.assertIn("stop_server(process)", script)
+        self.assertIn("--server-root", script)
+
     def test_reference_model_contract_matches_pawn_source_gates(self) -> None:
         movement = (ROOT / "include/ac/movement.inc").read_text(encoding="utf-8")
         network = (ROOT / "include/ac/network.inc").read_text(encoding="utf-8")
