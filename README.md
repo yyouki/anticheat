@@ -15,6 +15,7 @@ A successful Pawn smoke compile proves compiler/include compatibility for the sm
 - Grace-window support for server-authoritative transitions.
 - Conservative on-foot movement sampling and driver-only vehicle sampling.
 - Privacy-safe, bounded staging vehicle observations with measured inter-sample intervals, a local per-model summary, and optional exact capture-to-review binding; none of these measurements change detector thresholds or authenticate log origin.
+- A local staging-log exporter that keeps only validated pseudonymous event and vehicle records, omitting unrelated console metadata before review or sharing.
 - Evidence ring buffer, per-category cooldown, cross-family correlation, score/strike review markers, and decay.
 - Optional host callbacks for persistence, evidence, strikes, and administrative resets.
 - Synthetic JSON fixtures, a deterministic Python reference replay, unit tests, static audit, and Pawn smoke-compilation CI jobs.
