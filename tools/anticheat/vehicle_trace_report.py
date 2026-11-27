@@ -29,10 +29,16 @@ ALLOWED_TRACE_MODELS = frozenset({
     527, 533, 541, 546, 547, 550, 555, 560, 562, 565, 566, 567,
     575, 576, 580, 585, 587, 589, 602, 603,
 })
-REQUIRED_FIELDS = {
+BASE_FIELDS = {
     "schema", "actor", "model", "speed_centi_kmh", "ping",
     "packet_loss_centi_pct",
 }
+SCHEMA_FIELDS = {
+    "1": BASE_FIELDS,
+    "2": BASE_FIELDS | {"sample_interval_ms"},
+}
+TRACE_MIN_SAMPLE_INTERVAL_MS = 500
+MAX_TICK_INTERVAL_MS = 2_147_483_647
 ENVIRONMENT_GROUP_FIELDS = (
     "server_commit",
     "staging_artifact_sha256",
@@ -55,17 +61,24 @@ def _parse_observation(payload: str, line_number: int) -> dict[str, int]:
             raise ValueError(f"line {line_number}: malformed key/value token")
         if key in fields:
             raise ValueError(f"line {line_number}: duplicate field {key}")
-        if key not in REQUIRED_FIELDS:
+        if key not in BASE_FIELDS | {"sample_interval_ms"}:
             raise ValueError(f"line {line_number}: unsupported field {key}")
         fields[key] = value
 
-    missing = REQUIRED_FIELDS.difference(fields)
+    schema = fields.get("schema")
+    if schema not in SCHEMA_FIELDS:
+        raise ValueError(f"line {line_number}: unsupported schema")
+    required_fields = SCHEMA_FIELDS[schema]
+    unexpected = set(fields).difference(required_fields)
+    if unexpected:
+        raise ValueError(
+            f"line {line_number}: unsupported field {sorted(unexpected)[0]}"
+        )
+    missing = required_fields.difference(fields)
     if missing:
         raise ValueError(
             f"line {line_number}: missing required field(s): {', '.join(sorted(missing))}"
         )
-    if fields["schema"] != "1":
-        raise ValueError(f"line {line_number}: unsupported schema")
     if fields["actor"] != "primary":
         raise ValueError(f"line {line_number}: actor must use the primary test role")
 
@@ -81,6 +94,15 @@ def _parse_observation(payload: str, line_number: int) -> dict[str, int]:
     speed = int(fields["speed_centi_kmh"], 10)
     ping = int(fields["ping"], 10)
     packet_loss = int(fields["packet_loss_centi_pct"], 10)
+    sample_interval = None
+    if schema == "2":
+        if not UNSIGNED_INTEGER.fullmatch(fields["sample_interval_ms"]):
+            raise ValueError(
+                f"line {line_number}: sample_interval_ms must be a non-negative integer"
+            )
+        sample_interval = int(fields["sample_interval_ms"], 10)
+        if sample_interval > MAX_TICK_INTERVAL_MS:
+            raise ValueError(f"line {line_number}: sample_interval_ms exceeds the tick-difference bound")
 
     if not 400 <= model <= 611:
         raise ValueError(f"line {line_number}: model is outside the GTA vehicle ID range")
@@ -93,22 +115,44 @@ def _parse_observation(payload: str, line_number: int) -> dict[str, int]:
     if packet_loss != -1 and packet_loss > 10_000:
         raise ValueError(f"line {line_number}: packet loss exceeds 100 percent")
 
-    return {
+    observation = {
         "model": model,
         "speed_centi_kmh": speed,
         "ping": ping,
         "packet_loss_centi_pct": packet_loss,
     }
+    if sample_interval is not None:
+        observation["sample_interval_ms"] = sample_interval
+    return observation
 
 
 def parse_vehicle_observations(lines: Iterable[str]) -> list[dict[str, int]]:
-    """Read only the dedicated vehicle marker; ordinary console output is ignored."""
+    """Read one capture's vehicle marker and validate its sample cadence."""
     observations: list[dict[str, int]] = []
+    telemetry_schema: int | None = None
     for line_number, line in enumerate(lines, start=1):
         marker = line.find(PREFIX)
         if marker == -1:
             continue
         observation = _parse_observation(line[marker + len(PREFIX):].strip(), line_number)
+        current_schema = 2 if "sample_interval_ms" in observation else 1
+        if telemetry_schema is None:
+            telemetry_schema = current_schema
+        elif telemetry_schema != current_schema:
+            raise ValueError(f"line {line_number}: mixed vehicle telemetry schemas in one capture")
+
+        if current_schema == 2:
+            interval = observation["sample_interval_ms"]
+            if not observations and interval != 0:
+                raise ValueError(
+                    f"line {line_number}: first schema-v2 sample must use sample_interval_ms=0"
+                )
+            if observations and interval < TRACE_MIN_SAMPLE_INTERVAL_MS:
+                raise ValueError(
+                    f"line {line_number}: subsequent sample_interval_ms must be at least "
+                    f"{TRACE_MIN_SAMPLE_INTERVAL_MS}"
+                )
+
         observations.append(observation)
         if len(observations) > MAX_SAMPLES:
             raise ValueError(f"vehicle trace exceeds the {MAX_SAMPLES}-sample limit")
@@ -338,6 +382,23 @@ def build_report(
             for sample in samples
             if sample["packet_loss_centi_pct"] >= 0
         ]
+        timed_samples = [
+            sample for sample in samples if "sample_interval_ms" in sample
+        ]
+        measured_intervals = [
+            sample["sample_interval_ms"]
+            for sample in timed_samples
+            if sample["sample_interval_ms"] > 0
+        ]
+        if not timed_samples:
+            timing_status = "not_recorded_by_legacy_schema"
+        elif not measured_intervals:
+            timing_status = "insufficient_samples"
+        elif len(timed_samples) < len(samples):
+            timing_status = "partial"
+        else:
+            timing_status = "available"
+
         models[str(model)] = {
             "sample_count": len(samples),
             "speed_kmh": _distribution(
@@ -346,6 +407,10 @@ def build_report(
             "ping_ms": _distribution([sample["ping"] for sample in samples]),
             "packet_loss_known_samples": len(known_loss),
             "packet_loss_percent": _distribution(known_loss, scale=100) if known_loss else None,
+            "timing_status": timing_status,
+            "timing_observation_count": len(timed_samples),
+            "sample_interval_count": len(measured_intervals),
+            "sample_interval_ms": _distribution(measured_intervals) if measured_intervals else None,
         }
 
     trace_provenance = provenance or {
@@ -356,7 +421,7 @@ def build_report(
     }
     binding_verified = trace_provenance["binding_status"] == "verified"
     return {
-        "report_schema_version": 2,
+        "report_schema_version": 3,
         "report_type": "openmp_vehicle_telemetry_summary",
         "status": "observations_found" if observations else "empty",
         "validation_scope": "descriptive_server_side_staging_observations",
@@ -375,6 +440,8 @@ def build_report(
             "Percentiles describe the supplied captures; they are not safe speed limits.",
             "Observations do not establish whether an action is legitimate or anomalous.",
             "A verified binding checks exact file bytes and the review schema, not log origin or actual scenario execution.",
+            "Sampling intervals describe time between consecutive accepted observations; the first sample in each capture has no preceding interval.",
+            "Sampling intervals do not establish client event timing, callback scheduling quality, or detector accuracy.",
             "Packet loss is unknown when no fresh host-supplied measurement was available.",
         ],
     }
@@ -429,13 +496,23 @@ def main() -> int:
         for model, summary in report["models"].items():
             speed = summary["speed_kmh"]
             ping = summary["ping_ms"]
-            print(
+            line = (
                 f"  model {model}: n={summary['sample_count']}; "
                 f"speed km/h min/p50/p95/max="
                 f"{speed['min']}/{speed['p50']}/{speed['p95']}/{speed['max']}; "
                 f"ping ms min/p50/p95/max="
                 f"{ping['min']}/{ping['p50']}/{ping['p95']}/{ping['max']}"
             )
+            intervals = summary["sample_interval_ms"]
+            if intervals:
+                line += (
+                    "; sample interval ms min/p50/p95/max="
+                    f"{intervals['min']}/{intervals['p50']}/"
+                    f"{intervals['p95']}/{intervals['max']}"
+                )
+            else:
+                line += f"; sample timing={summary['timing_status']}"
+            print(line)
         print(f"Capture binding: {provenance['binding_status']}.")
         print("Scope: descriptive observations only; no safe envelope or detector verdict.")
     return 0 if observations else 1

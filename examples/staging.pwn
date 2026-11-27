@@ -144,10 +144,18 @@ stock AC_StageCaptureVehicleTelemetry(playerid)
     }
 
     new tick = GetTickCount();
-    if ((tick - AC_StageLastVehicleTraceTick[playerid]) < AC_SAMPLE_INTERVAL_MS)
-        return 0;
-    AC_StageLastVehicleTraceTick[playerid] = tick;
-
+    new sample_interval_ms;
+    if (AC_StageVehicleTraceSampleCount > 0)
+    {
+        sample_interval_ms = tick - AC_StageLastVehicleTraceTick[playerid];
+        if (sample_interval_ms < AC_SAMPLE_INTERVAL_MS)
+            return 0;
+    }
+    else
+    {
+        // The first sample has no preceding observation to measure against.
+        sample_interval_ms = 0;
+    }
     new vehicleid = GetPlayerVehicleID(playerid);
     if (vehicleid == 0 || vehicleid == INVALID_VEHICLE_ID || !IsValidVehicle(vehicleid))
         return 0;
@@ -178,9 +186,13 @@ stock AC_StageCaptureVehicleTelemetry(playerid)
         );
     }
 
+    // Update only after a complete observation is ready to be emitted.
+    AC_StageLastVehicleTraceTick[playerid] = tick;
+
     // No player ID, account ID, vehicle ID, or coordinates are written.
     printf(
-        "[AC-STAGE-VEHICLE] schema=1 actor=primary model=%d speed_centi_kmh=%d ping=%d packet_loss_centi_pct=%d",
+        "[AC-STAGE-VEHICLE] schema=2 actor=primary sample_interval_ms=%d model=%d speed_centi_kmh=%d ping=%d packet_loss_centi_pct=%d",
+        sample_interval_ms,
         modelid,
         speed_centi_kmh,
         ping,

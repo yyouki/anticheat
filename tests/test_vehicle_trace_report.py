@@ -38,6 +38,21 @@ def line(
     )
 
 
+def timed_line(
+    interval: int,
+    model: int = 411,
+    speed: int = 1234,
+    ping: int = 50,
+    packet_loss: int = -1,
+) -> str:
+    return (
+        "[AC-STAGE-VEHICLE] schema=2 actor=primary "
+        f"sample_interval_ms={interval} model={model} "
+        f"speed_centi_kmh={speed} ping={ping} "
+        f"packet_loss_centi_pct={packet_loss}"
+    )
+
+
 def create_bound_capture(
     directory: Path,
     *,
@@ -124,9 +139,53 @@ class VehicleTraceReportTests(unittest.TestCase):
 
     def test_schema_and_actor_are_strict(self) -> None:
         with self.assertRaisesRegex(ValueError, "unsupported schema"):
-            parse_vehicle_observations([line().replace("schema=1", "schema=2")])
+            parse_vehicle_observations([line().replace("schema=1", "schema=3")])
         with self.assertRaisesRegex(ValueError, "primary test role"):
             parse_vehicle_observations([line().replace("actor=primary", "actor=secondary")])
+
+    def test_schema_v2_requires_and_validates_sampling_intervals(self) -> None:
+        with self.assertRaisesRegex(ValueError, "missing required"):
+            parse_vehicle_observations([
+                timed_line(0).replace(" sample_interval_ms=0", "")
+            ])
+        with self.assertRaisesRegex(ValueError, "unsupported field sample_interval_ms"):
+            parse_vehicle_observations([line() + " sample_interval_ms=0"])
+        with self.assertRaisesRegex(ValueError, "first schema-v2 sample"):
+            parse_vehicle_observations([timed_line(500)])
+        with self.assertRaisesRegex(ValueError, "must be at least 500"):
+            parse_vehicle_observations([timed_line(0), timed_line(499)])
+        with self.assertRaisesRegex(ValueError, "mixed vehicle telemetry schemas"):
+            parse_vehicle_observations([line(), timed_line(0)])
+        with self.assertRaisesRegex(ValueError, "non-negative integer"):
+            parse_vehicle_observations([timed_line(-1)])
+        with self.assertRaisesRegex(ValueError, "tick-difference bound"):
+            parse_vehicle_observations([timed_line(2_147_483_648)])
+
+    def test_schema_v2_sampling_intervals_are_summarized_without_cross_run_gaps(self) -> None:
+        first_run = parse_vehicle_observations([
+            timed_line(0),
+            timed_line(500, speed=1500),
+        ])
+        second_run = parse_vehicle_observations([
+            timed_line(0),
+            timed_line(750, speed=2000),
+        ])
+        report = build_report(first_run + second_run)
+        self.assertEqual(report["report_schema_version"], 3)
+        model = report["models"]["411"]
+        self.assertEqual(model["timing_status"], "available")
+        self.assertEqual(model["timing_observation_count"], 4)
+        self.assertEqual(model["sample_interval_count"], 2)
+        self.assertEqual(
+            model["sample_interval_ms"],
+            {"min": 500, "p50": 500, "p95": 750, "max": 750},
+        )
+
+    def test_legacy_schema_reports_timing_as_unavailable(self) -> None:
+        model = build_report(parse_vehicle_observations([line()]))["models"]["411"]
+        self.assertEqual(model["timing_status"], "not_recorded_by_legacy_schema")
+        self.assertEqual(model["timing_observation_count"], 0)
+        self.assertIsNone(model["sample_interval_ms"])
 
     def test_model_and_ping_bounds_are_checked(self) -> None:
         with self.assertRaisesRegex(ValueError, "vehicle ID range"):
@@ -154,6 +213,7 @@ class VehicleTraceReportTests(unittest.TestCase):
         report = build_report(parse_vehicle_observations([line()]))
         self.assertEqual(report["validation_scope"], "descriptive_server_side_staging_observations")
         self.assertEqual(report["provenance"]["binding_status"], "not_provided")
+        self.assertEqual(report["report_schema_version"], 3)
         self.assertEqual(
             report["runtime_validation"],
             {

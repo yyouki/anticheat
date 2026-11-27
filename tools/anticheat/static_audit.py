@@ -151,7 +151,23 @@ def main() -> int:
     assert "#define AC_STAGE_MAX_VEHICLE_TRACE_SAMPLES (3600)" in staging
     assert "Vehicle trace sample limit reached" in telemetry_capture
     assert "AC_VEHICLE_SPEED_FACTOR" in telemetry_capture
-    assert "[AC-STAGE-VEHICLE] schema=1 actor=primary model=%d" in telemetry_capture
+    assert "[AC-STAGE-VEHICLE] schema=2 actor=primary sample_interval_ms=%d" in telemetry_capture
+    trace_report = sources["tools/anticheat/vehicle_trace_report.py"]
+    assert "SCHEMA_FIELDS" in trace_report
+    assert "TRACE_MIN_SAMPLE_INTERVAL_MS" in trace_report
+    assert telemetry_capture.index("GetVehicleVelocity") < telemetry_capture.index(
+        "AC_StageLastVehicleTraceTick[playerid] = tick;"
+    ), "sample tick must represent the preceding accepted observation"
+    assert '"report_schema_version": 3' in trace_report
+    assert "sample_interval_ms" in trace_report
+    assert "test_schema_v2_requires_and_validates_sampling_intervals" in sources["tests/test_vehicle_trace_report.py"]
+    assert "test_schema_v2_sampling_intervals_are_summarized_without_cross_run_gaps" in sources["tests/test_vehicle_trace_report.py"]
+    configured_interval = re.search(r"AC_SAMPLE_INTERVAL_MS\s+\((\d+)\)", config)
+    reported_interval = re.search(r"TRACE_MIN_SAMPLE_INTERVAL_MS\s*=\s*(\d+)", trace_report)
+    assert configured_interval and reported_interval
+    assert configured_interval.group(1) == reported_interval.group(1), (
+        "vehicle trace parser interval minimum must match the Pawn sampling interval"
+    )
     assert "playerid=" not in telemetry_capture
     assert "accountid=" not in telemetry_capture
     assert "vehicleid=" not in telemetry_capture
