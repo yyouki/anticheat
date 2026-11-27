@@ -408,6 +408,13 @@ stock AC_StageShowInfo(playerid)
         AC_GetStrikeCount(playerid),
         AC_GetEvidenceCount(playerid));
     SendClientMessage(playerid, 0xD8D8D8FF, message);
+
+    new PLAYER_STATE:player_state = GetPlayerState(playerid);
+    format(message, sizeof(message), "[AC-STAGE] Interior: %d | world: %d | state: %d",
+        GetPlayerInterior(playerid),
+        GetPlayerVirtualWorld(playerid),
+        _:player_state);
+    SendClientMessage(playerid, 0xD8D8D8FF, message);
     return 1;
 }
 
