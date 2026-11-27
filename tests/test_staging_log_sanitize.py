@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 import sys
 import tempfile
@@ -123,6 +124,29 @@ class StagingLogSanitizeTests(unittest.TestCase):
             link.symlink_to(source)
             with redirect_stderr(StringIO()):
                 self.assertEqual(main(["--log", str(link), "--output", str(output)]), 2)
+            self.assertFalse(output.exists())
+
+
+    def test_cli_rejects_source_replaced_with_symlink_during_open(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "raw.log"
+            target = root / "private-target.log"
+            output = root / "sanitized.log"
+            source.write_bytes(source_capture())
+            target.write_bytes(b"private target must not be read")
+            real_open = os.open
+
+            def replace_source_before_open(path_arg, flags, mode=0o777):
+                if Path(path_arg) == source:
+                    source.unlink()
+                    source.symlink_to(target)
+                return real_open(path_arg, flags, mode)
+
+            with patch("staging_log_sanitize.os.open", side_effect=replace_source_before_open):
+                with redirect_stderr(StringIO()):
+                    self.assertEqual(main(["--log", str(source), "--output", str(output)]), 2)
+
             self.assertFalse(output.exists())
 
 
