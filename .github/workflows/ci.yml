@@ -70,3 +70,29 @@ jobs:
           "$PAWNCC" -iinclude -iomp-stdlib -O2 -Z- \
             "-o$RUNNER_TEMP/ac-build/feature-gate-smoke.amx" examples/feature_gate_smoke.pwn
           test -s "$RUNNER_TEMP/ac-build/feature-gate-smoke.amx"
+
+      - name: Compile staging integration gamemode
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$PAWNCC" -iinclude -iomp-stdlib -O2 -Z- \
+            "-o$RUNNER_TEMP/ac-build/ac-staging.amx" examples/staging.pwn
+          test -s "$RUNNER_TEMP/ac-build/ac-staging.amx"
+
+      - name: Assemble staging package
+        shell: bash
+        run: |
+          set -euo pipefail
+          package="$RUNNER_TEMP/ac-staging-package"
+          mkdir -p "$package/gamemodes"
+          cp "$RUNNER_TEMP/ac-build/ac-staging.amx" "$package/gamemodes/ac-staging.amx"
+          cp examples/staging/config.json "$package/config.json"
+          cp examples/staging/README.md "$package/README.md"
+
+      - name: Upload staging package
+        uses: actions/upload-artifact@v4
+        with:
+          name: ac-staging-package
+          path: ${{ runner.temp }}/ac-staging-package/
+          if-no-files-found: error
+          retention-days: 30
