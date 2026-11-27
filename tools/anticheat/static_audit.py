@@ -47,7 +47,7 @@ def main() -> int:
     umbrella = sources["include/ac.inc"]
     for module in ("config", "state", "network", "core", "evidence", "player_state",
                    "movement", "vehicle", "combat", "integrity", "admin"):
-        assert f"ac\\{module}" in umbrella, f"umbrella missing {module}"
+        assert f"ac/{module}" in umbrella, f"umbrella missing {module}"
 
     assert "AC_EVIDENCE_WINDOW_SECONDS" in sources["include/ac/evidence.inc"]
     assert "other_mask != 0" in sources["include/ac/evidence.inc"]
