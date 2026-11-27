@@ -166,7 +166,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(
         description="Summarize local privacy-safe open.mp staging vehicle observations."
     )
-    parser.add_argument("--log", required=True, type=Path, help="local server console log")
+    parser.add_argument("--log", required=True, action="append", type=Path, help="local server console log; repeat for additional model runs")
     parser.add_argument(
         "--json",
         action="store_true",
@@ -175,7 +175,11 @@ def main() -> int:
     args = parser.parse_args()
 
     try:
-        observations = _read_log(args.log)
+        observations: list[dict[str, int]] = []
+        for log_path in args.log:
+            observations.extend(_read_log(log_path))
+            if len(observations) > MAX_SAMPLES:
+                raise ValueError(f"combined traces exceed the {MAX_SAMPLES}-sample limit")
     except (OSError, UnicodeError, ValueError) as error:
         print(f"Could not validate vehicle trace: {error}", file=sys.stderr)
         return 2
