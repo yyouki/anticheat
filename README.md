@@ -18,6 +18,7 @@ A successful Pawn smoke compile proves compiler/include compatibility for the sm
 - A local staging-log exporter that keeps only validated pseudonymous event and vehicle records, omitting unrelated console metadata before review or sharing.
 - Evidence ring buffer, per-category cooldown, cross-family correlation, score/strike review markers, and decay.
 - Optional host callbacks for persistence, evidence, strikes, and administrative resets.
+- Versioned evidence/strike callback envelopes with event time and per-session sequence context; legacy callback signatures remain available, while durable storage and retention remain host-owned.
 - Synthetic JSON fixtures, a deterministic Python reference replay, unit tests, static audit, and Pawn smoke-compilation CI jobs.
 
 ## Safety and enforcement policy
