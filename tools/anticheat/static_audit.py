@@ -57,6 +57,7 @@ REQUIRED = [
     "tests/fixtures/network_quality_resets_vehicle_streak.json",
     "tests/fixtures/vehicle_grace_resets_speed_streak.json",
     "tests/fixtures/vehicle_samples_obey_shared_sampling_interval.json",
+    "tests/fixtures/packet_loss_resets_vehicle_streak.json",
     "docs/TELEMETRY_REPLAY.md",
     "docs/ARCHITECTURE.md",
     "docs/INTEGRATION.md",
