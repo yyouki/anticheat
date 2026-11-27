@@ -4,6 +4,21 @@
   "description": "Continuous ordinary on-foot movement through a legitimate grace period produces no evidence.",
   "events": [
     {
+      "type": "connect",
+      "at_ms": 100
+    },
+    {
+      "type": "load_begin",
+      "at_ms": 200,
+      "account_id": 1001
+    },
+    {
+      "type": "load_complete",
+      "at_ms": 300,
+      "account_id": 1001,
+      "session_token": 2
+    },
+    {
       "type": "grace_start",
       "at_ms": 1000,
       "duration_ms": 4000
@@ -135,6 +150,12 @@
     "evidence_categories": [],
     "movement_evidence": 0,
     "score": 0,
-    "strikes": 0
+    "strikes": 0,
+    "loaded": true,
+    "account_id": 1001,
+    "session_token": 2,
+    "load_completion_results": [
+      true
+    ]
   }
 }
