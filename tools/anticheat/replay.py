@@ -40,6 +40,12 @@ CONSTANT_NAMES = (
     "AC_MOVEMENT_MAX_PING_TOLERANCE",
     "AC_MOVEMENT_REQUIRED_SAMPLES",
     "AC_NETWORK_QUALITY_TTL_MS",
+    "AC_VEHICLE_MAX_PING",
+    "AC_VEHICLE_MAX_SPEED_KMH",
+    "AC_VEHICLE_PING_TOLERANCE",
+    "AC_VEHICLE_MAX_PING_TOLERANCE",
+    "AC_VEHICLE_REQUIRED_SAMPLES",
+    "AC_VEHICLE_SPEED_FACTOR",
 )
 
 # Keep constants tied to the Pawn include that owns their definitions.
@@ -51,13 +57,16 @@ CONSTANT_SOURCE_FILES = {
 def load_constants(
     config_path: Path | None = None,
     network_path: Path | None = None,
+    vehicle_path: Path | None = None,
 ) -> dict[str, int | float]:
     """Read numeric thresholds from their owning Pawn include files."""
     config_file = config_path or ROOT / "include/ac/config.inc"
     network_file = network_path or config_file.with_name("network.inc")
+    vehicle_file = vehicle_path or config_file.with_name("vehicle.inc")
     source_files = {
         "config.inc": (config_file, config_file.read_text(encoding="utf-8")),
         "network.inc": (network_file, network_file.read_text(encoding="utf-8")),
+        "vehicle.inc": (vehicle_file, vehicle_file.read_text(encoding="utf-8")),
     }
     constants: dict[str, int | float] = {}
 
@@ -78,6 +87,20 @@ def load_constants(
         constants[name] = float(raw) if "." in raw else int(raw)
 
     return constants
+
+
+def load_excluded_vehicle_models(vehicle_path: Path | None = None) -> set[int]:
+    """Read special vehicle models excluded by the Pawn detector."""
+    source_file = vehicle_path or ROOT / "include/ac/vehicle.inc"
+    source = source_file.read_text(encoding="utf-8")
+    match = re.search(
+        r"switch\s*\(\s*modelid\s*\)\s*\{\s*case\s+([0-9,\s]+):",
+        source,
+        re.DOTALL,
+    )
+    if not match:
+        raise ValueError(f"Pawn vehicle exclusions are missing from {source_file}")
+    return {int(value) for value in re.findall(r"\d+", match.group(1))}
 
 
 def _require(condition: bool, message: str) -> None:
@@ -102,6 +125,7 @@ def validate_fixture(fixture: dict[str, Any]) -> None:
         "load_complete",
         "grace_start",
         "movement_sample",
+        "vehicle_sample",
         "evidence",
     }
 
@@ -143,6 +167,28 @@ def validate_fixture(fixture: dict[str, Any]) -> None:
             age = event.get("packet_loss_age_ms", 0)
             _require(isinstance(age, int) and age >= 0,
                      f"event {index} packet_loss_age_ms must be a non-negative integer")
+        if event_type == "vehicle_sample":
+            vehicle_id = event.get("vehicle_id")
+            model_id = event.get("vehicle_model")
+            speed = event.get("speed_kmh")
+            _require(type(vehicle_id) is int and vehicle_id >= 0,
+                     f"event {index} vehicle_id must be a non-negative integer")
+            _require(type(model_id) is int and 400 <= model_id <= 611,
+                     f"event {index} vehicle_model must be a GTA SA vehicle model ID")
+            _require(isinstance(speed, (int, float)) and not isinstance(speed, bool)
+                     and math.isfinite(float(speed)) and speed >= 0,
+                     f"event {index} speed_kmh must be a finite non-negative number")
+            _require(type(event.get("ping")) is int,
+                     f"event {index} ping must be an integer")
+            _require(event.get("state", "driver") in {"driver", "onfoot", "passenger", "spectator", "dead"},
+                     f"event {index} has an unsupported player state")
+            loss = event.get("packet_loss")
+            _require(loss is None or (isinstance(loss, (int, float)) and not isinstance(loss, bool)
+                     and math.isfinite(float(loss))),
+                     f"event {index} packet_loss must be finite numeric or null")
+            age = event.get("packet_loss_age_ms", 0)
+            _require(type(age) is int and age >= 0,
+                     f"event {index} packet_loss_age_ms must be a non-negative integer")
         if event_type == "evidence":
             _require(event.get("category") in CATEGORY_IDS, f"event {index} has unknown evidence category")
             _require(isinstance(event.get("points"), int) and event["points"] > 0,
@@ -150,7 +196,7 @@ def validate_fixture(fixture: dict[str, Any]) -> None:
 
 
 class ReplayEngine:
-    """Reference implementation of the v1 movement, evidence and session contract."""
+    """Reference implementation of the v1 movement, vehicle, evidence and session contract."""
 
     def __init__(self, constants: dict[str, int | float] | None = None) -> None:
         self.c = constants or load_constants()
@@ -179,6 +225,10 @@ class ReplayEngine:
         self.strikes = 0
         self.evidence_categories: list[str] = []
         self.movement_evidence = 0
+        self.vehicle_evidence = 0
+        self.last_vehicle_id = 0
+        self.vehicle_over_limit_samples = 0
+        self.excluded_vehicle_models = load_excluded_vehicle_models()
 
     def _reset_session(self) -> None:
         self.account_id = 0
@@ -192,6 +242,7 @@ class ReplayEngine:
         self.last_strike_at = 0
         self.evidence_categories = []
         self.movement_evidence = 0
+        self.vehicle_evidence = 0
         self._reset_sampling()
 
     def _reset_sampling(self) -> None:
@@ -199,10 +250,12 @@ class ReplayEngine:
         self.last_movement_tick = 0
         self.has_movement_sample = False
         self.over_limit_samples = 0
+        self.last_vehicle_id = 0
+        self.vehicle_over_limit_samples = 0
 
-    def _network_reliable(self, event: dict[str, Any]) -> bool:
+    def _network_reliable(self, event: dict[str, Any], max_ping: int) -> bool:
         ping = event["ping"]
-        if ping < 0 or ping == 65535 or ping > self.c["AC_MOVEMENT_MAX_PING"]:
+        if ping < 0 or ping == 65535 or ping > max_ping:
             return False
 
         packet_loss = event.get("packet_loss")
@@ -254,7 +307,7 @@ class ReplayEngine:
             return
         self.last_update_tick = tick
 
-        if not self._network_reliable(event):
+        if not self._network_reliable(event, int(self.c["AC_MOVEMENT_MAX_PING"])):
             self.has_movement_sample = False
             self.over_limit_samples = 0
             return
@@ -328,6 +381,78 @@ class ReplayEngine:
         self.has_movement_sample = True
         self.over_limit_samples = 0
 
+    def _vehicle_sample(self, event: dict[str, Any]) -> None:
+        """Mirror AC_OnPlayerUpdate and AC_OnVehicleSample vehicle gates."""
+        tick = event["at_ms"]
+        if not (self.connected and self.loaded and self.enabled):
+            self.vehicle_over_limit_samples = 0
+            self.last_vehicle_id = 0
+            return
+
+        # Pawn shares the 500 ms OnPlayerUpdate sampling gate across detectors.
+        if tick - self.last_update_tick < self.c["AC_SAMPLE_INTERVAL_MS"]:
+            return
+        self.last_update_tick = tick
+
+        if event.get("state", "driver") != "driver":
+            self.vehicle_over_limit_samples = 0
+            self.last_vehicle_id = 0
+            return
+
+        # The outer OnPlayerUpdate gate uses the movement ping ceiling and
+        # resets the streak without invalidating the current vehicle ID.
+        if not self._network_reliable(event, int(self.c["AC_MOVEMENT_MAX_PING"])):
+            self.vehicle_over_limit_samples = 0
+            return
+
+        # The vehicle-specific gate is stricter and invalidates the vehicle baseline.
+        if not self._network_reliable(event, int(self.c["AC_VEHICLE_MAX_PING"])):
+            self.vehicle_over_limit_samples = 0
+            self.last_vehicle_id = 0
+            return
+
+        vehicle_id = event["vehicle_id"]
+        if vehicle_id in {0, 65535}:
+            self.vehicle_over_limit_samples = 0
+            self.last_vehicle_id = 0
+            return
+
+        if (
+            self.grace_duration_ms > 0
+            and tick - self.grace_started_tick < self.grace_duration_ms
+        ):
+            self.vehicle_over_limit_samples = 0
+            self.last_vehicle_id = vehicle_id
+            return
+
+        if vehicle_id != self.last_vehicle_id:
+            self.last_vehicle_id = vehicle_id
+            self.vehicle_over_limit_samples = 0
+            return
+
+        if event["vehicle_model"] in self.excluded_vehicle_models:
+            self.vehicle_over_limit_samples = 0
+            return
+
+        ping = event["ping"]
+        limit = self.c["AC_VEHICLE_MAX_SPEED_KMH"] + (
+            ping * self.c["AC_VEHICLE_PING_TOLERANCE"]
+        )
+        limit = min(
+            limit,
+            self.c["AC_VEHICLE_MAX_SPEED_KMH"]
+            + self.c["AC_VEHICLE_MAX_PING_TOLERANCE"],
+        )
+
+        if event["speed_kmh"] > limit:
+            self.vehicle_over_limit_samples += 1
+            if self.vehicle_over_limit_samples >= self.c["AC_VEHICLE_REQUIRED_SAMPLES"]:
+                self._record_evidence("vehicle", 18, tick)
+                self.vehicle_evidence += 1
+                self.vehicle_over_limit_samples = 0
+        else:
+            self.vehicle_over_limit_samples = 0
+
     def run(self, fixture: dict[str, Any]) -> dict[str, Any]:
         validate_fixture(fixture)
         for event in fixture["events"]:
@@ -376,6 +501,8 @@ class ReplayEngine:
                 self._reset_sampling()
             elif kind == "movement_sample":
                 self._movement_sample(event)
+            elif kind == "vehicle_sample":
+                self._vehicle_sample(event)
             elif kind == "evidence":
                 self._record_evidence(event["category"], event["points"], at_ms)
 
@@ -383,6 +510,8 @@ class ReplayEngine:
             "evidence_count": min(8, len(self.evidence_categories)),
             "evidence_categories": self.evidence_categories,
             "movement_evidence": self.movement_evidence,
+            "vehicle_evidence": self.vehicle_evidence,
+            "vehicle_over_limit_samples": self.vehicle_over_limit_samples,
             "score": self.score,
             "strikes": self.strikes,
             "loaded": self.loaded,

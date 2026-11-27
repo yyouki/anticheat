@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "scenario_id": "vehicle_switch_resets_speed_streak",
+  "description": "Changing vehicle IDs clears an in-progress over-limit streak before the new vehicle is sampled.",
+  "events": [
+    {
+      "type": "connect",
+      "at_ms": 100
+    },
+    {
+      "type": "load_begin",
+      "at_ms": 200,
+      "account_id": 41001
+    },
+    {
+      "type": "load_complete",
+      "at_ms": 300,
+      "account_id": 41001,
+      "session_token": 2
+    },
+    {
+      "type": "vehicle_sample",
+      "at_ms": 500,
+      "vehicle_id": 1,
+      "vehicle_model": 411,
+      "speed_kmh": 400,
+      "ping": 50
+    },
+    {
+      "type": "vehicle_sample",
+      "at_ms": 1000,
+      "vehicle_id": 1,
+      "vehicle_model": 411,
+      "speed_kmh": 400,
+      "ping": 50
+    },
+    {
+      "type": "vehicle_sample",
+      "at_ms": 1500,
+      "vehicle_id": 1,
+      "vehicle_model": 411,
+      "speed_kmh": 400,
+      "ping": 50
+    },
+    {
+      "type": "vehicle_sample",
+      "at_ms": 2000,
+      "vehicle_id": 2,
+      "vehicle_model": 411,
+      "speed_kmh": 400,
+      "ping": 50
+    },
+    {
+      "type": "vehicle_sample",
+      "at_ms": 2500,
+      "vehicle_id": 2,
+      "vehicle_model": 411,
+      "speed_kmh": 400,
+      "ping": 50
+    },
+    {
+      "type": "vehicle_sample",
+      "at_ms": 3000,
+      "vehicle_id": 2,
+      "vehicle_model": 411,
+      "speed_kmh": 400,
+      "ping": 50
+    },
+    {
+      "type": "vehicle_sample",
+      "at_ms": 3500,
+      "vehicle_id": 2,
+      "vehicle_model": 411,
+      "speed_kmh": 400,
+      "ping": 50
+    }
+  ],
+  "expected": {
+    "evidence_count": 1,
+    "evidence_categories": [
+      "vehicle"
+    ],
+    "movement_evidence": 0,
+    "vehicle_evidence": 1,
+    "vehicle_over_limit_samples": 0,
+    "score": 18,
+    "strikes": 0,
+    "loaded": true,
+    "account_id": 41001,
+    "session_token": 2,
+    "load_completion_results": [
+      true
+    ]
+  }
+}

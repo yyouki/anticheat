@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "scenario_id": "packet_loss_resets_vehicle_streak",
+  "description": "High packet loss through the outer OnPlayerUpdate network gate clears the streak while preserving the vehicle baseline; three clean samples after recovery are still required.",
+  "events": [
+    {
+      "type": "connect",
+      "at_ms": 100
+    },
+    {
+      "type": "load_begin",
+      "at_ms": 200,
+      "account_id": 41002
+    },
+    {
+      "type": "load_complete",
+      "at_ms": 300,
+      "account_id": 41002,
+      "session_token": 2
+    },
+    {
+      "type": "vehicle_sample",
+      "at_ms": 500,
+      "vehicle_id": 3,
+      "vehicle_model": 411,
+      "speed_kmh": 400,
+      "ping": 50,
+      "packet_loss": 0
+    },
+    {
+      "type": "vehicle_sample",
+      "at_ms": 1000,
+      "vehicle_id": 3,
+      "vehicle_model": 411,
+      "speed_kmh": 400,
+      "ping": 50,
+      "packet_loss": 0
+    },
+    {
+      "type": "vehicle_sample",
+      "at_ms": 1500,
+      "vehicle_id": 3,
+      "vehicle_model": 411,
+      "speed_kmh": 400,
+      "ping": 50,
+      "packet_loss": 0
+    },
+    {
+      "type": "vehicle_sample",
+      "at_ms": 2000,
+      "vehicle_id": 3,
+      "vehicle_model": 411,
+      "speed_kmh": 400,
+      "ping": 50,
+      "packet_loss": 20
+    },
+    {
+      "type": "vehicle_sample",
+      "at_ms": 2500,
+      "vehicle_id": 3,
+      "vehicle_model": 411,
+      "speed_kmh": 400,
+      "ping": 50,
+      "packet_loss": 0
+    },
+    {
+      "type": "vehicle_sample",
+      "at_ms": 3000,
+      "vehicle_id": 3,
+      "vehicle_model": 411,
+      "speed_kmh": 400,
+      "ping": 50,
+      "packet_loss": 0
+    },
+    {
+      "type": "vehicle_sample",
+      "at_ms": 3500,
+      "vehicle_id": 3,
+      "vehicle_model": 411,
+      "speed_kmh": 400,
+      "ping": 50,
+      "packet_loss": 0
+    }
+  ],
+  "expected": {
+    "evidence_count": 1,
+    "evidence_categories": [
+      "vehicle"
+    ],
+    "movement_evidence": 0,
+    "vehicle_evidence": 1,
+    "vehicle_over_limit_samples": 0,
+    "score": 18,
+    "strikes": 0,
+    "loaded": true,
+    "account_id": 41002,
+    "session_token": 2,
+    "load_completion_results": [
+      true
+    ]
+  }
+}

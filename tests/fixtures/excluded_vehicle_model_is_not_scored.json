@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "scenario_id": "excluded_vehicle_model_is_not_scored",
+  "description": "A model excluded by the Pawn vehicle detector cannot accumulate speed evidence.",
+  "events": [
+    {
+      "type": "connect",
+      "at_ms": 100
+    },
+    {
+      "type": "load_begin",
+      "at_ms": 200,
+      "account_id": 41001
+    },
+    {
+      "type": "load_complete",
+      "at_ms": 300,
+      "account_id": 41001,
+      "session_token": 2
+    },
+    {
+      "type": "vehicle_sample",
+      "at_ms": 500,
+      "vehicle_id": 7,
+      "vehicle_model": 417,
+      "speed_kmh": 650,
+      "ping": 50
+    },
+    {
+      "type": "vehicle_sample",
+      "at_ms": 1000,
+      "vehicle_id": 7,
+      "vehicle_model": 417,
+      "speed_kmh": 650,
+      "ping": 50
+    },
+    {
+      "type": "vehicle_sample",
+      "at_ms": 1500,
+      "vehicle_id": 7,
+      "vehicle_model": 417,
+      "speed_kmh": 650,
+      "ping": 50
+    },
+    {
+      "type": "vehicle_sample",
+      "at_ms": 2000,
+      "vehicle_id": 7,
+      "vehicle_model": 417,
+      "speed_kmh": 650,
+      "ping": 50
+    }
+  ],
+  "expected": {
+    "evidence_count": 0,
+    "evidence_categories": [],
+    "movement_evidence": 0,
+    "vehicle_evidence": 0,
+    "vehicle_over_limit_samples": 0,
+    "score": 0,
+    "strikes": 0,
+    "loaded": true,
+    "account_id": 41001,
+    "session_token": 2,
+    "load_completion_results": [
+      true
+    ]
+  }
+}
