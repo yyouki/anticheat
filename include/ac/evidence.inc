@@ -64,11 +64,20 @@ stock AC_RecordEvidence(playerid, category, points, const reason[], Float:metric
 
     AC_CategoryLastAt[playerid][category] = now;
 
+    // Sequence values are unique within the current loaded player session.
+    AC_EvidenceSequence[playerid]++;
+    if (AC_EvidenceSequence[playerid] <= 0)
+        AC_EvidenceSequence[playerid] = 1;
+    new evidence_sequence = AC_EvidenceSequence[playerid];
+    new accountid = AC_AccountKey[playerid];
+    new sessiontoken = AC_SessionToken[playerid];
+    new ping = AC_GetPing(playerid);
+
     new slot = AC_EvidenceHead[playerid];
     AC_EvidenceTime[playerid][slot] = now;
     AC_EvidenceCategory[playerid][slot] = category;
     AC_EvidencePoints[playerid][slot] = adjusted_points;
-    AC_EvidencePing[playerid][slot] = AC_GetPing(playerid);
+    AC_EvidencePing[playerid][slot] = ping;
     AC_EvidenceMetric[playerid][slot] = metric;
     format(AC_EvidenceReason[playerid][slot], AC_EVIDENCE_REASON_LENGTH, "%s", reason);
 
@@ -82,7 +91,12 @@ stock AC_RecordEvidence(playerid, category, points, const reason[], Float:metric
 
     AC_Dirty[playerid] = true;
     CallLocalFunction("AC_OnEvidence", "ddddsf",
-        playerid, category, adjusted_points, AC_GetPing(playerid), reason, metric
+        playerid, category, adjusted_points, ping, reason, metric
+    );
+    // V2 provides immutable event context for host-owned audit/persistence queues.
+    CallLocalFunction("AC_OnEvidenceV2", "ddddddddsf",
+        playerid, accountid, sessiontoken, evidence_sequence, now,
+        category, adjusted_points, ping, reason, metric
     );
 
     if (AC_SuspicionScore[playerid] >= AC_SCORE_STRIKE_THRESHOLD
@@ -100,7 +114,12 @@ stock AC_RecordEvidence(playerid, category, points, const reason[], Float:metric
 
         AC_Dirty[playerid] = true;
         CallLocalFunction("AC_OnStrike", "ddds",
-            playerid, AC_AccountKey[playerid], AC_StrikeCount[playerid], reason
+            playerid, accountid, AC_StrikeCount[playerid], reason
+        );
+        // The strike envelope references the evidence event that triggered it.
+        CallLocalFunction("AC_OnStrikeV2", "dddddds",
+            playerid, accountid, sessiontoken, evidence_sequence, now,
+            AC_StrikeCount[playerid], reason
         );
         AC_SavePersistentState(playerid);
     }
