@@ -280,6 +280,9 @@ def _load_unbound_traces(log_paths: list[Path]) -> tuple[list[dict[str, int]], d
     capture_digests: set[str] = set()
     source_runs: list[dict[str, Any]] = []
 
+    if len(log_paths) > MAX_CAPTURES:
+        raise ValueError(f"capture set exceeds the {MAX_CAPTURES}-run limit")
+
     total_log_bytes = 0
     for index, log_path in enumerate(log_paths, start=1):
         try:
