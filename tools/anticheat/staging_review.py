@@ -46,7 +46,7 @@ def _load_scenarios() -> tuple[dict[str, dict[str, Any]], list[str]]:
     except (OSError, json.JSONDecodeError):
         return {}, ["scenario manifest could not be loaded"]
 
-    if not isinstance(data, dict) or data.get("schema_version") != 1:
+    if not isinstance(data, dict) or type(data.get("schema_version")) is not int or data.get("schema_version") != 1:
         return {}, ["scenario manifest schema is invalid"]
     scenarios = data.get("scenarios")
     if not isinstance(scenarios, list):
@@ -100,7 +100,7 @@ def validate_review_record(data: Any) -> dict[str, Any]:
         return _invalid_payload(["record root must be an object"])
 
     _exact_keys(data, {"schema_version", "run_id", "environment", "observations"}, errors, "record")
-    if data.get("schema_version") != 1:
+    if type(data.get("schema_version")) is not int or data.get("schema_version") != 1:
         errors.append("schema_version must equal 1")
 
     run_id = data.get("run_id")
