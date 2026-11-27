@@ -15,7 +15,7 @@ This is a disposable test gamemode for validating the anti-cheat integration con
 - A virtual-world transition to reserved staging world 9000 and a return to the saved world.
 - Spectating another connected player, including alignment to the target's interior/world and restoration after spectating ends.
 - Privacy-safe structured acceptance events for teleport, vehicle, interior, virtual-world, spectating, evidence, and review-marker observations.
-- Supplemental server-side vehicle telemetry observations while the primary test client is driving: approved road-car model, quantized speed, ping, and fresh host-supplied packet loss when available. Records are capped at two samples per second and exclude player, account, vehicle, and position identifiers.
+- Supplemental server-side vehicle telemetry observations while the primary test client is driving: approved road-car model, quantized speed, ping, and fresh host-supplied packet loss when available. Records are capped at two samples per second and 3,600 samples per capture (about 30 minutes), then collection stops with one notice. They exclude player, account, vehicle, and position identifiers.
 - An offline Python report checker that rejects incomplete or failed transition sequences and any evidence/review marker during the capture window.
 
 The adapter keeps up to `MAX_PLAYERS` synthetic account records in RAM. All records are lost when the server process restarts. This is deliberate: the sample demonstrates the callback interface without selecting a database or suggesting that volatile storage is suitable for production.
@@ -81,7 +81,7 @@ The raw server console log may contain unrelated host/server connection metadata
       --log /path/to/model-560-console.log
     ```
 
-    The summary reports sample count and min/p50/p95/max speed and ping for each model, plus packet-loss statistics where available. It ignores ordinary transition events and reads only `[AC-STAGE-VEHICLE]` records. The summary is descriptive only: percentiles are not safe speed limits, and they do not prove a detector false positive or false negative. Keep source logs local.
+    The summary reports sample count and min/p50/p95/max speed and ping for each model, plus packet-loss statistics where available. Each source capture is limited to 3,600 telemetry observations. It ignores ordinary transition events and reads only `[AC-STAGE-VEHICLE]` records. The summary is descriptive only: percentiles are not safe speed limits, and they do not prove a detector false positive or false negative. Keep source logs local.
 
 The report must show `PASS`. It requires the complete teleport, vehicle, interior callback, world, and spectating event sequence. Any evidence, review marker, missing callback, failed restoration, capture abort, or incomplete capture makes the report fail. The parser ignores ordinary console lines and only evaluates the structured records inside the capture window.
 14. Outside the capture, run `/acstageevidence` and `/acstageclear` to inspect and clear the current review state. Then run `/acstagesave`, disconnect, reconnect, and authenticate again with the same synthetic account ID. This persistence test works only while the same server process remains running.
