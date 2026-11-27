@@ -73,15 +73,25 @@ Only combine captures from the same server commit, client build, and network pro
 
 The report accepts individual source logs up to 32 MiB each, a combined 64 MiB total, and 100,000 observations. It rejects symlinks and unsupported model IDs.
 
-For multiple model runs, combine the local logs:
+For an exploratory summary, logs can be read without review records. Such output has \`provenance.binding_status=not_provided\` and must not be treated as an evidence-bound run.
 
-```sh
+For a bound summary, first fill the schema-v2 review JSON for each capture and bind it to the exact raw file:
+
+\`\`\`sh
+python3 tools/anticheat/staging_review_capture.py --record /path/to/model-411-review.json --capture-log /path/to/model-411-console.log --write-digest
+\`\`\`
+
+Pass each log and its matching record in the same order:
+
+\`\`\`sh
 python3 tools/anticheat/vehicle_trace_report.py \\
-  --log /path/to/model-411-console.log \\
-  --log /path/to/model-560-console.log
-```
+  --log /path/to/model-411-console.log --record /path/to/model-411-review.json \\
+  --log /path/to/model-560-console.log --record /path/to/model-560-review.json --json
+\`\`\`
 
-The tool reports counts and descriptive min/p50/p95/max values per model. These values are observations from the supplied logs, not safe speed limits, detector decisions, or evidence that a scenario was executed correctly. The tool cannot authenticate log origin. Keep raw logs private and local.
+Bound mode checks the exact capture SHA-256, full staging transition contract, and the review record schema. It requires a clean \`vehicle_enter_drive_exit\` review observation and distinct run IDs and capture digests. It rejects captures with no vehicle observations, more than one vehicle model in a file, or mismatched server commit, staging artifact, open.mp version, client platform/build, or network profile. Limits are 500 captures, 64 MiB combined logs, 8 MiB combined review records, and 100,000 telemetry samples.
+
+A verified binding links the report to the precise files and operator-entered metadata. It does not authenticate log origin or independently verify scenario execution. The report always leaves detector accuracy, safe speed envelope, and production readiness unverified. Percentiles are observations, not safe speed limits. Keep raw logs and review records local.
 
 ## Interpreting the validator output
 
