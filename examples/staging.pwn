@@ -360,19 +360,21 @@ stock AC_StageRunPersistenceSelfTest(playerid)
     else
         failed++;
 
-    AC_NotifyLegitimateVehicleChange(playerid);
-    if (AC_StageSelfTestCheck(playerid, true, "vehicle transition notification accepted"))
+    new vehicle_notice = AC_NotifyLegitimateVehicleChange(playerid);
+    if (AC_StageSelfTestCheck(playerid, vehicle_notice != 0, "vehicle transition notification accepted"))
         passed++;
     else
         failed++;
 
     if (AC_SavePersistentState(playerid))
     {
+        new saved_slot = AC_StageFindSavedSlot(selftest_accountid);
         if (AC_StageSelfTestCheck(
             playerid,
-            AC_StageSavedScore[AC_StageFindSavedSlot(selftest_accountid)] == score
-                && AC_StageSavedStrikes[AC_StageFindSavedSlot(selftest_accountid)] == strikes
-                && AC_StageSavedLastStrikeAt[AC_StageFindSavedSlot(selftest_accountid)] == last_strike_at,
+            saved_slot != -1
+                && AC_StageSavedScore[saved_slot] == score
+                && AC_StageSavedStrikes[saved_slot] == strikes
+                && AC_StageSavedLastStrikeAt[saved_slot] == last_strike_at,
             "persistence callback saves score, strikes and cooldown timestamp"
         ))
             passed++;
