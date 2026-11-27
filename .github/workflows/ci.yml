@@ -63,6 +63,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          "$PAWNCC" -iinclude -iomp-stdlib -O2 -Z- \\
+          "$PAWNCC" -iinclude -iomp-stdlib -O2 -Z- \
             "-o$RUNNER_TEMP/ac-build/feature-gate-smoke.amx" examples/feature_gate_smoke.pwn
           test -s "$RUNNER_TEMP/ac-build/feature-gate-smoke.amx"
