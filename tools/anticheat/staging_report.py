@@ -54,6 +54,8 @@ def _parse_record(payload: str, line_number: int) -> dict[str, str]:
         raise ValueError(f"line {line_number}: unsupported or missing schema")
     if fields.get("actor") != "primary":
         raise ValueError(f"line {line_number}: actor must use the primary test role")
+    if fields.get("reason") not in (None, "owner_disconnect", "context_restore_failed"):
+        raise ValueError(f"line {line_number}: unsupported abort reason")
     event = fields.get("event")
     if event not in ALLOWED_EVENTS:
         raise ValueError(f"line {line_number}: unsupported event {event!r}")
