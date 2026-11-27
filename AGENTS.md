@@ -27,10 +27,14 @@ Before changing code, read `docs/PROJECT_CONTEXT.md`, `README.md`, `docs/ROADMAP
 - State clearly whether a check is compile-only, synthetic reference replay, or actual runtime validation.
 - Do not describe the framework as production-ready until every release gate in `docs/VALIDATION.md` has evidence.
 
-## Change management
+## Change management and merge workflow
 
-- Start from the latest `main` on a focused branch. Keep unrelated work out of the same PR.
+- Start from the latest `main` on a focused branch for substantive changes. Small documentation-only corrections may be made directly on `main` when safe.
 - Update tests and documentation with behavior or callback/API changes.
 - Never rewrite expected fixture output only to silence a regression.
-- Update `docs/PROJECT_CONTEXT.md` with meaningful changes to architecture, API contracts, merged PRs, CI state, or next steps.
-- Prefer small, reviewable commits and a draft PR while CI or runtime validation is incomplete.
+- Update `docs/PROJECT_CONTEXT.md` with meaningful changes to architecture, API contracts, merged PRs, CI state, or project preferences.
+- The repository owner prefers a low-friction merge flow and does not want routine manual line-by-line PR review as a required step.
+- Perform the implementation review and inspect the diff yourself. When CI is green and no unresolved blocker is known, present a concise summary and test results rather than asking the owner to manually review every change.
+- Mark PRs ready when their relevant CI checks pass. Do not merge on the owner's behalf unless explicitly asked.
+- If CI fails, security-sensitive behavior changes, or a specific unresolved risk exists, explain that concrete blocker.
+
