@@ -56,8 +56,8 @@ The schema-v2 review record requires `environment.capture_sha256`. The digest mu
 First export one complete, validated capture from the private raw console log:
 
 ```sh
-python3 tools/anticheat/staging_log_sanitize.py \\
-  --log /path/to/private-raw-console.log \\
+python3 tools/anticheat/staging_log_sanitize.py \
+  --log /path/to/private-raw-console.log \
   --output /path/to/staging-sanitized.log
 ```
 
@@ -83,7 +83,7 @@ Use one vehicle model per complete acceptance capture because the transition rep
 
 Only combine captures from the same server commit, client build, and network profile. Keep different client or network profiles in separate reports so their distributions are not blended.
 
-The report accepts individual source logs up to 32 MiB each, a combined 64 MiB total, and 100,000 observations. It rejects symlinks and unsupported model IDs.
+The sanitizer accepts raw source logs up to 32 MiB and emits exports up to 8 MiB each. The vehicle trace report independently caps its input files at 32 MiB each, 64 MiB combined, and 100,000 observations. Both tools reject symlink inputs and unsupported model IDs.
 
 For an exploratory summary, logs can be read without review records. Such output has `provenance.binding_status=not_provided` and must not be treated as an evidence-bound run.
 
@@ -96,8 +96,8 @@ python3 tools/anticheat/staging_review_capture.py --record /path/to/model-411-re
 Pass each log and its matching record in the same order:
 
 ```sh
-python3 tools/anticheat/vehicle_trace_report.py \\
-  --log /path/to/model-411-sanitized.log --record /path/to/model-411-review.json \\
+python3 tools/anticheat/vehicle_trace_report.py \
+  --log /path/to/model-411-sanitized.log --record /path/to/model-411-review.json \
   --log /path/to/model-560-sanitized.log --record /path/to/model-560-review.json --json
 ```
 
