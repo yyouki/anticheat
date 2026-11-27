@@ -29,6 +29,8 @@ The latest PR #4 head commit `b830c90509c38e64da977b34e664c4da75854a6b` passed G
 
 This headless boot check proves that the server process can start and load the staging AMX. It does not connect a game client, exercise live player callbacks, validate anti-cheat thresholds, or establish mobile/desktop false-positive rates. Interactive player testing remains outstanding.
 
+This headless boot check proves that the server process can start and load the staging AMX. It does not connect a game client, exercise live player callbacks, validate anti-cheat thresholds, or establish mobile/desktop false-positive rates. Interactive player testing remains outstanding.
+
 
 ## Required release suite
 
