@@ -35,6 +35,7 @@ For asynchronous persistence:
 1. Call AC_BeginAccountLoad(playerid, accountid) and save the returned session token with the pending query.
 2. When the account query completes, call AC_ApplyPersistentState(playerid, accountid, sessiontoken, score, strikes, score_decay_at, strike_decay_at).
 3. The token and account key prevent a late query callback from activating a reused player slot or a different account. Only the first matching completion is accepted; duplicate completions for an already-loaded session are rejected.
+4. Keep the supplied strike-decay timestamp with the account state. During an active five-minute strike cooldown it also lets the core restore the cooldown after reconnect; the same timestamp still drives the six-hour strike decay.
 4. Implement public AC_OnPersistenceSave(playerid, accountid, score, strikes, score_decay_at, strike_decay_at). Return 1 only when the save request has been accepted by the host persistence layer.
 
 No MySQL plugin, SQLite library, ORM, or table schema is required by the core.
