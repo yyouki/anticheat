@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "scenario_id": "legal_movement_during_and_after_grace",
+  "description": "Continuous ordinary on-foot movement through a legitimate grace period produces no evidence.",
+  "events": [
+    {
+      "type": "grace_start",
+      "at_ms": 1000,
+      "duration_ms": 4000
+    },
+    {
+      "type": "movement_sample",
+      "at_ms": 1000,
+      "x": 0,
+      "y": 0,
+      "ping": 50,
+      "packet_loss": 0,
+      "state": "onfoot",
+      "interior": 0,
+      "world": 0
+    },
+    {
+      "type": "movement_sample",
+      "at_ms": 1500,
+      "x": 2.5,
+      "y": 0,
+      "ping": 50,
+      "packet_loss": 0,
+      "state": "onfoot",
+      "interior": 0,
+      "world": 0
+    },
+    {
+      "type": "movement_sample",
+      "at_ms": 2000,
+      "x": 5,
+      "y": 0,
+      "ping": 50,
+      "packet_loss": 0,
+      "state": "onfoot",
+      "interior": 0,
+      "world": 0
+    },
+    {
+      "type": "movement_sample",
+      "at_ms": 2500,
+      "x": 7.5,
+      "y": 0,
+      "ping": 50,
+      "packet_loss": 0,
+      "state": "onfoot",
+      "interior": 0,
+      "world": 0
+    },
+    {
+      "type": "movement_sample",
+      "at_ms": 3000,
+      "x": 10,
+      "y": 0,
+      "ping": 50,
+      "packet_loss": 0,
+      "state": "onfoot",
+      "interior": 0,
+      "world": 0
+    },
+    {
+      "type": "movement_sample",
+      "at_ms": 3500,
+      "x": 12.5,
+      "y": 0,
+      "ping": 50,
+      "packet_loss": 0,
+      "state": "onfoot",
+      "interior": 0,
+      "world": 0
+    },
+    {
+      "type": "movement_sample",
+      "at_ms": 4000,
+      "x": 15,
+      "y": 0,
+      "ping": 50,
+      "packet_loss": 0,
+      "state": "onfoot",
+      "interior": 0,
+      "world": 0
+    },
+    {
+      "type": "movement_sample",
+      "at_ms": 4500,
+      "x": 17.5,
+      "y": 0,
+      "ping": 50,
+      "packet_loss": 0,
+      "state": "onfoot",
+      "interior": 0,
+      "world": 0
+    },
+    {
+      "type": "movement_sample",
+      "at_ms": 5000,
+      "x": 20,
+      "y": 0,
+      "ping": 50,
+      "packet_loss": 0,
+      "state": "onfoot",
+      "interior": 0,
+      "world": 0
+    },
+    {
+      "type": "movement_sample",
+      "at_ms": 5500,
+      "x": 22.5,
+      "y": 0,
+      "ping": 50,
+      "packet_loss": 0,
+      "state": "onfoot",
+      "interior": 0,
+      "world": 0
+    },
+    {
+      "type": "movement_sample",
+      "at_ms": 6000,
+      "x": 25,
+      "y": 0,
+      "ping": 50,
+      "packet_loss": 0,
+      "state": "onfoot",
+      "interior": 0,
+      "world": 0
+    }
+  ],
+  "expected": {
+    "evidence_count": 0,
+    "evidence_categories": [],
+    "movement_evidence": 0,
+    "score": 0,
+    "strikes": 0
+  }
+}
