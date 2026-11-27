@@ -64,6 +64,8 @@ The supplied config disables server-list announcement, query visibility, and RCO
 
 Useful commands: `/acstagehelp`, `/acstageauth <accountid>`, `/acstageinfo`, `/acstagetest`, `/acstageevidence`, `/acstagetoggle`, `/acstagesave`, `/acstageclear`, `/acstageteleport`, `/acstagevehicle`, `/acstageexitvehicle`, `/acstageinterior`, `/acstageworld`, `/acstagespectate <playerid>`, `/acstageunspectate`, `/acstagelogbegin`, and `/acstagelogend`.
 
+The `/acstagetest` command reserves synthetic account IDs beginning at `2000000000` for its internal persistence checks. Do not assign that range to manually selected staging test accounts.
+
 ## What this does not prove
 
 The harness does not provide a durable database adapter, a client-side test bot, an exploit simulator, an automatic punishment system, or a production authentication flow. The offline acceptance report verifies that expected staging callbacks and commands were observed without evidence or review markers during one bounded test window. It is not an exploit simulator and does not establish movement/vehicle threshold accuracy, mobile/desktop false-positive rates, real reconnect behavior, production performance, or release readiness. Actual runtime testing still requires supported connected clients and representative network conditions.
