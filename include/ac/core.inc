@@ -26,6 +26,8 @@ stock AC_GetVersion(destination[], size = sizeof(destination))
 
 stock AC_AdvanceSessionToken(playerid)
 {
+    if (!AC_IsValidPlayerId(playerid))
+        return 0;
     AC_SessionToken[playerid]++;
     if (AC_SessionToken[playerid] <= 0)
         AC_SessionToken[playerid] = 1;
@@ -34,13 +36,15 @@ stock AC_AdvanceSessionToken(playerid)
 
 stock AC_GetSessionToken(playerid)
 {
-    if (playerid < 0 || playerid >= MAX_PLAYERS)
+    if (!AC_IsValidPlayerId(playerid))
         return 0;
     return AC_SessionToken[playerid];
 }
 
 stock AC_OnPlayerConnect(playerid)
 {
+    if (!AC_IsValidPlayerId(playerid))
+        return 0;
     AC_AdvanceSessionToken(playerid);
     AC_ResetPlayer(playerid);
     return 1;
@@ -48,6 +52,8 @@ stock AC_OnPlayerConnect(playerid)
 
 stock AC_OnPlayerDisconnect(playerid)
 {
+    if (!AC_IsValidPlayerId(playerid))
+        return 0;
     if (AC_PlayerLoaded[playerid] && AC_Dirty[playerid])
         AC_SavePersistentState(playerid);
 
@@ -61,7 +67,7 @@ stock AC_OnPlayerDisconnect(playerid)
 
 stock AC_SetIdentity(playerid, accountid)
 {
-    if (!IsPlayerConnected(playerid) || accountid <= 0)
+    if (!AC_IsValidPlayerId(playerid) || !IsPlayerConnected(playerid) || accountid <= 0)
         return 0;
 
     AC_AdvanceSessionToken(playerid);
@@ -79,7 +85,7 @@ stock AC_SetIdentity(playerid, accountid)
 // AC_ApplyPersistentState when the database callback completes.
 stock AC_BeginAccountLoad(playerid, accountid)
 {
-    if (!IsPlayerConnected(playerid) || accountid <= 0)
+    if (!AC_IsValidPlayerId(playerid) || !IsPlayerConnected(playerid) || accountid <= 0)
         return 0;
 
     AC_AdvanceSessionToken(playerid);
@@ -90,7 +96,8 @@ stock AC_BeginAccountLoad(playerid, accountid)
 
 stock AC_ApplyPersistentState(playerid, accountid, sessiontoken, score, strikes, score_decay_at, strike_decay_at)
 {
-    if (!IsPlayerConnected(playerid)
+    if (!AC_IsValidPlayerId(playerid)
+        || !IsPlayerConnected(playerid)
         || sessiontoken != AC_SessionToken[playerid]
         || accountid != AC_AccountKey[playerid])
     {
@@ -114,7 +121,7 @@ stock AC_ApplyPersistentState(playerid, accountid, sessiontoken, score, strikes,
 
 stock AC_SetEnabled(playerid, bool:enabled)
 {
-    if (!IsPlayerConnected(playerid) || !AC_PlayerLoaded[playerid])
+    if (!AC_IsValidPlayerId(playerid) || !IsPlayerConnected(playerid) || !AC_PlayerLoaded[playerid])
         return 0;
 
     AC_PlayerEnabled[playerid] = enabled;
@@ -124,8 +131,7 @@ stock AC_SetEnabled(playerid, bool:enabled)
 
 stock bool:AC_IsMonitored(playerid)
 {
-    return playerid >= 0
-        && playerid < MAX_PLAYERS
+    return AC_IsValidPlayerId(playerid)
         && IsPlayerConnected(playerid)
         && AC_PlayerLoaded[playerid]
         && AC_PlayerEnabled[playerid];
@@ -133,7 +139,7 @@ stock bool:AC_IsMonitored(playerid)
 
 stock AC_NotifyLegitimateTeleport(playerid, milliseconds = AC_DEFAULT_GRACE_MS)
 {
-    if (!IsPlayerConnected(playerid))
+    if (!AC_IsValidPlayerId(playerid) || !IsPlayerConnected(playerid))
         return 0;
 
     AC_GraceStartedTick[playerid] = GetTickCount();
@@ -154,6 +160,8 @@ stock AC_NotifyLegitimateSpawn(playerid)
 
 stock AC_NotifyLegitimateVehicleChange(playerid)
 {
+    if (!AC_IsValidPlayerId(playerid) || !IsPlayerConnected(playerid))
+        return 0;
     AC_VehicleOverLimitSamples[playerid] = 0;
     AC_LastVehicleId[playerid] = INVALID_VEHICLE_ID;
     return 1;
@@ -162,11 +170,13 @@ stock AC_NotifyLegitimateVehicleChange(playerid)
 stock AC_NotifyLegitimateHealthChange(playerid)
 {
     // Health/armour changes are not scored in the initial production baseline.
-    return IsPlayerConnected(playerid);
+    return AC_IsValidPlayerId(playerid) && IsPlayerConnected(playerid);
 }
 
 stock bool:AC_IsInGrace(playerid)
 {
+    if (!AC_IsValidPlayerId(playerid))
+        return false;
     if (AC_GraceDurationMs[playerid] <= 0)
         return false;
 
@@ -180,6 +190,8 @@ stock bool:AC_IsInGrace(playerid)
 
 stock AC_SavePersistentState(playerid)
 {
+    if (!AC_IsValidPlayerId(playerid))
+        return 0;
     if (!AC_PlayerLoaded[playerid] || AC_AccountKey[playerid] <= 0)
         return 0;
 
@@ -200,6 +212,8 @@ stock AC_SavePersistentState(playerid)
 
 stock AC_ApplyDecay(playerid)
 {
+    if (!AC_IsValidPlayerId(playerid))
+        return 0;
     new now = gettime();
     new elapsed;
     new periods;
