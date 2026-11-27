@@ -10,6 +10,9 @@ stock AC_OnPlayerSpawn(playerid)
 
 stock AC_OnPlayerDeath(playerid)
 {
+    if (!AC_IsValidPlayerId(playerid))
+        return 0;
+
     AC_ResetSampling(playerid);
     return AC_NotifyLegitimateTeleport(playerid, AC_DEFAULT_GRACE_MS);
 }
