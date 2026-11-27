@@ -29,11 +29,13 @@ REQUIRED = [
     "tools/anticheat/replay.py",
     "tools/anticheat/staging_report.py",
     "tools/anticheat/staging_review.py",
+    "tools/anticheat/staging_review_batch.py",
     "tools/anticheat/staging_review_scenarios.json",
     "tools/anticheat/openmp_runtime_smoke.py",
     "tests/test_replay.py",
     "tests/test_staging_report.py",
     "tests/test_staging_review.py",
+    "tests/test_staging_review_batch.py",
     "docs/STAGING_FALSE_POSITIVE_MATRIX.md",
     "docs/templates/staging-review-template.json",
     "tests/fixtures/staging_acceptance_success.log",
@@ -270,6 +272,10 @@ def main() -> int:
     assert len(review_template["observations"]) == len(review_manifest["scenarios"])
     assert "scenario_execution_complete" in review_tool
     assert "false-positive matrix" in staging_readme.lower()
+    review_batch = sources["tools/anticheat/staging_review_batch.py"]
+    assert "false_positive_rate_estimated" in review_batch
+    assert "scenario_result_counts" in review_batch
+    assert "MAX_RECORDS = 500" in review_batch
 
     player_id_parser = function_body(staging, "AC_StageParsePlayerId")
     assert "return -1;" in player_id_parser

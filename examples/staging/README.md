@@ -96,3 +96,12 @@ python3 tools/anticheat/staging_review.py --record /path/to/staging-review.json
 \`\`\`
 
 The validator checks record structure and whether scenario/evidence reviews are complete. It cannot prove that the scenarios were actually executed or that a run is false-positive-free. Its output always leaves independent verification and production readiness false. Keep review records and raw logs local and remove any accidental identifiers before sharing a summary.
+
+
+For repeated client/build/network runs, use the batch summary tool after individually validating and saving each review JSON in a private directory:
+
+```sh
+python3 tools/anticheat/staging_review_batch.py --records-dir /path/to/private-review-records
+```
+
+It groups by exact build/environment metadata and includes per-scenario counts. It rejects invalid or duplicate run records and reports counts only; it does not calculate false-positive rates or certify runtime behavior.

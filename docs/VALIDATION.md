@@ -135,6 +135,11 @@ Run #69 does not execute connected game clients. The JSON staging report validat
 
 The next manual-testing increment adds docs/STAGING_FALSE_POSITIVE_MATRIX.md, a versioned review-record template, and tools/anticheat/staging_review.py. They help record benign actions across client builds and network profiles while keeping raw identifiers out of the review schema. The validator reports record completeness and human evidence-review state only; it does not certify test execution, false-positive rate, independent verification, or production readiness. Interactive runtime testing remains outstanding.
 
+
+PR #11, [Add privacy-safe staging false-positive review ledger](https://github.com/yyouki/anticheat/pull/11), merged as `17192632aab1e8c63c17b3aaac1ebc6fb67f0752`. Post-merge run #71 (`45977639889`) passed all three jobs: static audit, Python tests/replay and Pawn compile/package/headless open.mp smoke. Artifact `ac-staging-package` ID `15187896874`, SHA-256 `9cfff4b4c34ae292d68d11f0f7bbc94a7a31cdd6a0806e9e37b81fd0ba6dc`.
+
+The follow-up batch summary tool groups individually validated operator records by exact server commit, artifact digest, open.mp version, client platform/build label, and network profile. It reports aggregate and per-scenario counts, rejects invalid/duplicate records, and never estimates a false-positive rate. This remains bookkeeping over operator-authored input, not runtime verification.
+
 ## Required release suite
 
 | Area | Required cases |

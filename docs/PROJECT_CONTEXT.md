@@ -48,7 +48,9 @@ Supporting validation lives in:
 - `tools/anticheat/replay.py`: Python reference model and fixture runner.
 - `tools/anticheat/openmp_runtime_smoke.py`: starts the pinned open.mp server and verifies that the staging gamemode loads.
 - `tools/anticheat/staging_report.py`: validates one privacy-safe interactive staging capture.
-- `tests/test_replay.py` and `tests/test_staging_report.py`: tests for replay outcomes, telemetry contracts, staging-report parsing, and source invariants.
+- `tools/anticheat/staging_review.py`: validates one local operator-authored false-positive review record.
+- `tools/anticheat/staging_review_batch.py`: validates and aggregates up to 500 local review records by exact build and network metadata.
+- `tests/test_replay.py`, `tests/test_staging_report.py`, `tests/test_staging_review.py`, and `tests/test_staging_review_batch.py`: tests for replay outcomes, staging contracts, privacy-safe review records, and batch summaries.
 - `tests/fixtures/`: synthetic JSON telemetry scenarios and a pseudonymous staging acceptance log.
 - `.github/workflows/`: static audit, Python tests/replays and Pawn smoke builds.
 - `docs/INTEGRATION.md`: host gamemode callback and persistence contract.
@@ -124,6 +126,16 @@ Always use a session token and account key to reject stale asynchronous loads an
   - Merge commit: `257b3d8bb371639a5d12725111eb9b77991b27ff`.
   - Post-merge run #69 (`45976338084`) passed all three jobs.
   - Artifact: `ac-staging-package`, ID `15186404863`, SHA-256 `82a1cb95ced58ed251ab17755445537f2769ab3b20e774480074bbce191ed699`.
+- PR #11, privacy-safe false-positive review ledger, merged to `main`.
+  - PR: https://github.com/yyouki/anticheat/pull/11
+  - Merge commit: `17192632aab1e8c63c17b3aaac1ebc6fb67f0752`.
+  - Post-merge run #71 (`45977639889`) passed static audit, Python tests/replay, all Pawn compile targets, staging artifact upload, and pinned open.mp headless boot.
+  - Artifact: `ac-staging-package`, ID `15187896874`, SHA-256 `9cfff4b4c34ae292d68d11f0f7bbc94a7a31cdd6a0806e9e37b81fd0ba6dc`.
+- PR #11, privacy-safe false-positive review ledger, merged to `main`.
+  - PR: https://github.com/yyouki/anticheat/pull/11
+  - Merge commit: `17192632aab1e8c63c17b3aaac1ebc6fb67f0752`.
+  - Post-merge run #71 (`45977639889`) passed all three jobs.
+  - Artifact: `ac-staging-package`, ID `15187896874`, SHA-256 `9cfff4b4c34ae292d68d11f0f7bbc94a7a31cdd6a0806e9e37b81fd0ba6dc`.
 
 A PR being merged does not imply every CI job passed. Always verify the latest workflow for the resulting `main` commit.
 
@@ -187,3 +199,16 @@ The sample adapter remains volatile RAM only. The staging report's synthetic suc
 3. Review every evidence event, record its human adjudication, and resolve confirmed false positives before considering threshold changes.
 4. Benchmark runtime cost and review adversarial traces before changing detector thresholds.
 5. Replace the sample RAM adapter only in a host-specific integration package with a known persistence contract.
+
+
+## Multi-run review summary
+
+The batch summary tool is `tools/anticheat/staging_review_batch.py`. It validates every review JSON in a local directory and groups counts by exact server commit, artifact digest, open.mp version, client platform/build label, and network profile. It includes per-scenario counts and rejects invalid or duplicate-run records. It does not estimate a false-positive rate or independently verify operator-entered observations.
+
+Batch command:
+
+```sh
+python3 tools/anticheat/staging_review_batch.py --records-dir /path/to/private-review-records
+```
+
+The review JSON directory remains local and should not be committed or uploaded with raw logs.
