@@ -168,3 +168,8 @@ A reviewer must attempt gradual threshold evasion, single-family evidence floodi
 ## Promotion policy
 
 No automatic punishment in v1. A production release requires a successful build, passing runtime/false-positive/performance/adversarial tests, a reviewed adapter implementation, and an administrator-visible evidence trail.
+
+
+PR #12, [Add multi-run staging review summaries](https://github.com/yyouki/anticheat/pull/12), merged as `18346071602254afa6177bbf2cf9d86f92b246cb`. Post-merge run #75 (`45982873217`) passed all three jobs: static audit, Pawn compile, and pinned open.mp headless runtime smoke. Artifact `ac-staging-package` ID `15189179026`, size 43,718 bytes, SHA-256 `1a0bd8dc250c2771f2177776406a638918bc4560eec5310fddc2a0117668754a`.
+
+PR #12 adds a bounded multi-run summary for operator-entered review records. Counts remain observations, not rates; they do not establish test execution, authenticate logs, or certify detector quality. No connected game-client test was performed by run #75.

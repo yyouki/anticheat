@@ -50,7 +50,8 @@ Supporting validation lives in:
 - `tools/anticheat/staging_report.py`: validates one privacy-safe interactive staging capture.
 - `tools/anticheat/staging_review.py`: validates one local operator-authored false-positive review record.
 - `tools/anticheat/staging_review_batch.py`: validates and aggregates up to 500 local review records by exact build and network metadata.
-- `tests/test_replay.py`, `tests/test_staging_report.py`, `tests/test_staging_review.py`, and `tests/test_staging_review_batch.py`: tests for replay outcomes, staging contracts, privacy-safe review records, and batch summaries.
+- `tools/anticheat/staging_review_capture.py`: binds a schema-v2 review record to the SHA-256 digest of one passing local staging capture.
+- `tests/test_replay.py`, `tests/test_staging_report.py`, `tests/test_staging_review.py`, `tests/test_staging_review_batch.py`, and `tests/test_staging_review_capture.py`: tests for replay outcomes, staging contracts, privacy-safe review records, batch summaries, and capture binding.
 - `tests/fixtures/`: synthetic JSON telemetry scenarios and a pseudonymous staging acceptance log.
 - `.github/workflows/`: static audit, Python tests/replays and Pawn smoke builds.
 - `docs/INTEGRATION.md`: host gamemode callback and persistence contract.
@@ -190,7 +191,8 @@ The sample adapter remains volatile RAM only. The staging report's synthetic suc
 - `tools/anticheat/staging_review_scenarios.json` is the versioned scenario manifest.
 - `docs/templates/staging-review-template.json` is a local-only template; it intentionally starts with unfilled environment metadata and all scenarios marked `not_run`.
 - `tools/anticheat/staging_review.py` validates one operator-authored JSON review record and reports missing, blocked, not-run, pending, inconclusive, and confirmed false-positive outcomes.
-- The review validator never certifies that tests were actually executed, that the detector is false-positive-free, or that the project is production-ready.
+- Schema v2 requires `environment.capture_sha256`; `staging_review_capture.py` verifies the digest against the exact local capture bytes and reruns the structured-log contract before a record is accepted for binding.
+- The review validator never certifies that tests were actually executed, that the detector is false-positive-free, or that the project is production-ready. Capture binding does not authenticate log origin or verify a human test execution.
 
 ## Remaining release gates
 
@@ -212,3 +214,8 @@ python3 tools/anticheat/staging_review_batch.py --records-dir /path/to/private-r
 ```
 
 The review JSON directory remains local and should not be committed or uploaded with raw logs.
+
+
+## PR #12 — multi-run review summaries
+
+PR #12, [Add multi-run staging review summaries](https://github.com/yyouki/anticheat/pull/12), was merged as `18346071602254afa6177bbf2cf9d86f92b246cb` on 2026-11-27. Post-merge workflow run #75 (`45982873217`) completed successfully: static audit, Pawn compile, and pinned open.mp headless runtime smoke all passed. The `ac-staging-package` artifact is ID `15189179026`, SHA-256 `1a0bd8dc250c2771f2177776406a638918bc4560eec5310fddc2a0117668754a` (43,718 bytes). These automated checks do not connect interactive game clients.

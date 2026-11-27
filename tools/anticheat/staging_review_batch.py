@@ -56,6 +56,7 @@ def aggregate_records(records: list[Any]) -> dict[str, Any]:
     errors: list[str] = []
     valid: list[tuple[dict[str, Any], dict[str, Any]]] = []
     seen_run_ids: set[str] = set()
+    seen_capture_hashes: set[str] = set()
 
     for index, record in enumerate(records, start=1):
         report = validate_review_record(record)
@@ -67,6 +68,11 @@ def aggregate_records(records: list[Any]) -> dict[str, Any]:
             errors.append("duplicate run_id detected")
             continue
         seen_run_ids.add(run_id)
+        capture_sha256 = record["environment"]["capture_sha256"]
+        if capture_sha256 in seen_capture_hashes:
+            errors.append("duplicate capture_sha256 detected")
+            continue
+        seen_capture_hashes.add(capture_sha256)
         valid.append((record, report))
 
     if errors:

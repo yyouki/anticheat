@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import json
 from pathlib import Path
 import sys
@@ -26,6 +27,7 @@ def valid_record(run_id: str = "run-001") -> dict:
     data["environment"].update({
         "server_commit": "a" * 40,
         "staging_artifact_sha256": "b" * 64,
+        "capture_sha256": hashlib.sha256(run_id.encode("utf-8")).hexdigest(),
         "client_build": "test-build-1",
         "started_at": "2026-11-27T10:00:00+07:00",
     })
@@ -77,6 +79,14 @@ class StagingReviewBatchTests(unittest.TestCase):
         report = aggregate_records([record])
         self.assertEqual(report["totals"]["confirmed_false_positive_count"], 1)
         self.assertEqual(report["totals"]["review_decision_counts"]["confirmed_false_positive"], 1)
+
+    def test_rejects_duplicate_capture_hashes(self) -> None:
+        first = valid_record("run-001")
+        second = valid_record("run-002")
+        second["environment"]["capture_sha256"] = first["environment"]["capture_sha256"]
+        report = aggregate_records([first, second])
+        self.assertEqual(report["status"], "invalid")
+        self.assertIn("duplicate capture_sha256 detected", report["errors"])
 
     def test_rejects_duplicate_run_ids(self) -> None:
         first = valid_record("run-001")

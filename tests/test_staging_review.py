@@ -23,6 +23,7 @@ def valid_record() -> dict:
     data["environment"].update({
         "server_commit": "a" * 40,
         "staging_artifact_sha256": "b" * 64,
+        "capture_sha256": "c" * 64,
         "client_build": "test-build-1",
         "started_at": "2026-11-27T10:00:00+07:00",
     })
@@ -143,6 +144,16 @@ class StagingReviewTests(unittest.TestCase):
 
         data = valid_record()
         data["observations"][0]["review_decision"] = {}
+        self.assertEqual(validate_review_record(data)["record_status"], "invalid")
+
+    def test_invalid_capture_digest_is_rejected(self) -> None:
+        data = valid_record()
+        data["environment"]["capture_sha256"] = "not-a-digest"
+        self.assertEqual(validate_review_record(data)["record_status"], "invalid")
+
+    def test_schema_v1_requires_explicit_capture_binding_migration(self) -> None:
+        data = valid_record()
+        data["schema_version"] = 1
         self.assertEqual(validate_review_record(data)["record_status"], "invalid")
 
     def test_invalid_commit_and_timezone_are_rejected(self) -> None:

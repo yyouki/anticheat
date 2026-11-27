@@ -97,6 +97,14 @@ python3 tools/anticheat/staging_review.py --record /path/to/staging-review.json
 
 The validator checks record structure and whether scenario/evidence reviews are complete. It cannot prove that the scenarios were actually executed or that a run is false-positive-free. Its output always leaves independent verification and production readiness false. Keep review records and raw logs local and remove any accidental identifiers before sharing a summary.
 
+The review template uses schema version 2. Bind the review record to the exact raw capture file with:
+
+```sh
+python3 tools/anticheat/staging_review_capture.py --record /path/to/staging-review.json --capture-log /path/to/staging-console.log --write-digest
+```
+
+This command checks the staging log contract, computes SHA-256 over the exact raw file bytes, upgrades a schema-v1 record to schema v2 when explicitly requested, and writes the digest into `environment.capture_sha256`. Run it again without `--write-digest` to verify the binding later. It rejects symlinks and capture files larger than 32 MiB. It prints no raw log contents or local file paths. This binds the review to one exact file and checks its structure; it does not authenticate who produced the log or prove that a human executed the scenarios.
+
 
 For repeated client/build/network runs, use the batch summary tool after individually validating and saving each review JSON in a private directory:
 
