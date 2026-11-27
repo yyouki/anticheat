@@ -92,7 +92,7 @@ Always use a session token and account key to reject stale asynchronous loads an
   - Branch: `fix/replay-ci-and-project-context`.
   - Verified head commit: `da672c628cc0b85c5116fa3b61b1041ee9543c80`.
   - GitHub Actions run #33 (`45945300237`) passed static audit, all 5 Python unit tests, all 10 replay fixtures, and both default/opt-in Pawn smoke compile jobs.
-  - PR #3 is open as Draft and is not yet merged to `main`. A final documentation-only commit is being added to preserve this verified result; recheck CI for the resulting head SHA.
+  - PR #3 is open and ready for review; it is not yet merged to `main`. The final documentation snapshot was verified again in GitHub Actions run #35 (`45945431019`), with static audit, all 5 Python unit tests, all 10 replay fixtures, and both Pawn smoke compile jobs passing.
 
 A PR being merged does not imply every CI job passed. Never describe the repository as fully green unless the current workflow for the relevant commit confirms it.
 
