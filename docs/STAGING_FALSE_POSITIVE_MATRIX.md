@@ -43,9 +43,9 @@ The full /acstagelogbegin to /acstagelogend acceptance capture remains a separat
 5. For spectate_roundtrip, set secondary_client_connected=true only when the second test client was actually connected for that scenario.
 6. Validate the local record:
 
-   \`\`\`sh
+   ```sh
    python3 tools/anticheat/staging_review.py --record /path/to/staging-review.json
-   \`\`\`
+   ```
 
 7. Keep the review JSON and raw logs private unless they have been checked for accidental identifiers. Share only the redacted summary when reporting results.
 
@@ -60,6 +60,28 @@ python3 tools/anticheat/staging_review_capture.py --record /path/to/staging-revi
 This validates the structured event sequence and writes the SHA-256 digest of the exact raw file bytes into the review record. Repeat without `--write-digest` to verify the binding later. The command rejects symlink inputs and raw captures larger than 32 MiB. It does not upload either file, authenticate log origin, or prove that the scenario observations were performed.
 
 The batch tool rejects a repeated `capture_sha256` across distinct run IDs, preventing accidental reuse of one capture as multiple independent runs. Keep the raw log and review record private.
+
+## Collecting vehicle telemetry observations
+
+During each bounded acceptance capture, the staging gamemode also writes `[AC-STAGE-VEHICLE]` records for the primary client while it is driving. Samples are limited to two per second and 3,600 per capture (about 30 minutes at the full sampling rate); after the cap, collection stops and emits one notice. Each sample contains an approved road-car model ID, quantized server-side speed, ping, and a fresh host-supplied packet-loss value when one exists. Unknown packet loss is recorded as `-1`. The stock staging gamemode does not configure a packet-loss provider, so the field normally remains unknown unless a host integration supplies a fresh measurement through `AC_SetNetworkQuality`. Player IDs, account IDs, vehicle IDs, and coordinates are not written.
+
+Use one vehicle model per complete acceptance capture because the transition report intentionally requires one vehicle-enter/exit pair. The staging command accepts `/acstagevehicle <modelid>`; it defaults to model 411. Approved model IDs are:
+
+`400, 401, 402, 404, 405, 410, 411, 415, 419, 421, 426, 429, 436, 439, 445, 451, 458, 477, 489, 496, 506, 517, 518, 526, 527, 533, 541, 546, 547, 550, 555, 560, 562, 565, 566, 567, 575, 576, 580, 585, 587, 589, 602, 603`.
+
+Only combine captures from the same server commit, client build, and network profile. Keep different client or network profiles in separate reports so their distributions are not blended.
+
+The report accepts individual source logs up to 32 MiB each, a combined 64 MiB total, and 100,000 observations. It rejects symlinks and unsupported model IDs.
+
+For multiple model runs, combine the local logs:
+
+```sh
+python3 tools/anticheat/vehicle_trace_report.py \\
+  --log /path/to/model-411-console.log \\
+  --log /path/to/model-560-console.log
+```
+
+The tool reports counts and descriptive min/p50/p95/max values per model. These values are observations from the supplied logs, not safe speed limits, detector decisions, or evidence that a scenario was executed correctly. The tool cannot authenticate log origin. Keep raw logs private and local.
 
 ## Interpreting the validator output
 
@@ -76,11 +98,11 @@ The sample persistence adapter is RAM-only. A server process restart loses its s
 
 ## Comparing multiple review runs
 
-Keep each completed review JSON file in a private local directory. Use a distinct, non-identifying \`run_id\` for every run. The batch aggregator validates every file before producing a combined report:
+Keep each completed review JSON file in a private local directory. Use a distinct, non-identifying `run_id` for every run. The batch aggregator validates every file before producing a combined report:
 
-\`\`\`sh
+```sh
 python3 tools/anticheat/staging_review_batch.py --records-dir /path/to/private-review-records
-\`\`\`
+```
 
 The output groups runs by the exact server commit, staging artifact digest, open.mp version, client platform/build label, and network profile. Each group contains total result counts and per-scenario counts, so a scenario that repeatedly produces evidence is visible instead of being hidden in an overall total.
 

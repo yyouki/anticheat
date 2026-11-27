@@ -9,7 +9,12 @@ new AC_StageSavedScoreDecayAt[AC_STAGE_STORE_CAPACITY];
 new AC_StageSavedStrikeDecayAt[AC_STAGE_STORE_CAPACITY];
 new AC_StageSavedLastStrikeAt[AC_STAGE_STORE_CAPACITY];
 new AC_StageVehicleId[MAX_PLAYERS];
+new AC_StageLastVehicleTraceTick[MAX_PLAYERS];
+new AC_StageVehicleTraceSampleCount;
+new bool:AC_StageVehicleTraceLimitNotified;
 new AC_StageLogCaptureOwner = INVALID_PLAYER_ID;
+
+#define AC_STAGE_MAX_VEHICLE_TRACE_SAMPLES (3600)
 
 #define AC_STAGE_TEST_INTERIOR_ID (17)
 #define AC_STAGE_TEST_WORLD_ID (9000)
@@ -103,6 +108,88 @@ stock AC_StageParsePlayerId(const value[])
     return result;
 }
 
+stock bool:AC_StageIsTraceVehicleModel(modelid)
+{
+    // Keep the staging trace command limited to ordinary road cars.
+    switch (modelid)
+    {
+        case 400, 401, 402, 404, 405, 410, 411, 415, 419, 421, 426, 429,
+             436, 439, 445, 451, 458, 477, 489, 496, 506, 517, 518, 526,
+             527, 533, 541, 546, 547, 550, 555, 560, 562, 565, 566, 567,
+             575, 576, 580, 585, 587, 589, 602, 603:
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+stock AC_StageCaptureVehicleTelemetry(playerid)
+{
+    if (playerid != AC_StageLogCaptureOwner
+        || !AC_IsMonitored(playerid)
+        || GetPlayerState(playerid) != PLAYER_STATE_DRIVER)
+    {
+        return 0;
+    }
+
+    if (AC_StageVehicleTraceSampleCount >= AC_STAGE_MAX_VEHICLE_TRACE_SAMPLES)
+    {
+        if (!AC_StageVehicleTraceLimitNotified)
+        {
+            print("[AC-STAGE] Vehicle trace sample limit reached; further observations are suppressed.");
+            AC_StageVehicleTraceLimitNotified = true;
+        }
+        return 0;
+    }
+
+    new tick = GetTickCount();
+    if ((tick - AC_StageLastVehicleTraceTick[playerid]) < AC_SAMPLE_INTERVAL_MS)
+        return 0;
+    AC_StageLastVehicleTraceTick[playerid] = tick;
+
+    new vehicleid = GetPlayerVehicleID(playerid);
+    if (vehicleid == 0 || vehicleid == INVALID_VEHICLE_ID || !IsValidVehicle(vehicleid))
+        return 0;
+
+    new modelid = GetVehicleModel(vehicleid);
+    if (!AC_StageIsTraceVehicleModel(modelid))
+        return 0;
+
+    new Float:vx, Float:vy, Float:vz;
+    if (!GetVehicleVelocity(vehicleid, vx, vy, vz))
+        return 0;
+
+    // Keep the detector's exact velocity conversion, but record observations only.
+    new Float:speed_kmh = floatsqroot((vx * vx) + (vy * vy) + (vz * vz)) * AC_VEHICLE_SPEED_FACTOR;
+    new speed_centi_kmh = floatround(speed_kmh * 100.0, floatround_round);
+    new ping = AC_GetPing(playerid);
+    if (ping < 0)
+        ping = GetPlayerPing(playerid);
+
+    // -1 means no fresh host-supplied packet-loss measurement was available.
+    new packet_loss_centi_pct = -1;
+    if (AC_NetworkPacketLossKnown[playerid]
+        && (tick - AC_NetworkQualityTick[playerid]) <= AC_NETWORK_QUALITY_TTL_MS)
+    {
+        packet_loss_centi_pct = floatround(
+            AC_NetworkPacketLoss[playerid] * 100.0,
+            floatround_round
+        );
+    }
+
+    // No player ID, account ID, vehicle ID, or coordinates are written.
+    printf(
+        "[AC-STAGE-VEHICLE] schema=1 actor=primary model=%d speed_centi_kmh=%d ping=%d packet_loss_centi_pct=%d",
+        modelid,
+        speed_centi_kmh,
+        ping,
+        packet_loss_centi_pct
+    );
+    AC_StageVehicleTraceSampleCount++;
+    return 1;
+}
+
 stock AC_StageRequireLoaded(playerid)
 {
     if (!AC_IsValidPlayerId(playerid) || !IsPlayerConnected(playerid))
@@ -151,6 +238,9 @@ stock AC_StageBeginLogCapture(playerid)
     }
 
     AC_StageLogCaptureOwner = playerid;
+    AC_StageLastVehicleTraceTick[playerid] = 0;
+    AC_StageVehicleTraceSampleCount = 0;
+    AC_StageVehicleTraceLimitNotified = false;
     AC_StageLogEvent(playerid, "run_begin", "");
     SendClientMessage(playerid, 0xD8D8D8FF, "[AC-STAGE] Acceptance log capture started.");
     return 1;
@@ -835,6 +925,7 @@ public OnPlayerConnect(playerid)
 {
     AC_OnPlayerConnect(playerid);
     AC_StageVehicleId[playerid] = INVALID_VEHICLE_ID;
+    AC_StageLastVehicleTraceTick[playerid] = 0;
     AC_StageInteriorActive[playerid] = false;
     AC_StageWorldActive[playerid] = false;
     AC_StageSpectating[playerid] = false;
@@ -899,6 +990,7 @@ public OnPlayerInteriorChange(playerid, newinteriorid, oldinteriorid)
 public OnPlayerUpdate(playerid)
 {
     AC_OnPlayerUpdate(playerid);
+    AC_StageCaptureVehicleTelemetry(playerid);
     return 1;
 }
 
@@ -915,7 +1007,7 @@ public OnPlayerCommandText(playerid, cmdtext[])
         SendClientMessage(playerid, 0xD8D8D8FF, "/acstagesave - save to the temporary memory adapter");
         SendClientMessage(playerid, 0xD8D8D8FF, "/acstageclear - clear your own review state");
         SendClientMessage(playerid, 0xD8D8D8FF, "/acstageteleport - test a server-notified legal teleport");
-        SendClientMessage(playerid, 0xD8D8D8FF, "/acstagevehicle - spawn and enter a test vehicle");
+        SendClientMessage(playerid, 0xD8D8D8FF, "/acstagevehicle [modelid] - spawn an approved road-car trace model (default 411)");
         SendClientMessage(playerid, 0xD8D8D8FF, "/acstageexitvehicle - leave your current vehicle");
         SendClientMessage(playerid, 0xD8D8D8FF, "/acstageinterior - enter/exit a real test interior transition");
         SendClientMessage(playerid, 0xD8D8D8FF, "/acstageworld - enter/exit reserved virtual world 9000");
@@ -1068,17 +1160,36 @@ public OnPlayerCommandText(playerid, cmdtext[])
         return 1;
     }
 
-    if (!strcmp(cmdtext, "/acstagevehicle", true))
+    if (strfind(cmdtext, "/acstagevehicle", true) == 0)
     {
         if (!AC_StageRequireLoaded(playerid))
             return 1;
+
+        new modelid = 411;
+        if (cmdtext[15] != 0)
+        {
+            if (cmdtext[15] != ' ')
+            {
+                SendClientMessage(playerid, 0xE05A5AFF, "Usage: /acstagevehicle [modelid]");
+                return 1;
+            }
+            modelid = AC_StageParsePlayerId(cmdtext[16]);
+        }
+
+        if (!AC_StageIsTraceVehicleModel(modelid))
+        {
+            SendClientMessage(playerid, 0xE05A5AFF, "[AC-STAGE] Unsupported trace model. Use /acstagevehicle [modelid] with an approved road-car model.");
+            return 1;
+        }
 
         new Float:x, Float:y, Float:z;
         if (!GetPlayerPos(playerid, x, y, z))
             return 1;
 
+        // Reset the detector baseline before replacing or entering a vehicle.
+        AC_NotifyLegitimateVehicleChange(playerid);
         AC_StageDestroyVehicle(playerid);
-        new vehicleid = CreateVehicle(411, x + 5.0, y, z, 0.0, -1, -1, 60);
+        new vehicleid = CreateVehicle(modelid, x + 5.0, y, z, 0.0, -1, -1, 60);
         if (vehicleid == 0 || vehicleid == INVALID_VEHICLE_ID)
         {
             SendClientMessage(playerid, 0xE05A5AFF, "[AC-STAGE] Could not create the test vehicle.");
@@ -1087,9 +1198,8 @@ public OnPlayerCommandText(playerid, cmdtext[])
 
         AC_StageVehicleId[playerid] = vehicleid;
         PutPlayerInVehicle(playerid, vehicleid, 0);
-        AC_NotifyLegitimateVehicleChange(playerid);
         AC_StageLogEvent(playerid, "vehicle_enter", "");
-        SendClientMessage(playerid, 0xD8D8D8FF, "[AC-STAGE] Test vehicle created and server-placed.");
+        SendClientMessage(playerid, 0xD8D8D8FF, "[AC-STAGE] Test road car created and server-placed. Drive normally while capture is active to collect telemetry.");
         return 1;
     }
 
@@ -1101,8 +1211,8 @@ public OnPlayerCommandText(playerid, cmdtext[])
         if (GetPlayerState(playerid) == PLAYER_STATE_DRIVER
             || GetPlayerState(playerid) == PLAYER_STATE_PASSENGER)
         {
-            RemovePlayerFromVehicle(playerid);
             AC_NotifyLegitimateVehicleChange(playerid);
+            RemovePlayerFromVehicle(playerid);
             AC_StageLogEvent(playerid, "vehicle_exit", "");
             SendClientMessage(playerid, 0xD8D8D8FF, "[AC-STAGE] Vehicle exit completed.");
         }

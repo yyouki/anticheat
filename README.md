@@ -14,6 +14,7 @@ A successful Pawn smoke compile proves compiler/include compatibility for the sm
 - Session-token and account-key guards for asynchronous persistence callbacks.
 - Grace-window support for server-authoritative transitions.
 - Conservative on-foot movement sampling and driver-only vehicle sampling.
+- Privacy-safe, bounded staging vehicle observations and a local per-model telemetry summary; these observations do not change detector thresholds.
 - Evidence ring buffer, per-category cooldown, cross-family correlation, score/strike review markers, and decay.
 - Optional host callbacks for persistence, evidence, strikes, and administrative resets.
 - Synthetic JSON fixtures, a deterministic Python reference replay, unit tests, static audit, and Pawn smoke-compilation CI jobs.

@@ -15,6 +15,7 @@ This is a disposable test gamemode for validating the anti-cheat integration con
 - A virtual-world transition to reserved staging world 9000 and a return to the saved world.
 - Spectating another connected player, including alignment to the target's interior/world and restoration after spectating ends.
 - Privacy-safe structured acceptance events for teleport, vehicle, interior, virtual-world, spectating, evidence, and review-marker observations.
+- Supplemental server-side vehicle telemetry observations while the primary test client is driving: approved road-car model, quantized speed, ping, and fresh host-supplied packet loss when available. Records are capped at two samples per second and 3,600 samples per capture (about 30 minutes at the full sampling rate), then collection stops with one notice. They exclude player, account, vehicle, and position identifiers. The stock staging gamemode does not configure a packet-loss provider, so that field normally remains `-1` unless a host integration supplies a fresh measurement through `AC_SetNetworkQuality`.
 - An offline Python report checker that rejects incomplete or failed transition sequences and any evidence/review marker during the capture window.
 
 The adapter keeps up to `MAX_PLAYERS` synthetic account records in RAM. All records are lost when the server process restarts. This is deliberate: the sample demonstrates the callback interface without selecting a database or suggesting that volatile storage is suitable for production.
@@ -49,13 +50,14 @@ The supplied config disables server-list announcement, query visibility, and RCO
 4. Connect a second test client. Keep both clients on foot in exterior interior 0 and the same virtual world. The second client should remain connected and stationary as the spectating target.
 5. Run `/acstagetest` before beginning the capture. It checks stale session-token rejection, account-ID mismatch rejection, duplicate load rejection, timestamp restoration, grace notifications, persistence save, and simulated framework-session restoration. It exercises framework reset handlers while the real game client remains connected; it does not disconnect the real client.
 6. On the primary client, run `/acstagelogbegin`. This starts one bounded acceptance window. Do not begin a second capture until the first one has ended.
-7. During the capture, walk normally, then run `/acstageteleport`, `/acstagevehicle`, and `/acstageexitvehicle`.
-8. Run `/acstageinterior` twice to enter and leave the 24/7 interior (ID 17). Then run `/acstageworld` twice to enter and leave reserved virtual world 9000.
-9. Run `/acstagespectate <targetid>` on the primary client, then `/acstageunspectate`. The target is logged only as the pseudonymous role `secondary`; the report never needs either client's player ID. The harness restores the spectator's previous position/context after spectating ends.
-10. On the primary client, run `/acstagelogend`. Copy the server console log to a local text file. The structured `[AC-STAGE-EVENT]` records contain only the fixed role labels `primary` and `secondary`, transition values, and detector category counters; they do not include player IDs, account IDs, IP addresses, or session tokens.
+7. During the capture, walk normally, then run `/acstageteleport`.
+8. Select one approved vehicle model for this capture with `/acstagevehicle <modelid>` (or omit the argument for model 411). Drive normally at varied speeds for at least 30 seconds, then run `/acstageexitvehicle`. Use one vehicle model per acceptance capture because the acceptance parser expects exactly one vehicle-enter/exit sequence. Repeat the complete capture for another model rather than spawning multiple models in the same run.
+9. Run `/acstageinterior` twice to enter and leave the 24/7 interior (ID 17). Then run `/acstageworld` twice to enter and leave reserved virtual world 9000.
+10. Run `/acstagespectate <targetid>` on the primary client, then `/acstageunspectate`. The target is logged only as the pseudonymous role `secondary`; the report never needs either client's player ID. The harness restores the spectator's previous position/context after spectating ends.
+11. On the primary client, run `/acstagelogend`. Copy the server console log to a local text file. The structured `[AC-STAGE-EVENT]` records contain only the fixed role labels `primary` and `secondary`, transition values, and detector category counters. Supplemental `[AC-STAGE-VEHICLE]` records contain only the fixed `primary` role, model ID, quantized speed, ping, and optional packet-loss measurement. Neither record type includes player IDs, account IDs, vehicle IDs, coordinates, IP addresses, or session tokens.
 The raw server console log may contain unrelated host/server connection metadata. Keep it local, do not commit or publicly upload it, and share only the redacted report summary if results need to be discussed.
 
-11. Run the offline report checker from the repository root:
+12. Run the offline transition report checker from the repository root:
 
     ```sh
     python3 tools/anticheat/staging_report.py --log /path/to/staging-console.log
@@ -71,16 +73,26 @@ The raw server console log may contain unrelated host/server connection metadata
 
     The parser also rejects malformed or duplicate fields, negative counters, unknown evidence categories, non-pseudonymous spectate targets, and event-specific records missing required transition fields. These checks validate the structured record contract; they do not authenticate who produced the log.
 
-The report must show `PASS`. It requires the complete teleport, vehicle, interior callback, world, and spectating event sequence. Any evidence, review marker, missing callback, failed restoration, capture abort, or incomplete capture makes the report fail. The parser ignores ordinary console lines and only evaluates the structured records inside the capture window.
-12. Outside the capture, run `/acstageevidence` and `/acstageclear` to inspect and clear the current review state. Then run `/acstagesave`, disconnect, reconnect, and authenticate again with the same synthetic account ID. This persistence test works only while the same server process remains running.
+13. For a descriptive per-model speed and network summary, run the supplemental local tool. Repeat `--log` for each separate model capture:
 
-Useful commands: `/acstagehelp`, `/acstageauth <accountid>`, `/acstageinfo`, `/acstagetest`, `/acstageevidence`, `/acstagetoggle`, `/acstagesave`, `/acstageclear`, `/acstageteleport`, `/acstagevehicle`, `/acstageexitvehicle`, `/acstageinterior`, `/acstageworld`, `/acstagespectate <playerid>`, `/acstageunspectate`, `/acstagelogbegin`, and `/acstagelogend`.
+    ```sh
+    python3 tools/anticheat/vehicle_trace_report.py \\
+      --log /path/to/model-411-console.log \\
+      --log /path/to/model-560-console.log
+    ```
+
+    The summary reports sample count and min/p50/p95/max speed and ping for each model, plus packet-loss statistics where available. Each source capture is limited to 3,600 telemetry observations. It ignores ordinary transition events and reads only `[AC-STAGE-VEHICLE]` records. The summary is descriptive only: percentiles are not safe speed limits, and they do not prove a detector false positive or false negative. Keep source logs local.
+
+The report must show `PASS`. It requires the complete teleport, vehicle, interior callback, world, and spectating event sequence. Any evidence, review marker, missing callback, failed restoration, capture abort, or incomplete capture makes the report fail. The parser ignores ordinary console lines and only evaluates the structured records inside the capture window.
+14. Outside the capture, run `/acstageevidence` and `/acstageclear` to inspect and clear the current review state. Then run `/acstagesave`, disconnect, reconnect, and authenticate again with the same synthetic account ID. This persistence test works only while the same server process remains running.
+
+Useful commands: `/acstagehelp`, `/acstageauth <accountid>`, `/acstageinfo`, `/acstagetest`, `/acstageevidence`, `/acstagetoggle`, `/acstagesave`, `/acstageclear`, `/acstageteleport`, `/acstagevehicle [modelid]`, `/acstageexitvehicle`, `/acstageinterior`, `/acstageworld`, `/acstagespectate <playerid>`, `/acstageunspectate`, `/acstagelogbegin`, and `/acstagelogend`.
 
 The `/acstagetest` command reserves synthetic account IDs beginning at `2000000000` for its internal persistence checks. Do not assign that range to manually selected staging test accounts.
 
 ## What this does not prove
 
-The harness does not provide a durable database adapter, a client-side test bot, an exploit simulator, an automatic punishment system, or a production authentication flow. The offline acceptance report verifies that expected staging callbacks and commands were observed without evidence or review markers during one bounded test window. It is not an exploit simulator and does not establish movement/vehicle threshold accuracy, mobile/desktop false-positive rates, real reconnect behavior, production performance, or release readiness. Actual runtime testing still requires supported connected clients and representative network conditions.
+The harness does not provide a durable database adapter, a client-side test bot, an exploit simulator, an automatic punishment system, or a production authentication flow. Vehicle telemetry is sampled from server-side state for observation only; it is not an additional detector input or a model-specific threshold. The offline acceptance report verifies that expected staging callbacks and commands were observed without evidence or review markers during one bounded test window. It is not an exploit simulator and does not establish movement/vehicle threshold accuracy, mobile/desktop false-positive rates, real reconnect behavior, production performance, or release readiness. Actual runtime testing still requires supported connected clients and representative network conditions.
 
 Do not use the volatile adapter as a production persistence implementation. Keep client memory scans and experimental combat cadence scoring disabled.
 

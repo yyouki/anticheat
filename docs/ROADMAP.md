@@ -22,6 +22,7 @@
 - [x] Add a privacy-safe per-client/network-profile false-positive review matrix, record template, and structural validator; the validator does not certify executed tests or detector accuracy.
 - [x] Add a bounded batch summary grouped by exact server/client/network build metadata, including per-scenario result counts; it does not estimate false-positive rates.
 - [x] Bind each schema-v2 manual review record to one exact staging capture SHA-256 and validate the capture contract locally; this does not authenticate log origin or prove scenario execution.
+- [x] Add pseudonymous server-side vehicle telemetry observations (maximum 2 Hz) and a bounded local per-model distribution report to prepare for trace-based envelope analysis without changing detector thresholds.
 - [ ] Complete interactive staging tests with supported game clients, including false-positive review.
 
 ## Milestone 1 — investigation and host adapters
@@ -36,7 +37,7 @@
 
 ## Milestone 2 — detection coverage
 
-- [ ] Add model-aware vehicle envelopes from staging traces.
+- [ ] Add model-aware vehicle envelopes from representative, operator-collected staging traces after desktop/Android and network-profile review. The telemetry collector is available, but no real traces have been supplied or analysed yet.
 - [x] Add explicit pre-action notifications for server-owned teleports, interior changes, virtual-world changes, spectating changes, spawn/death and vehicle transitions; retain a generic state-change helper for host-specific scripted transitions.
 - [ ] Add combat heuristics only after mobile/desktop false-positive evidence.
 - [ ] Add network packet-loss context only through a validated low-cost source.
