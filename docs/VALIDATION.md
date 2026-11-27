@@ -208,3 +208,13 @@ PR #15, [Add bounded staging vehicle telemetry traces](https://github.com/yyouki
 - Pinned open.mp `v1.6.7.3218` headless boot: PASSED.
 
 Run #90 did not connect an interactive game client or collect real vehicle traces. The detector thresholds remain unchanged.
+
+
+PR #16, [Bind vehicle trace summaries to staging review captures](https://github.com/yyouki/anticheat/pull/16), head `dbd8dfc5bcad2ca18dff77cfc97845e24c794055`, passed workflow run #92 (`45997360443`). All three jobs completed successfully:
+
+- Static repository audit, all 90 Python unit tests, and deterministic telemetry replay: PASSED.
+- Default, opt-in feature-gate, and staging Pawn compile targets: PASSED.
+- Staging artifact upload: PASSED (`ac-staging-package`, ID `15195659656`, size 45,753 bytes, SHA-256 `0669d424bb0f50aa9ed34e39ad8472a7c3f6dcd1eb5eefd5972f42ad9ca575f2`).
+- Pinned open.mp `v1.6.7.3218` headless runtime smoke: PASSED.
+
+PR #16 adds local capture-to-review consistency validation only. Bound reports verify exact file digests and matching operator-entered metadata, but do not authenticate log origin or prove that a human executed the scenarios. No interactive client tests or detector-threshold changes were made.
