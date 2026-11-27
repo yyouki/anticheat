@@ -219,3 +219,17 @@ PR #16, [Bind vehicle trace summaries to staging review captures](https://github
 - Staging artifact: `ac-staging-package`, ID `15197766625`, size 45,753 bytes, SHA-256 `a434fccb84166145e243c139ea369d041df98c8fabef9310a7f397833a4e4119`.
 
 PR #16 verifies that each vehicle trace is paired with the exact schema-v2 review capture and that review metadata is consistent across the set. It does not authenticate log origin, prove operator scenario execution, connect a game client, or establish detector accuracy. The Pawn detector and its thresholds remain unchanged.
+
+
+## PR #17 — measured vehicle sample intervals (pre-merge)
+
+PR #17, [Add vehicle telemetry sample interval diagnostics](https://github.com/yyouki/anticheat/pull/17), head `c439b9ee89e30c4abeb2c57fddce9d9e26af8d2a`, passed Actions run #97 (`46001052529`) on 2026-11-27:
+
+- Static repository audit: PASSED.
+- Python unit tests: PASSED (93 tests).
+- Deterministic telemetry replay: PASSED.
+- Default, opt-in feature-gate, and staging Pawn compiles: PASSED.
+- Pinned open.mp `v1.6.7.3218` headless runtime smoke: PASSED.
+- Staging artifact: `ac-staging-package`, ID `15198191515`, size 46,093 bytes, SHA-256 `e75ba3abc7d1b297956e4e77f11d66f813fde27f0f8668069432d2c66d263bba`.
+
+This is a PR-branch validation result, not a post-merge `main` result. The headless runtime job does not connect interactive game clients. The new timing report describes intervals between accepted server-side observations only; no detector, threshold, evidence, score, or enforcement behavior changes are included.
