@@ -198,6 +198,9 @@ def main() -> int:
         "persistence callback saves score, strikes and cooldown timestamp",
         "saved state restored after simulated session reconnect",
         "original synthetic account restored",
+        "interior change notification starts grace window",
+        "virtual world change notification starts grace window",
+        "spectate change notification starts grace window",
     ):
         assert selftest_case in staging, f"staging self-test missing case: {selftest_case}"
     assert "real game client remains connected" in staging_readme
