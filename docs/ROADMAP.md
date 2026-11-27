@@ -19,7 +19,8 @@
 - [x] Provide evidence, strike, persistence and administrative-reset callbacks.
 - [ ] Add tested adapters for common command processors as optional packages.
 - [ ] Add an optional durable evidence storage adapter with retention controls.
-- [ ] Add a replayable telemetry fixture format for regression tests.
+- [x] Add versioned synthetic telemetry fixtures and a deterministic Python reference replay.
+- [x] Add CI regression tests for movement grace, sustained anomalies, network suppressors, sampling resets, evidence correlation, and stale/duplicate account loads.
 
 ## Milestone 2 — detection coverage
 
