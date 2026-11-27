@@ -213,7 +213,7 @@ public OnGameModeInit()
 {
     AC_Init();
     SetGameModeText("Anti-Cheat Staging");
-    AddPlayerClass(0, 1958.3783, 1343.1572, 15.3746, 269.1425, 0, 0, 0, 0, 0, 0);
+    AddPlayerClass(0, 1958.3783, 1343.1572, 15.3746, 269.1425, WEAPON_FIST, 0, WEAPON_FIST, 0, WEAPON_FIST, 0);
 
     print("[AC-STAGE] Staging gamemode initialized.");
     print("[AC-STAGE] Persistence is intentionally in-memory and is lost on server restart.");
