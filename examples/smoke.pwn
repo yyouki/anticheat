@@ -81,6 +81,18 @@ public AC_OnStrike(playerid, accountid, strikes, const reason[])
     return 1;
 }
 
+public AC_OnEvidenceV2(playerid, accountid, sessiontoken, sequence, timestamp, category, points, ping, const reason[], Float:metric)
+{
+    #pragma unused playerid, accountid, sessiontoken, sequence, timestamp, category, points, ping, reason, metric
+    return 1;
+}
+
+public AC_OnStrikeV2(playerid, accountid, sessiontoken, sequence, timestamp, strikes, const reason[])
+{
+    #pragma unused playerid, accountid, sessiontoken, sequence, timestamp, strikes, reason
+    return 1;
+}
+
 // Call this from the gamemode's real, successful login/character activation path.
 // Do not enable monitoring before authentication and character state are ready.
 stock AC_ExampleOnAuthenticated(playerid, accountid)
