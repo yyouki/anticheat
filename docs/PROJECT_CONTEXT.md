@@ -151,7 +151,7 @@ CI also performs the repository static audit and default/opt-in Pawn smoke compi
 
 ## Current implementation focus
 
-PR #7 is being developed on branch `test/staging-live-transition-commands`. It adds real staging commands for a 24/7 interior transition (ID 17), virtual-world toggle (reserved world 9000), and spectating a second connected player. The commands notify the framework before server-owned state changes, report the current state, and restore the player's prior context after spectating. CI source-contract tests verify notification/API ordering; a connected client is still required to observe live behavior.
+PR #7, [Add live staging commands for legal state transitions](https://github.com/yyouki/anticheat/pull/7), is open on branch `test/staging-live-transition-commands`. Tested head `f56c810ec2344558a959227a646eba99a98751b1` passed Actions run #57 (`45961527023`): static audit, 10 Python unit tests, all 10 telemetry fixtures, all three Pawn compile targets, staging artifact upload (ID `15181240532`), and pinned open.mp headless boot. The commands exercise a documented 24/7 interior (ID 17), reserved virtual world 9000, and spectating a second connected player; they notify before server-owned setters and restore the prior context after spectating. These CI checks verify source contracts and gamemode startup, not actual client-side transition behavior.
 
 ## Remaining release gates
 
