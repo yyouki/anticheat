@@ -31,7 +31,7 @@
 - [ ] Add tested adapters for common command processors as optional packages.
 - [ ] Add an optional durable evidence storage adapter with retention controls.
 - [x] Add versioned synthetic telemetry fixtures and a deterministic Python reference replay.
-- [x] Add CI regression tests for movement grace, sustained anomalies, network suppressors, sampling resets, evidence correlation, and stale/duplicate account loads.
+- [x] Add CI regression tests for movement and vehicle grace, sustained anomalies, network suppressors, sampling resets, excluded vehicle models, evidence correlation, and stale/duplicate account loads.
 - [x] Repair replay/unit-test CI regression in PR #3; post-merge main run #37 passed all automated checks.
 
 ## Milestone 2 — detection coverage
