@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from contextlib import redirect_stdout
+from contextlib import redirect_stderr, redirect_stdout
 import json
 from io import StringIO
 from pathlib import Path
@@ -118,6 +118,64 @@ class VehicleTraceReportTests(unittest.TestCase):
         self.assertNotIn("accountid", serialized)
         self.assertNotIn("vehicleid", serialized)
 
+    def test_staging_hook_is_bounded_pseudonymous_and_uses_source_speed_conversion(self) -> None:
+        staging = (ROOT / "examples" / "staging.pwn").read_text(encoding="utf-8")
+
+        def pawn_stock_body(name: str) -> str:
+            start = staging.index(f"stock {name}(")
+            opening = staging.index("{", start)
+            depth = 0
+            for index in range(opening, len(staging)):
+                if staging[index] == "{":
+                    depth += 1
+                elif staging[index] == "}":
+                    depth -= 1
+                    if depth == 0:
+                        return staging[opening + 1:index]
+            self.fail(f"unterminated Pawn stock function: {name}")
+
+        body = pawn_stock_body("AC_StageCaptureVehicleTelemetry")
+        self.assertIn("AC_IsMonitored(playerid)", body)
+        self.assertIn("PLAYER_STATE_DRIVER", body)
+        self.assertIn("AC_SAMPLE_INTERVAL_MS", body)
+        self.assertIn("AC_VEHICLE_SPEED_FACTOR", body)
+        self.assertIn("packet_loss_centi_pct = -1", body)
+        self.assertIn(
+            "[AC-STAGE-VEHICLE] schema=1 actor=primary model=%d",
+            body,
+        )
+        self.assertNotIn("playerid=", body)
+        self.assertNotIn("accountid=", body)
+        self.assertNotIn("vehicleid=", body)
+        self.assertIn("AC_StageCaptureVehicleTelemetry(playerid);", staging)
+        self.assertIn('"/acstagevehicle [modelid]"', staging)
+
+    def test_staging_trace_model_allowlist_excludes_special_vehicle_models(self) -> None:
+        from replay import load_excluded_vehicle_models
+
+        staging = (ROOT / "examples" / "staging.pwn").read_text(encoding="utf-8")
+        start = staging.index("stock bool:AC_StageIsTraceVehicleModel(")
+        opening = staging.index("{", start)
+        depth = 0
+        for index in range(opening, len(staging)):
+            if staging[index] == "{":
+                depth += 1
+            elif staging[index] == "}":
+                depth -= 1
+                if depth == 0:
+                    body = staging[opening + 1:index]
+                    break
+        else:
+            self.fail("unterminated AC_StageIsTraceVehicleModel function")
+
+        allowed = {
+            int(value)
+            for value in __import__("re").findall(r"\\b(\\d{3})\\b", body)
+        }
+        self.assertGreaterEqual(len(allowed), 30)
+        self.assertTrue(all(400 <= model <= 611 for model in allowed))
+        self.assertTrue(allowed.isdisjoint(load_excluded_vehicle_models()))
+
     def test_cli_outputs_json_without_private_paths(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             log_path = Path(directory) / "server.log"
@@ -138,7 +196,7 @@ class VehicleTraceReportTests(unittest.TestCase):
             target.write_text(line() + "\n", encoding="utf-8")
             link.symlink_to(target)
             with patch("sys.argv", ["vehicle_trace_report.py", "--log", str(link)]):
-                with redirect_stdout(StringIO()), redirect_stdout(StringIO()):
+                with redirect_stdout(StringIO()), redirect_stderr(StringIO()):
                     exit_code = main()
             self.assertEqual(exit_code, 2)
 
