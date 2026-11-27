@@ -195,8 +195,8 @@ class VehicleTraceReportTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             first = Path(directory) / "model-411.log"
             second = Path(directory) / "model-560.log"
-            first.write_text(line(411, 1000, 40, 0) + "\\n", encoding="utf-8")
-            second.write_text(line(560, 2500, 70, -1) + "\\n", encoding="utf-8")
+            first.write_text(line(411, 1000, 40, 0) + "\n", encoding="utf-8")
+            second.write_text(line(560, 2500, 70, -1) + "\n", encoding="utf-8")
             output = StringIO()
             with patch(
                 "sys.argv",
