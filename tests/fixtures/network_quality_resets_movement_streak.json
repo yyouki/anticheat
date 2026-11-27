@@ -4,6 +4,21 @@
   "description": "High packet loss, the 65535 ping sentinel, and over-limit ping suppress and reset movement sampling.",
   "events": [
     {
+      "type": "connect",
+      "at_ms": 100
+    },
+    {
+      "type": "load_begin",
+      "at_ms": 200,
+      "account_id": 1003
+    },
+    {
+      "type": "load_complete",
+      "at_ms": 300,
+      "account_id": 1003,
+      "session_token": 2
+    },
+    {
       "type": "movement_sample",
       "at_ms": 1000,
       "x": 0,
@@ -89,6 +104,12 @@
     "evidence_categories": [],
     "movement_evidence": 0,
     "score": 0,
-    "strikes": 0
+    "strikes": 0,
+    "loaded": true,
+    "account_id": 1003,
+    "session_token": 2,
+    "load_completion_results": [
+      true
+    ]
   }
 }
