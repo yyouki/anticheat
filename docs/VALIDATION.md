@@ -3,7 +3,8 @@
 ## Current repository validation
 
 - Static repository audit: PASSED in the latest GitHub Actions run (#4).
-- Pawn default and opt-in feature-gate smoke compiles: PASSED with Pawn compiler 3.10.11 and open.mp standard includes pinned to commit 17c1b0191195cb0b59a820135fbca622c84129dd. The default and compile-only experimental AMX files were produced.
+- Default Pawn smoke compile: PASSED with Pawn compiler 3.10.11 and open.mp standard includes pinned to commit 17c1b0191195cb0b59a820135fbca622c84129dd. The default smoke AMX was produced.
+- Opt-in feature-gate smoke compile: configured in CI; the new compile-only fixture is awaiting its first successful run.
 - Runtime test server: not run.
 - Desktop/mobile false-positive suite: not run.
 - Performance measurements: not run.
