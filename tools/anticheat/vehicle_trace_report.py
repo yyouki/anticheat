@@ -20,6 +20,8 @@ PREFIX = "[AC-STAGE-VEHICLE] "
 MAX_LOG_BYTES = 32 * 1024 * 1024
 MAX_TOTAL_LOG_BYTES = 64 * 1024 * 1024
 MAX_RECORD_BYTES = 1_048_576
+MAX_TOTAL_RECORD_BYTES = 8 * 1024 * 1024
+MAX_CAPTURES = 500
 MAX_SAMPLES = 100_000
 ALLOWED_TRACE_MODELS = frozenset({
     400, 401, 402, 404, 405, 410, 411, 415, 419, 421, 426, 429,
@@ -156,9 +158,17 @@ def _read_log(path: Path) -> tuple[list[dict[str, int]], str]:
 
 def _read_review_record(path: Path) -> dict[str, Any]:
     raw = _read_regular_file(path, MAX_RECORD_BYTES, "review record")
+    def reject_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+        result: dict[str, Any] = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError("review record contains duplicate JSON keys")
+            result[key] = value
+        return result
+
     try:
-        data = json.loads(raw.decode("utf-8"))
-    except (UnicodeDecodeError, json.JSONDecodeError) as error:
+        data = json.loads(raw.decode("utf-8"), object_pairs_hook=reject_duplicate_keys)
+    except (UnicodeDecodeError, json.JSONDecodeError, ValueError) as error:
         raise ValueError("review record could not be read as JSON") from error
     if not isinstance(data, dict):
         raise ValueError("review record root must be an object")
@@ -172,14 +182,27 @@ def _load_bound_traces(
     """Verify one schema-v2 review record against every exact source capture."""
     if len(log_paths) != len(record_paths):
         raise ValueError("provide exactly one --record for each --log, in matching order")
+    if len(log_paths) > MAX_CAPTURES:
+        raise ValueError(f"capture set exceeds the {MAX_CAPTURES}-run limit")
 
     observations: list[dict[str, int]] = []
     run_ids: set[str] = set()
     capture_digests: set[str] = set()
     common_environment: dict[str, str] | None = None
+    total_log_bytes = 0
+    total_record_bytes = 0
     source_runs: list[dict[str, Any]] = []
 
     for log_path, record_path in zip(log_paths, record_paths, strict=True):
+        try:
+            total_log_bytes += log_path.stat().st_size
+            total_record_bytes += record_path.stat().st_size
+        except OSError as error:
+            raise ValueError("capture or review record could not be read") from error
+        if total_log_bytes > MAX_TOTAL_LOG_BYTES:
+            raise ValueError(f"combined logs exceed the {MAX_TOTAL_LOG_BYTES}-byte limit")
+        if total_record_bytes > MAX_TOTAL_RECORD_BYTES:
+            raise ValueError(f"combined review records exceed the {MAX_TOTAL_RECORD_BYTES}-byte limit")
         record = _read_review_record(record_path)
         environment = record.get("environment")
         if not isinstance(environment, dict):
