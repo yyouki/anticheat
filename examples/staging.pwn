@@ -133,7 +133,14 @@ stock AC_StageCaptureVehicleTelemetry(playerid)
     }
 
     if (AC_StageVehicleTraceSampleCount >= AC_STAGE_MAX_VEHICLE_TRACE_SAMPLES)
+    {
+        if (!AC_StageVehicleTraceLimitNotified)
+        {
+            print("[AC-STAGE] Vehicle trace sample limit reached; further observations are suppressed.");
+            AC_StageVehicleTraceLimitNotified = true;
+        }
         return 0;
+    }
 
     new tick = GetTickCount();
     if ((tick - AC_StageLastVehicleTraceTick[playerid]) < AC_SAMPLE_INTERVAL_MS)
@@ -232,6 +239,7 @@ stock AC_StageBeginLogCapture(playerid)
     AC_StageLogCaptureOwner = playerid;
     AC_StageLastVehicleTraceTick[playerid] = 0;
     AC_StageVehicleTraceSampleCount = 0;
+    AC_StageVehicleTraceLimitNotified = false;
     AC_StageLogEvent(playerid, "run_begin", "");
     SendClientMessage(playerid, 0xD8D8D8FF, "[AC-STAGE] Acceptance log capture started.");
     return 1;
