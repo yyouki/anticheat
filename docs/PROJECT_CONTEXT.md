@@ -48,6 +48,7 @@ Supporting validation lives in:
 - `tools/anticheat/replay.py`: Python reference model and fixture runner for movement, vehicle, evidence and session contracts; it does not execute Pawn bytecode.
 - `tools/anticheat/openmp_runtime_smoke.py`: starts the pinned open.mp server and verifies that the staging gamemode loads.
 - `tools/anticheat/staging_report.py`: validates one privacy-safe interactive staging capture.
+- `tools/anticheat/staging_log_sanitize.py`: exports only one complete validated staging capture and its vehicle telemetry markers from a bounded local console log; unrelated host output is omitted.
 - `tools/anticheat/staging_review.py`: validates one local operator-authored false-positive review record.
 - `tools/anticheat/staging_review_batch.py`: validates and aggregates up to 500 local review records by exact build and network metadata.
 - `tools/anticheat/staging_review_capture.py`: binds a schema-v2 review record to the SHA-256 digest of one passing local staging capture.
