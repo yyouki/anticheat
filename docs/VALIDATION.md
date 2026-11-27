@@ -178,3 +178,13 @@ PR #12 adds a bounded multi-run summary for operator-entered review records. Cou
 PR #13, [Bind staging reviews to exact capture logs](https://github.com/yyouki/anticheat/pull/13), merged as `aa8b0a9809c36b2c75450309a957ca5d6a40b882`. PR workflow run #77 (`45983957773`) and post-merge `main` run #78 (`45984403784`) passed static audit, Python tests/replay, all three Pawn compile targets, staging artifact upload, and pinned open.mp `v1.6.7.3218` headless boot. The post-merge artifact `ac-staging-package` is ID `15191081168`, size 43,973 bytes, SHA-256 `e8a6bb55e841f2017fd93fda59ddcb72fb3de09db6d61b1f67a0e628f30acb60`.
 
 PR #13 changes the manual review schema to v2 and binds each review record to an exact local capture-file digest. This validates file consistency and the structured event contract only; it does not authenticate who produced the log or verify that a human performed the scenario observations. No connected game-client test ran in run #78.
+
+
+PR #14, [Add deterministic vehicle telemetry replay coverage](https://github.com/yyouki/anticheat/pull/14), merged to `main` as `650fa4fb4eb1dc29ca54a276b6ec98c57657aa70`. Post-merge Actions run #83 (`45990008906`) completed successfully on that exact merge commit:
+
+- Static audit, Python contract tests and deterministic movement/vehicle replay: PASSED.
+- Default, opt-in feature-gate, and staging Pawn compiles: PASSED.
+- Staging package upload: PASSED (`ac-staging-package`, artifact ID `15192318954`, size 43,973 bytes, SHA-256 `59c41804269ac3d6a12ec5afd6478aa51751ff8b379d7eb9229ff32a6c7ca7e1`).
+- Pinned open.mp `v1.6.7.3218` headless boot: PASSED.
+
+Run #83 did not connect an interactive game client. PR #14 expands only the synthetic Python reference replay; it does not change the Pawn vehicle detector or establish model-aware thresholds.
