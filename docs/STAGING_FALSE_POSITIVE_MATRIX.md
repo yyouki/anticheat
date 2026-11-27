@@ -69,6 +69,10 @@ Use one vehicle model per complete acceptance capture because the transition rep
 
 \`400, 401, 402, 404, 405, 410, 411, 415, 419, 421, 426, 429, 436, 439, 445, 451, 458, 477, 489, 496, 506, 517, 518, 526, 527, 533, 541, 546, 547, 550, 555, 560, 562, 565, 566, 567, 575, 576, 580, 585, 587, 589, 602, 603\`.
 
+Only combine captures from the same server commit, client build, and network profile. Keep different client or network profiles in separate reports so their distributions are not blended.
+
+The report accepts individual source logs up to 32 MiB each, a combined 64 MiB total, and 100,000 observations. It rejects symlinks and unsupported model IDs.
+
 For multiple model runs, combine the local logs:
 
 \`\`\`sh
