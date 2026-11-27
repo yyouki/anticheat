@@ -14,7 +14,8 @@ This is a disposable test gamemode for validating the anti-cheat integration con
 - A real interior transition using interior 17, including a return to the saved position.
 - A virtual-world transition to reserved staging world 9000 and a return to the saved world.
 - Spectating another connected player, including alignment to the target's interior/world and restoration after spectating ends.
-- Logs for actual interior and spectating state callbacks.
+- Privacy-safe structured acceptance events for teleport, vehicle, interior, virtual-world, spectating, evidence, and review-marker observations.
+- An offline Python report checker that rejects incomplete or failed transition sequences and any evidence/review marker during the capture window.
 
 The adapter keeps up to `MAX_PLAYERS` synthetic account records in RAM. All records are lost when the server process restarts. This is deliberate: the sample demonstrates the callback interface without selecting a database or suggesting that volatile storage is suitable for production.
 
@@ -42,26 +43,33 @@ The supplied config disables server-list announcement, query visibility, and RCO
 
 ## Player test sequence
 
-1. Join and spawn. Monitoring must remain off until the test account is loaded.
-2. Run `/acstageauth 424242`. Use any positive synthetic account ID; do not use an actual account identifier.
-3. Run `/acstageinfo` and confirm the account is loaded and monitoring is enabled.
-4. Walk and drive normally while the server runs. This is for checking that valid gameplay and ordinary network variation do not create unexplained evidence.
-5. Run `/acstageteleport`; the gamemode notifies the detector before the server-side position change. Confirm this legal transition does not create movement evidence.
-6. Run `/acstagevehicle` and then `/acstageexitvehicle` to test server-owned vehicle placement and exit notifications.
-7. Run `/acstageinterior` to enter the 24/7 test interior (ID 17), then run it again to restore your saved position and interior. The command uses the documented coordinates from the [open.mp interior list](https://open.mp/docs/scripting/resources/interiorids).
-8. Run `/acstageworld` to enter reserved virtual world 9000, then run it again to return to the previous world. Use `/acstageinfo` to inspect the current interior, virtual world, and player state.
-9. Connect a second test client. Run `/acstagespectate <targetid>` on the first client, then `/acstageunspectate` to exit. The command aligns the spectator's interior/world with the target and restores the spectator's previous position/context after spawn. It follows the required [open.mp spectating order](https://open.mp/docs/scripting/functions/PlayerSpectatePlayer): enable spectating before attaching the camera to the target.
-10. Run `/acstagesave`, disconnect, reconnect, and authenticate again with the same synthetic account ID. Confirm the in-memory values load while the same server process is still running.
-11. Run `/acstageevidence` and `/acstageclear` to inspect and clear the current review state.
+1. Join with the primary test client and spawn. Monitoring must remain off until the test account is loaded.
+2. Run `/acstageauth 424242`. Use a positive synthetic account ID; never use an actual account identifier.
+3. Run `/acstageinfo` and confirm that the account is loaded and monitoring is enabled.
+4. Connect a second test client. Keep both clients on foot in exterior interior 0 and the same virtual world. The second client should remain connected and stationary as the spectating target.
+5. Run `/acstagetest` before beginning the capture. It checks stale session-token rejection, account-ID mismatch rejection, duplicate load rejection, timestamp restoration, grace notifications, persistence save, and simulated framework-session restoration. It exercises framework reset handlers while the real game client remains connected; it does not disconnect the real client.
+6. On the primary client, run `/acstagelogbegin`. This starts one bounded acceptance window. Do not begin a second capture until the first one has ended.
+7. During the capture, walk normally, then run `/acstageteleport`, `/acstagevehicle`, and `/acstageexitvehicle`.
+8. Run `/acstageinterior` twice to enter and leave the 24/7 interior (ID 17). Then run `/acstageworld` twice to enter and leave reserved virtual world 9000.
+9. Run `/acstagespectate <targetid>` on the primary client, then `/acstageunspectate`. The target is logged only as the pseudonymous role `secondary`; the report never needs either client's player ID. The harness restores the spectator's previous position/context after spectating ends.
+10. On the primary client, run `/acstagelogend`. Copy the server console log to a local text file. The structured `[AC-STAGE-EVENT]` records contain only the fixed role labels `primary` and `secondary`, transition values, and detector category counters; they do not include player IDs, account IDs, IP addresses, or session tokens.
+The raw server console log may contain unrelated host/server connection metadata. Keep it local, do not commit or publicly upload it, and share only the redacted report summary if results need to be discussed.
 
-Before the manual reconnect test, run `/acstagetest`. It performs in-server checks for stale session-token rejection, account-ID mismatch rejection, duplicate load rejection, restoration of the independent strike-cooldown timestamp, generic/interior/virtual-world/spectating grace notifications, vehicle-change notification, persistence callback save, and state restoration after a simulated framework-session reset. It saves the currently authenticated synthetic account first and restores it after the test.
+11. Run the offline report checker from the repository root:
 
-The self-test uses a reserved synthetic account ID range beginning at `2000000000`. Do not use that range for manually assigned test accounts. It simulates the framework disconnect/connect handlers while the real game client remains connected; it is not a network reconnect test. The separate manual disconnect/reconnect step below remains required.
+    ```sh
+    python3 tools/anticheat/staging_report.py --log /path/to/staging-console.log
+    ```
 
-Useful commands: `/acstagehelp`, `/acstageauth <accountid>`, `/acstageinfo`, `/acstagetest`, `/acstageevidence`, `/acstagetoggle`, `/acstagesave`, `/acstageclear`, `/acstageteleport`, `/acstagevehicle`, `/acstageexitvehicle`, `/acstageinterior`, `/acstageworld`, `/acstagespectate <playerid>`, and `/acstageunspectate`.
+    The report must show `PASS`. It requires the complete teleport, vehicle, interior callback, world, and spectating event sequence. Any evidence, review marker, missing callback, failed restoration, capture abort, or incomplete capture makes the report fail. The parser ignores ordinary console lines and only evaluates the structured records inside the capture window.
+12. Outside the capture, run `/acstageevidence` and `/acstageclear` to inspect and clear the current review state. Then run `/acstagesave`, disconnect, reconnect, and authenticate again with the same synthetic account ID. This persistence test works only while the same server process remains running.
+
+Useful commands: `/acstagehelp`, `/acstageauth <accountid>`, `/acstageinfo`, `/acstagetest`, `/acstageevidence`, `/acstagetoggle`, `/acstagesave`, `/acstageclear`, `/acstageteleport`, `/acstagevehicle`, `/acstageexitvehicle`, `/acstageinterior`, `/acstageworld`, `/acstagespectate <playerid>`, `/acstageunspectate`, `/acstagelogbegin`, and `/acstagelogend`.
+
+The `/acstagetest` command reserves synthetic account IDs beginning at `2000000000` for its internal persistence checks. Do not assign that range to manually selected staging test accounts.
 
 ## What this does not prove
 
-The harness does not provide a durable database adapter, a client-side test bot, an exploit simulator, an automatic punishment system, or a production authentication flow. Compilation and a successful server start are not evidence that movement/vehicle thresholds are accurate. Actual runtime testing requires people to connect with the supported clients, representative legal server transitions, real network conditions, and a recorded false-positive review.
+The harness does not provide a durable database adapter, a client-side test bot, an exploit simulator, an automatic punishment system, or a production authentication flow. The offline acceptance report verifies that expected staging callbacks and commands were observed without evidence or review markers during one bounded test window. It is not an exploit simulator and does not establish movement/vehicle threshold accuracy, mobile/desktop false-positive rates, real reconnect behavior, production performance, or release readiness. Actual runtime testing still requires supported connected clients and representative network conditions.
 
 Do not use the volatile adapter as a production persistence implementation. Keep client memory scans and experimental combat cadence scoring disabled.

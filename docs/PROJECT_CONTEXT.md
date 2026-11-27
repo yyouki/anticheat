@@ -47,8 +47,9 @@ Supporting validation lives in:
 
 - `tools/anticheat/replay.py`: Python reference model and fixture runner.
 - `tools/anticheat/openmp_runtime_smoke.py`: starts the pinned open.mp server and verifies that the staging gamemode loads.
-- `tests/test_replay.py`: unit tests for replay outcomes, schema/order checks and selected source contracts.
-- `tests/fixtures/`: version-1 synthetic JSON telemetry scenarios.
+- `tools/anticheat/staging_report.py`: validates one privacy-safe interactive staging capture.
+- `tests/test_replay.py` and `tests/test_staging_report.py`: tests for replay outcomes, telemetry contracts, staging-report parsing, and source invariants.
+- `tests/fixtures/`: synthetic JSON telemetry scenarios and a pseudonymous staging acceptance log.
 - `.github/workflows/`: static audit, Python tests/replays and Pawn smoke builds.
 - `docs/INTEGRATION.md`: host gamemode callback and persistence contract.
 - `docs/TELEMETRY_REPLAY.md`: fixture schema, semantics and local commands.
@@ -86,6 +87,10 @@ Always use a session token and account key to reject stale asynchronous loads an
 - PR #2, deterministic telemetry replay suite, merged to `main`.
   - Merge commit: `c288eec29042b509156fa0e48b481098074403cc`.
   - Its original Python CI failed because the replay loader searched in the wrong include file.
+- PR #3, replay CI repair and durable project context, merged to `main`.
+  - PR: https://github.com/yyouki/anticheat/pull/3
+  - Merge commit: `5bf1443a87ec132ba6d93655b45f4b89427fa2e8`.
+  - Post-merge Actions run #37 (`45946672307`) passed static audit, Python tests, all 10 replay fixtures, default Pawn smoke compile, and opt-in feature-gate compile.
 - PR #4, open.mp staging integration harness, merged to `main`.
   - PR: https://github.com/yyouki/anticheat/pull/4
   - Merge commit: `c0591531c02dc7829e5b0964081f8d177c2d100b`.
@@ -93,19 +98,18 @@ Always use a session token and account key to reject stale asynchronous loads an
 - PR #5, staging persistence and session self-tests, merged to `main`.
   - PR: https://github.com/yyouki/anticheat/pull/5
   - Merge commit: `60a9b4d080034be41613959c369c8af1fcdef8d0`.
-  - PR head `345f4cd5a9743c82a47b9c13706d0cb9f039b70f` passed Actions run #51 (`45955418806`); post-merge `main` run #52 (`45956905920`) passed all jobs.
-  - The `ac-staging-package` artifact from post-merge run #52 is ID `15178982257`.
+  - PR head run #51 (`45955418806`) and post-merge run #52 (`45956905920`) passed all jobs.
+  - Post-merge staging artifact: `ac-staging-package`, ID `15178982257`.
 - PR #6, explicit legal transition notification hooks, merged to `main`.
   - PR: https://github.com/yyouki/anticheat/pull/6
   - Merge commit: `003793945a546c8eb25b67c8036ad19cf633301e`.
-  - Final PR branch Actions run #55 (`45957683000`) and post-merge `main` run #56 (`45959927009`) passed all jobs.
-  - The post-merge `ac-staging-package` artifact is ID `15180860714`.
-- PR #3, replay CI repair and durable project context, merged to `main`.
-  - PR: https://github.com/yyouki/anticheat/pull/3
-  - Merge commit: `5bf1443a87ec132ba6d93655b45f4b89427fa2e8`.
-  - PR head: `18b2c211257318e90377d807b2e5a60fb0c22f9b`.
-  - PR Actions run #36 (`45945528117`) passed all checks.
-  - Post-merge `main` Actions run #37 (`45946672307`) also passed: static audit, 5 Python unit tests, all 10 replay fixtures, default Pawn smoke compile, and opt-in feature-gate compile.
+  - PR head run #55 (`45957683000`) and post-merge run #56 (`45959927009`) passed all jobs.
+  - Post-merge staging artifact: `ac-staging-package`, ID `15180860714`.
+- PR #7, live staging commands for legal state transitions, merged to `main`.
+  - PR: https://github.com/yyouki/anticheat/pull/7
+  - Merge commit: `da1464dbbe1c499eac074a5a7aa5d8d621b95bc4`.
+  - Post-merge run #59 (`45962033428`) passed static audit, all Python tests/replay, all three Pawn compile targets, staging artifact upload, and pinned open.mp headless boot.
+  - Artifact: `ac-staging-package`, ID `15180944000`, SHA-256 `1914e4b4d0387ef7224a868d52dde8f20050e59f1943351c6093b013c130bc2d`.
 
 A PR being merged does not imply every CI job passed. Always verify the latest workflow for the resulting `main` commit.
 
@@ -151,12 +155,16 @@ CI also performs the repository static audit and default/opt-in Pawn smoke compi
 
 ## Current implementation focus
 
-PR #7, [Add live staging commands for legal state transitions](https://github.com/yyouki/anticheat/pull/7), is open on branch `test/staging-live-transition-commands`. Tested head `f56c810ec2344558a959227a646eba99a98751b1` passed Actions run #57 (`45961527023`): static audit, 10 Python unit tests, all 10 telemetry fixtures, all three Pawn compile targets, staging artifact upload (ID `15181240532`), and pinned open.mp headless boot. The commands exercise a documented 24/7 interior (ID 17), reserved virtual world 9000, and spectating a second connected player; they notify before server-owned setters and restore the prior context after spectating. These CI checks verify source contracts and gamemode startup, not actual client-side transition behavior.
+PR #7, [Add live staging commands for legal state transitions](https://github.com/yyouki/anticheat/pull/7), is merged to `main` as `da1464dbbe1c499eac074a5a7aa5d8d621b95bc4`. Post-merge run #59 (`45962033428`) passed all three CI jobs.
+
+PR #8, [Add privacy-safe staging acceptance report](https://github.com/yyouki/anticheat/pull/8), is open on branch `feat/privacy-safe-staging-acceptance-report`. Tested head `8d781806751783bc86b7077c09191374442947d3` passed Actions run #62 (`45963399362`): static audit (38 required files), 18 Python unit tests, all telemetry replay fixtures, all three Pawn compile targets, staging package upload (artifact ID `15181702026`), and pinned open.mp `v1.6.7.3218` headless boot. The package digest is `sha256:dc7e2ee2f92c19e18c762beef4dede469abad342419bb0bf9ad9bb5c8ee10a40`.
+
+PR #8 adds pseudonymous `[AC-STAGE-EVENT]` records, `/acstagelogbegin` and `/acstagelogend`, and `tools/anticheat/staging_report.py`. The offline checker requires the complete legal teleport, vehicle, interior callback, virtual-world, and spectating sequence, and fails on evidence/review markers or incomplete/aborted captures. The synthetic success fixture tests parser behavior only. Real-client execution and false-positive review remain outstanding.
 
 ## Remaining release gates
 
-1. Run `/acstagetest` on an isolated private open.mp server with an actual connected test client.
-2. Perform real disconnect/reconnect tests and normal gameplay on each supported desktop/Android client.
-3. Record legal teleports, interior/world/spectate changes, vehicle entry/exit, and false-positive outcomes.
+1. Run `/acstagetest` and one complete `/acstagelogbegin`–`/acstagelogend` capture on an isolated private open.mp server with two connected test clients; inspect the offline report.
+2. Perform real disconnect/reconnect tests and ordinary gameplay on each supported desktop/Android client.
+3. Record representative legal server transitions and review false-positive outcomes. Do not change thresholds based on synthetic reports alone.
 4. Benchmark runtime cost and review adversarial traces before changing detector thresholds.
 5. Replace the sample RAM adapter only in a host-specific integration package with a known persistence contract.

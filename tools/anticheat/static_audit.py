@@ -27,8 +27,11 @@ REQUIRED = [
     "examples/staging/config.json",
     "examples/staging/README.md",
     "tools/anticheat/replay.py",
+    "tools/anticheat/staging_report.py",
     "tools/anticheat/openmp_runtime_smoke.py",
     "tests/test_replay.py",
+    "tests/test_staging_report.py",
+    "tests/fixtures/staging_acceptance_success.log",
     "tests/fixtures/legal_movement_during_and_after_grace.json",
     "tests/fixtures/sustained_onfoot_speed_anomaly.json",
     "tests/fixtures/network_quality_resets_movement_streak.json",
@@ -211,6 +214,43 @@ def main() -> int:
     ):
         assert staging_command in staging, f"staging command missing: {staging_command}"
 
+    for capture_command in ('"/acstagelogbegin"', '"/acstagelogend"'):
+        assert capture_command in staging, f"staging capture command missing: {capture_command}"
+    assert "AC_StageLogCaptureOwner" in staging
+    log_event = function_body(staging, "AC_StageLogEvent")
+    assert "actor=primary" in log_event
+    assert 'printf("[AC-STAGE-EVENT] schema=1 event=%s actor=primary%s"' in log_event
+    interior_capture = function_body(staging, "AC_StageToggleInterior")
+    assert interior_capture.index("SetPlayerPos(playerid, -25.7220") < interior_capture.index(
+        'AC_StageLogEvent(playerid, "interior_enter"'
+    )
+    assert interior_capture.index("SetPlayerPos(") < interior_capture.index(
+        'AC_StageLogEvent(playerid, "interior_exit"'
+    )
+    world_capture = function_body(staging, "AC_StageToggleVirtualWorld")
+    assert world_capture.index("SetPlayerVirtualWorld(playerid, AC_STAGE_TEST_WORLD_ID)") < world_capture.index(
+        'AC_StageLogEvent(playerid, "world_enter"'
+    )
+    spectate_capture = function_body(staging, "AC_StageStartSpectating")
+    assert spectate_capture.index("PlayerSpectatePlayer(playerid, targetid)") < spectate_capture.index(
+        'AC_StageLogEvent(playerid, "spectate_start"'
+    )
+    assert 'AC_StageLogEvent(playerid, "teleport", "")' in staging
+    assert 'AC_StageLogEvent(playerid, "vehicle_enter", "")' in staging
+    assert 'AC_StageLogEvent(playerid, "vehicle_exit", "")' in staging
+    assert 'AC_StageLogEvent(playerid, "evidence", details)' in staging
+    assert 'AC_StageLogEvent(playerid, "review_marker", details)' in staging
+    assert 'AC_StageLogEvent(playerid, "run_abort", " reason=owner_disconnect")' in staging
+    assert "LOAD account=%d session=%d" not in staging
+    assert "SAVE account=%d" not in staging
+    report_tool = sources["tools/anticheat/staging_report.py"]
+    assert "PREFIX = \"[AC-STAGE-EVENT] \"" in report_tool
+    assert "parse_staging_log" in report_tool
+    assert '"playerid"' not in report_tool
+    assert "unsupported field" in report_tool
+    assert "python3 tools/anticheat/staging_report.py --log" in staging_readme
+    assert "staging_acceptance_success.log" in sources["tests/test_staging_report.py"]
+
     player_id_parser = function_body(staging, "AC_StageParsePlayerId")
     assert "return -1;" in player_id_parser
     assert "new targetid = AC_StageParsePlayerId(cmdtext[17]);" in staging
@@ -251,7 +291,7 @@ def main() -> int:
 
     assert "OnPlayerInteriorChange" in staging
     assert "Connect a second test client" in staging_readme
-    assert "real game client remains connected" in staging_readme
+    assert "does not disconnect the real client" in staging_readme
     assert "AC_OnPlayerUpdate(playerid);" in staging
     assert not re.search(r"\b(?:Kick|Ban|BanEx)\s*\(", staging)
     assert staging_config.get("announce") is False

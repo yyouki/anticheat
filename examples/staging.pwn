@@ -9,6 +9,7 @@ new AC_StageSavedScoreDecayAt[AC_STAGE_STORE_CAPACITY];
 new AC_StageSavedStrikeDecayAt[AC_STAGE_STORE_CAPACITY];
 new AC_StageSavedLastStrikeAt[AC_STAGE_STORE_CAPACITY];
 new AC_StageVehicleId[MAX_PLAYERS];
+new AC_StageLogCaptureOwner = INVALID_PLAYER_ID;
 
 #define AC_STAGE_TEST_INTERIOR_ID (17)
 #define AC_STAGE_TEST_WORLD_ID (9000)
@@ -128,28 +129,91 @@ stock AC_StageRequireOnFoot(playerid)
     return 1;
 }
 
+stock AC_StageLogEvent(playerid, const event[], const details[])
+{
+    if (playerid != AC_StageLogCaptureOwner)
+        return 0;
+
+    // Use stable test roles only; never place player or account identifiers in this log.
+    printf("[AC-STAGE-EVENT] schema=1 event=%s actor=primary%s", event, details);
+    return 1;
+}
+
+stock AC_StageBeginLogCapture(playerid)
+{
+    if (!AC_StageRequireLoaded(playerid))
+        return 0;
+
+    if (AC_StageLogCaptureOwner != INVALID_PLAYER_ID)
+    {
+        SendClientMessage(playerid, 0xE05A5AFF, "[AC-STAGE] Another acceptance capture is already active.");
+        return 0;
+    }
+
+    AC_StageLogCaptureOwner = playerid;
+    AC_StageLogEvent(playerid, "run_begin", "");
+    SendClientMessage(playerid, 0xD8D8D8FF, "[AC-STAGE] Acceptance log capture started.");
+    return 1;
+}
+
+stock AC_StageEndLogCapture(playerid)
+{
+    if (playerid != AC_StageLogCaptureOwner)
+    {
+        SendClientMessage(playerid, 0xE05A5AFF, "[AC-STAGE] You do not own the active acceptance capture.");
+        return 0;
+    }
+
+    AC_StageLogEvent(playerid, "run_end", "");
+    AC_StageLogCaptureOwner = INVALID_PLAYER_ID;
+    SendClientMessage(playerid, 0xD8D8D8FF, "[AC-STAGE] Acceptance log capture ended.");
+    return 1;
+}
+
 stock AC_StageRestoreSpectateContext(playerid)
 {
     if (!AC_IsValidPlayerId(playerid) || !AC_StagePendingSpectateRestore[playerid])
         return 0;
 
+    new bool:was_spectating = AC_StageSpectating[playerid];
     AC_StagePendingSpectateRestore[playerid] = false;
     AC_StageSpectating[playerid] = false;
 
     // Restore the player's original interior before restoring their position.
+    new bool:restore_ok = true;
     AC_NotifyLegitimateInteriorChange(playerid);
-    SetPlayerInterior(playerid, AC_StageSpectateSavedInterior[playerid]);
+    if (!SetPlayerInterior(playerid, AC_StageSpectateSavedInterior[playerid]))
+        restore_ok = false;
 
     AC_NotifyLegitimateVirtualWorldChange(playerid);
-    SetPlayerVirtualWorld(playerid, AC_StageSpectateSavedWorld[playerid]);
+    if (!SetPlayerVirtualWorld(playerid, AC_StageSpectateSavedWorld[playerid]))
+        restore_ok = false;
 
     AC_NotifyLegitimateTeleport(playerid);
-    SetPlayerPos(
+    if (!SetPlayerPos(
         playerid,
         AC_StageSpectateSavedX[playerid],
         AC_StageSpectateSavedY[playerid],
         AC_StageSpectateSavedZ[playerid]
-    );
+    ))
+        restore_ok = false;
+
+    if (was_spectating)
+    {
+        if (restore_ok)
+            AC_StageLogEvent(playerid, "spectate_stop", "");
+        else
+        {
+            AC_StageLogEvent(playerid, "run_abort", " reason=context_restore_failed");
+            AC_StageLogCaptureOwner = INVALID_PLAYER_ID;
+        }
+    }
+
+    if (!restore_ok)
+    {
+        SendClientMessage(playerid, 0xE05A5AFF, "[AC-STAGE] Spectate ended, but context restoration reported a failure.");
+        return 0;
+    }
 
     SendClientMessage(playerid, 0xD8D8D8FF, "[AC-STAGE] Spectating ended; your previous position and world were restored.");
     return 1;
@@ -188,6 +252,10 @@ stock AC_StageToggleInterior(playerid)
             return 0;
 
         AC_StageInteriorActive[playerid] = true;
+        new details[48];
+        format(details, sizeof(details), " from=%d to=%d",
+            AC_StageSavedInterior[playerid], AC_STAGE_TEST_INTERIOR_ID);
+        AC_StageLogEvent(playerid, "interior_enter", details);
         SendClientMessage(playerid, 0xD8D8D8FF, "[AC-STAGE] Entered the 24/7 test interior (17). Run the command again to return.");
     }
     else
@@ -206,6 +274,10 @@ stock AC_StageToggleInterior(playerid)
             return 0;
 
         AC_StageInteriorActive[playerid] = false;
+        new details[48];
+        format(details, sizeof(details), " from=%d to=%d",
+            AC_STAGE_TEST_INTERIOR_ID, AC_StageSavedInterior[playerid]);
+        AC_StageLogEvent(playerid, "interior_exit", details);
         SendClientMessage(playerid, 0xD8D8D8FF, "[AC-STAGE] Returned to your previous position and interior.");
     }
     return 1;
@@ -231,6 +303,9 @@ stock AC_StageToggleVirtualWorld(playerid)
             return 0;
 
         AC_StageWorldActive[playerid] = true;
+        new details[48];
+        format(details, sizeof(details), " from=%d to=%d", current_world, AC_STAGE_TEST_WORLD_ID);
+        AC_StageLogEvent(playerid, "world_enter", details);
         SendClientMessage(playerid, 0xD8D8D8FF, "[AC-STAGE] Entered staging virtual world 9000. Run the command again to return.");
     }
     else
@@ -240,6 +315,10 @@ stock AC_StageToggleVirtualWorld(playerid)
             return 0;
 
         AC_StageWorldActive[playerid] = false;
+        new details[48];
+        format(details, sizeof(details), " from=%d to=%d",
+            AC_STAGE_TEST_WORLD_ID, AC_StageSavedWorld[playerid]);
+        AC_StageLogEvent(playerid, "world_exit", details);
         SendClientMessage(playerid, 0xD8D8D8FF, "[AC-STAGE] Returned to your previous virtual world.");
     }
     return 1;
@@ -317,6 +396,7 @@ stock AC_StageStartSpectating(playerid, targetid)
     }
 
     AC_StageSpectating[playerid] = true;
+    AC_StageLogEvent(playerid, "spectate_start", " target=secondary");
     SendClientMessage(playerid, 0xD8D8D8FF, "[AC-STAGE] Spectating target. Use /acstageunspectate to return.");
     return 1;
 }
@@ -401,8 +481,7 @@ stock AC_StageAuthenticate(playerid, accountid)
         SendClientMessage(playerid, 0xD8D8D8FF, "[AC-STAGE] Saved in-memory test account restored.");
     }
 
-    printf("[AC-STAGE] LOAD account=%d session=%d score=%d strikes=%d",
-        accountid, sessiontoken, score, strikes);
+    printf("[AC-STAGE] LOAD accepted score=%d strikes=%d", score, strikes);
     SendClientMessage(playerid, 0xD8D8D8FF, "[AC-STAGE] Use /acstagehelp to list test commands.");
     return 1;
 }
@@ -773,6 +852,11 @@ public OnPlayerDisconnect(playerid, reason)
     AC_StageWorldActive[playerid] = false;
     AC_StageSpectating[playerid] = false;
     AC_StagePendingSpectateRestore[playerid] = false;
+    if (AC_StageLogCaptureOwner == playerid)
+    {
+        AC_StageLogEvent(playerid, "run_abort", " reason=owner_disconnect");
+        AC_StageLogCaptureOwner = INVALID_PLAYER_ID;
+    }
     AC_OnPlayerDisconnect(playerid);
     return 1;
 }
@@ -794,18 +878,21 @@ public OnPlayerDeath(playerid, killerid, WEAPON:reason)
 public OnPlayerStateChange(playerid, PLAYER_STATE:newstate, PLAYER_STATE:oldstate)
 {
     AC_OnPlayerStateChange(playerid, newstate, oldstate);
-    if (newstate == PLAYER_STATE_SPECTATING || oldstate == PLAYER_STATE_SPECTATING)
+    if (playerid == AC_StageLogCaptureOwner)
     {
-        printf("[AC-STAGE] STATE_CHANGE player=%d old=%d new=%d",
-            playerid, _:oldstate, _:newstate);
+        if (newstate == PLAYER_STATE_SPECTATING)
+            AC_StageLogEvent(playerid, "spectate_state_enter", "");
+        else if (oldstate == PLAYER_STATE_SPECTATING)
+            AC_StageLogEvent(playerid, "spectate_state_exit", "");
     }
     return 1;
 }
 
 public OnPlayerInteriorChange(playerid, newinteriorid, oldinteriorid)
 {
-    printf("[AC-STAGE] INTERIOR_CHANGE player=%d old=%d new=%d",
-        playerid, oldinteriorid, newinteriorid);
+    new details[48];
+    format(details, sizeof(details), " old=%d new=%d", oldinteriorid, newinteriorid);
+    AC_StageLogEvent(playerid, "interior_callback", details);
     return 1;
 }
 
@@ -834,6 +921,20 @@ public OnPlayerCommandText(playerid, cmdtext[])
         SendClientMessage(playerid, 0xD8D8D8FF, "/acstageworld - enter/exit reserved virtual world 9000");
         SendClientMessage(playerid, 0xD8D8D8FF, "/acstagespectate <playerid> - spectate another connected player");
         SendClientMessage(playerid, 0xD8D8D8FF, "/acstageunspectate - leave spectate and restore your position");
+        SendClientMessage(playerid, 0xD8D8D8FF, "/acstagelogbegin - start a privacy-safe acceptance capture");
+        SendClientMessage(playerid, 0xD8D8D8FF, "/acstagelogend - finish the acceptance capture");
+        return 1;
+    }
+
+    if (!strcmp(cmdtext, "/acstagelogbegin", true))
+    {
+        AC_StageBeginLogCapture(playerid);
+        return 1;
+    }
+
+    if (!strcmp(cmdtext, "/acstagelogend", true))
+    {
+        AC_StageEndLogCapture(playerid);
         return 1;
     }
 
@@ -962,6 +1063,7 @@ public OnPlayerCommandText(playerid, cmdtext[])
         // Notify the detector before moving the player through a server-owned action.
         AC_NotifyLegitimateTeleport(playerid);
         SetPlayerPos(playerid, x + 8.0, y, z);
+        AC_StageLogEvent(playerid, "teleport", "");
         SendClientMessage(playerid, 0xD8D8D8FF, "[AC-STAGE] Legal teleport applied with a grace window.");
         return 1;
     }
@@ -986,6 +1088,7 @@ public OnPlayerCommandText(playerid, cmdtext[])
         AC_StageVehicleId[playerid] = vehicleid;
         PutPlayerInVehicle(playerid, vehicleid, 0);
         AC_NotifyLegitimateVehicleChange(playerid);
+        AC_StageLogEvent(playerid, "vehicle_enter", "");
         SendClientMessage(playerid, 0xD8D8D8FF, "[AC-STAGE] Test vehicle created and server-placed.");
         return 1;
     }
@@ -1000,6 +1103,7 @@ public OnPlayerCommandText(playerid, cmdtext[])
         {
             RemovePlayerFromVehicle(playerid);
             AC_NotifyLegitimateVehicleChange(playerid);
+            AC_StageLogEvent(playerid, "vehicle_exit", "");
             SendClientMessage(playerid, 0xD8D8D8FF, "[AC-STAGE] Vehicle exit completed.");
         }
         else
@@ -1036,30 +1140,40 @@ public AC_OnPersistenceSave(playerid, accountid, score, strikes, score_decay_at,
     AC_StageSavedStrikeDecayAt[slot] = strike_decay_at;
     AC_StageSavedLastStrikeAt[slot] = last_strike_at;
 
-    printf("[AC-STAGE] SAVE account=%d score=%d strikes=%d", accountid, score, strikes);
+    printf("[AC-STAGE] SAVE accepted score=%d strikes=%d", score, strikes);
     return 1;
 }
 
 public AC_OnEvidence(playerid, category, points, ping, const reason[], Float:metric)
 {
-    #pragma unused metric
-    new category_name[16];
-    AC_GetCategoryName(category, category_name, sizeof(category_name));
-    printf("[AC-STAGE] EVIDENCE player=%d category=%s points=%d ping=%d reason=%s",
-        playerid, category_name, points, ping, reason);
+    #pragma unused reason, metric
+    if (playerid == AC_StageLogCaptureOwner)
+    {
+        new category_name[16];
+        new details[80];
+        AC_GetCategoryName(category, category_name, sizeof(category_name));
+        format(details, sizeof(details), " category=%s points=%d ping=%d",
+            category_name, points, ping);
+        AC_StageLogEvent(playerid, "evidence", details);
+    }
     return 1;
 }
 
 public AC_OnStrike(playerid, accountid, strikes, const reason[])
 {
-    printf("[AC-STAGE] REVIEW_MARKER player=%d account=%d strikes=%d reason=%s",
-        playerid, accountid, strikes, reason);
+    #pragma unused accountid, reason
+    if (playerid == AC_StageLogCaptureOwner)
+    {
+        new details[32];
+        format(details, sizeof(details), " strikes=%d", strikes);
+        AC_StageLogEvent(playerid, "review_marker", details);
+    }
     return 1;
 }
 
 public AC_OnAdministrativeReset(adminid, targetid, accountid)
 {
-    printf("[AC-STAGE] REVIEW_RESET actor=%d target=%d account=%d",
-        adminid, targetid, accountid);
+    #pragma unused adminid, targetid, accountid
+    print("[AC-STAGE] REVIEW_RESET observed");
     return 1;
 }
