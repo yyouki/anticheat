@@ -134,8 +134,10 @@ class ReplayEngine:
     def __init__(self, constants: dict[str, int | float] | None = None) -> None:
         self.c = constants or load_constants()
         self.session_token = 0
+        self.connected = False
         self.account_id = 0
         self.loaded = False
+        self.enabled = False
         self.load_completion_results: list[bool] = []
 
         self.last_update_tick = 0
@@ -160,6 +162,7 @@ class ReplayEngine:
     def _reset_session(self) -> None:
         self.account_id = 0
         self.loaded = False
+        self.enabled = False
         self.score = 0
         self.strikes = 0
         self.category_last_at = {name: 0 for name in CATEGORY_IDS}
@@ -190,6 +193,8 @@ class ReplayEngine:
         return True
 
     def _record_evidence(self, category: str, points: int, at_ms: int) -> None:
+        if not (self.connected and self.loaded and self.enabled):
+            return
         now = at_ms // 1000
         last_at = self.category_last_at[category]
         if last_at > 0 and now - last_at < self.c["AC_CATEGORY_COOLDOWN_SECONDS"]:
@@ -219,6 +224,8 @@ class ReplayEngine:
             self.score = max(0, self.score - reduction)
 
     def _movement_sample(self, event: dict[str, Any]) -> None:
+        if not (self.connected and self.loaded and self.enabled):
+            return
         tick = event["at_ms"]
         if tick - self.last_update_tick < self.c["AC_SAMPLE_INTERVAL_MS"]:
             return
@@ -307,22 +314,27 @@ class ReplayEngine:
             if kind == "connect":
                 self.session_token += 1
                 self._reset_session()
+                self.connected = True
             elif kind == "disconnect":
                 self.session_token += 1
                 self._reset_session()
+                self.connected = False
             elif kind == "load_begin":
-                self.session_token += 1
-                self._reset_session()
-                self.account_id = event["account_id"]
+                if self.connected:
+                    self.session_token += 1
+                    self._reset_session()
+                    self.account_id = event["account_id"]
             elif kind == "load_complete":
                 accepted = (
                     event["session_token"] == self.session_token
                     and event["account_id"] == self.account_id
+                    and self.connected
                     and not self.loaded
                 )
                 self.load_completion_results.append(accepted)
                 if accepted:
                     self.loaded = True
+                    self.enabled = True
             elif kind == "grace_start":
                 self.grace_started_tick = at_ms
                 self.grace_duration_ms = event["duration_ms"]
