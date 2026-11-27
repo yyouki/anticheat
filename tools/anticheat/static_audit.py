@@ -155,6 +155,12 @@ def main() -> int:
     trace_report = sources["tools/anticheat/vehicle_trace_report.py"]
     assert "SCHEMA_FIELDS" in trace_report
     assert "TRACE_MIN_SAMPLE_INTERVAL_MS" in trace_report
+    assert "AC_StageLastVehicleTraceTick[playerid] = tick;" not in telemetry_capture.split(
+        "// No player ID, account ID, vehicle ID, or coordinates are written."
+    )[0], "sample tick must not advance before the observation is validated"
+    assert telemetry_capture.index("GetVehicleVelocity") < telemetry_capture.index(
+        "AC_StageLastVehicleTraceTick[playerid] = tick;"
+    ), "sample tick must represent the preceding accepted observation"
     assert '"report_schema_version": 3' in trace_report
     assert "sample_interval_ms" in trace_report
     assert "test_schema_v2_requires_and_validates_sampling_intervals" in sources["tests/test_vehicle_trace_report.py"]
