@@ -4,6 +4,21 @@
   "description": "A long sampling gap and a virtual-world transition each establish a new baseline instead of carrying anomaly samples across transitions.",
   "events": [
     {
+      "type": "connect",
+      "at_ms": 100
+    },
+    {
+      "type": "load_begin",
+      "at_ms": 200,
+      "account_id": 1004
+    },
+    {
+      "type": "load_complete",
+      "at_ms": 300,
+      "account_id": 1004,
+      "session_token": 2
+    },
+    {
       "type": "movement_sample",
       "at_ms": 1000,
       "x": 0,
@@ -68,6 +83,12 @@
     "evidence_categories": [],
     "movement_evidence": 0,
     "score": 0,
-    "strikes": 0
+    "strikes": 0,
+    "loaded": true,
+    "account_id": 1004,
+    "session_token": 2,
+    "load_completion_results": [
+      true
+    ]
   }
 }
