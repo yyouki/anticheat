@@ -88,7 +88,11 @@ Always use a session token and account key to reject stale asynchronous loads an
   - Static audit and both Pawn smoke compile jobs passed.
   - Python tests failed because the loader expected `AC_NETWORK_QUALITY_TTL_MS` in the wrong include.
   - The replay command was skipped after the Python test failure.
-- The follow-up branch `fix/replay-ci-and-project-context` addresses this loader defect, fixes related documentation, and introduces this durable context record. Update this section with the resulting PR number, commit, and CI run once verified.
+- PR #3: [Fix telemetry replay CI and add durable project context](https://github.com/yyouki/anticheat/pull/3).
+  - Branch: `fix/replay-ci-and-project-context`.
+  - Verified head commit: `da672c628cc0b85c5116fa3b61b1041ee9543c80`.
+  - GitHub Actions run #33 (`45945300237`) passed static audit, all 5 Python unit tests, all 10 replay fixtures, and both default/opt-in Pawn smoke compile jobs.
+  - PR #3 is open as Draft and is not yet merged to `main`. A final documentation-only commit is being added to preserve this verified result; recheck CI for the resulting head SHA.
 
 A PR being merged does not imply every CI job passed. Never describe the repository as fully green unless the current workflow for the relevant commit confirms it.
 
@@ -115,8 +119,7 @@ CI also performs the repository static audit and default/opt-in Pawn smoke compi
 
 ## Next work after replay CI repair
 
-1. Confirm the follow-up PR has passing static audit, Python unit tests, replay fixtures, and both Pawn smoke compile jobs.
-2. Only then mark the CI repair complete in `docs/ROADMAP.md` and update the validation snapshot with the actual run ID/head SHA.
-3. Plan staging-server integration with a neutral sample gamemode and a minimal persistence adapter.
-4. Collect representative desktop/mobile traces and legal-transition cases before tightening movement/vehicle/combat thresholds.
-5. Add only host-neutral optional adapters after their public API and failure behavior are tested.
+1. Review and merge PR #3 after checking its final head CI and diff.
+2. Plan staging-server integration with a neutral sample gamemode and a minimal persistence adapter.
+3. Collect representative desktop/mobile traces and legal-transition cases before tightening movement/vehicle/combat thresholds.
+4. Add only host-neutral optional adapters after their public API and failure behavior are tested.
