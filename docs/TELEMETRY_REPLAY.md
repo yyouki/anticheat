@@ -4,7 +4,7 @@
 
 The replay format is a deterministic, privacy-safe test input for the anti-cheat contract. It is intended for synthetic scenarios and reviewed, anonymised traces after sensitive identifiers and coordinates have been removed.
 
-The Python replay engine is a reference model for the documented v1 rules. It reads numeric thresholds from both `include/ac/config.inc` and `include/ac/network.inc`, following the include that owns each constant. It does not execute Pawn bytecode or start open.mp. A passing replay validates the fixture and reference model, not live detector accuracy. Runtime, Android/desktop false-positive, performance, and adversarial validation remain separate release gates.
+The Python replay engine is a reference model for the documented v1 rules. It reads numeric thresholds from `include/ac/config.inc`, `include/ac/network.inc`, and `include/ac/vehicle.inc`, following the include that owns each constant. It also reads the special vehicle-model exclusion list from the Pawn vehicle module. It does not execute Pawn bytecode or start open.mp. A passing replay validates the fixture and reference model, not live detector accuracy. Runtime, Android/desktop false-positive, performance, and adversarial validation remain separate release gates.
 
 Never commit account names, IP addresses, session secrets, real player identifiers, or raw private chat into fixtures. Use relative coordinates, synthetic account IDs, and monotonic timestamps.
 
@@ -49,9 +49,10 @@ All event timestamps are integer milliseconds on one monotonic timeline and must
 | `load_complete` | `at_ms`, `account_id`, `session_token` | Attempt to apply an asynchronous load result. |
 | `grace_start` | `at_ms`, `duration_ms` | Mark a server-authoritative legal transition grace period. |
 | `movement_sample` | `at_ms`, `x`, `y`, `ping` | Submit a synthetic movement sample with optional network/state context. |
+| `vehicle_sample` | `at_ms`, `vehicle_id`, `vehicle_model`, `speed_kmh`, `ping` | Submit a synthetic driver speed sample with optional network/state context. Vehicle ID and model are synthetic test values. |
 | `evidence` | `at_ms`, `category`, `points` | Inject detector-family evidence to test correlation policy. |
 
-Optional movement fields are `packet_loss`, `packet_loss_age_ms`, `state`, `interior`, and `world`. A null or omitted packet-loss value means unknown. A measurement older than the configured network-quality TTL is ignored. The replay reads numeric sampling and threshold values from the Pawn includes.
+Optional movement fields are `packet_loss`, `packet_loss_age_ms`, `state`, `interior`, and `world`. Optional vehicle fields are `packet_loss`, `packet_loss_age_ms`, and `state` (default `driver`). A null or omitted packet-loss value means unknown. A measurement older than the configured network-quality TTL is ignored. Vehicle samples follow the Pawn driver-only gate, shared 500 ms update sampling, 400 ms ping ceiling, source-derived speed envelope, 3-sample streak, grace reset, vehicle-switch reset, and excluded-model list.
 
 The `expected` object asserts exact output fields and can include `evidence_count`, `evidence_categories`, `movement_evidence`, `score`, `strikes`, `loaded`, `account_id`, `session_token`, and `load_completion_results`.
 
@@ -77,5 +78,6 @@ The replay command prints one PASS/FAIL line per fixture. The unittest suite als
 - Expired packet-loss measurements no longer suppressing samples.
 - Stale asynchronous account-load results and duplicate completions being rejected.
 - Persisted strike cooldown remaining active after disconnect, player-slot reuse, and account reload.
+- Sustained vehicle speed anomalies, excluded aircraft models, vehicle switching, grace windows, network-quality resets, and the shared sampling interval.
 
 Add a fixture whenever a threshold or suppressor changes. Update expected values only after reviewing the rule change; never change expected values merely to silence a failing test.
