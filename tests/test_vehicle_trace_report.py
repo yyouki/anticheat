@@ -15,6 +15,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools" / "anticheat"))
 from vehicle_trace_report import (  # noqa: E402
+    ALLOWED_TRACE_MODELS,
     build_report,
     main,
     parse_vehicle_observations,
@@ -84,6 +85,8 @@ class VehicleTraceReportTests(unittest.TestCase):
     def test_model_and_ping_bounds_are_checked(self) -> None:
         with self.assertRaisesRegex(ValueError, "vehicle ID range"):
             parse_vehicle_observations([line(model=399)])
+        with self.assertRaisesRegex(ValueError, "not approved"):
+            parse_vehicle_observations([line(model=417)])
         with self.assertRaisesRegex(ValueError, "ping exceeds"):
             parse_vehicle_observations([line(ping=65536)])
 
@@ -176,6 +179,7 @@ class VehicleTraceReportTests(unittest.TestCase):
         }
         self.assertGreaterEqual(len(allowed), 30)
         self.assertTrue(all(400 <= model <= 611 for model in allowed))
+        self.assertEqual(allowed, set(ALLOWED_TRACE_MODELS))
         self.assertTrue(allowed.isdisjoint(load_excluded_vehicle_models()))
 
     def test_cli_outputs_json_without_private_paths(self) -> None:
@@ -209,6 +213,24 @@ class VehicleTraceReportTests(unittest.TestCase):
             self.assertEqual(report["sample_count"], 2)
             self.assertEqual(set(report["models"]), {"411", "560"})
             self.assertEqual(report["models"]["560"]["speed_kmh"]["max"], 25.0)
+
+    def test_cli_rejects_combined_logs_over_total_byte_limit(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            first = Path(directory) / "first.log"
+            second = Path(directory) / "second.log"
+            first.write_text(line() + "\\n", encoding="utf-8")
+            second.write_text(line(560) + "\\n", encoding="utf-8")
+            output = StringIO()
+            error_output = StringIO()
+            with patch("vehicle_trace_report.MAX_TOTAL_LOG_BYTES", 1):
+                with patch(
+                    "sys.argv",
+                    ["vehicle_trace_report.py", "--log", str(first), "--log", str(second)],
+                ):
+                    with redirect_stdout(output), redirect_stderr(error_output):
+                        exit_code = main()
+            self.assertEqual(exit_code, 2)
+            self.assertIn("combined logs exceed", error_output.getvalue())
 
     def test_cli_rejects_symlink_input(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
