@@ -51,7 +51,8 @@ Supporting validation lives in:
 - `tools/anticheat/staging_review.py`: validates one local operator-authored false-positive review record.
 - `tools/anticheat/staging_review_batch.py`: validates and aggregates up to 500 local review records by exact build and network metadata.
 - `tools/anticheat/staging_review_capture.py`: binds a schema-v2 review record to the SHA-256 digest of one passing local staging capture.
-- `tests/test_replay.py`, `tests/test_staging_report.py`, `tests/test_staging_review.py`, `tests/test_staging_review_batch.py`, and `tests/test_staging_review_capture.py`: tests for replay outcomes, staging contracts, privacy-safe review records, batch summaries, and capture binding.
+- `tools/anticheat/vehicle_trace_report.py`: validates and summarizes local pseudonymous vehicle observations by model; it reports descriptive percentiles only and does not establish safe envelopes.
+- `tests/test_replay.py`, `tests/test_staging_report.py`, `tests/test_staging_review.py`, `tests/test_staging_review_batch.py`, `tests/test_staging_review_capture.py`, and `tests/test_vehicle_trace_report.py`: tests for replay outcomes, staging contracts, privacy-safe review records, batch summaries, capture binding, and local vehicle telemetry summaries.
 - `tests/fixtures/`: synthetic JSON telemetry scenarios and a pseudonymous staging acceptance log.
 - `.github/workflows/`: static audit, Python tests/replays and Pawn smoke builds.
 - `docs/INTEGRATION.md`: host gamemode callback and persistence contract.
@@ -144,6 +145,16 @@ Always use a session token and account key to reject stale asynchronous loads an
   - Post-merge artifact: `ac-staging-package`, ID `15191081168`, size 43,973 bytes, SHA-256 `e8a6bb55e841f2017fd93fda59ddcb72fb3de09db6d61b1f67a0e628f30acb60`.
 
 A PR being merged does not imply every CI job passed. Always verify the latest workflow for the resulting `main` commit.
+
+## PR #14 — deterministic vehicle telemetry replay
+
+PR #14, [Add deterministic vehicle telemetry replay coverage](https://github.com/yyouki/anticheat/pull/14), merged to `main` as `650fa4fb4eb1dc29ca54a276b6ec98c57657aa70` on 2026-11-27. Post-merge workflow run #83 (`45990008906`) passed all three jobs: static audit/Python replay, all Pawn compile targets and staging package upload, and pinned open.mp headless boot. Artifact `ac-staging-package` ID `15192318954`, size 43,973 bytes, SHA-256 `59c41804269ac3d6a12ec5afd6478aa51751ff8b379d7eb9229ff32a6c7ca7e1`.
+
+The replay coverage mirrors the current generic vehicle detector contract and synthetic tests only. It does not establish model-specific speed envelopes or real-client accuracy.
+
+## Vehicle trace collection status
+
+The staging harness is being extended with bounded, pseudonymous vehicle observations and a local per-model summary tool. The intended collector records model, quantized speed, ping, and fresh host-supplied packet loss when available, at no more than 2 Hz. This is observational staging instrumentation, not an additional detector input. No real client traces have been collected yet; model-aware detector thresholds remain blocked on representative real staging evidence.
 
 ## Working and merge workflow preference
 
