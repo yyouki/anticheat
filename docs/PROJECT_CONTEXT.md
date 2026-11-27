@@ -146,7 +146,7 @@ CI also performs the repository static audit and default/opt-in Pawn smoke compi
 
 ## Current implementation focus
 
-PR #6, [Add explicit legal transition notification hooks](https://github.com/yyouki/anticheat/pull/6), is open on branch `feat/legal-transition-hooks`. It adds explicit notifications for server-owned interior, virtual-world, and spectating transitions. The helpers validate the player and share the conservative sampling/grace reset path; do not treat PR #6 as merged until its merge is verified.
+PR #6, [Add explicit legal transition notification hooks](https://github.com/yyouki/anticheat/pull/6), is open on branch `feat/legal-transition-hooks`. It adds explicit notifications for server-owned interior, virtual-world, and spectating transitions. The helpers validate the player and share the conservative sampling/grace reset path; do not treat PR #6 as merged until its merge is verified. Its tested head `5cde5fa8b368ae93f31794f6a346b768489eaa03` passed Actions run #54 (`45957558835`): 9 Python unit tests, all 10 telemetry fixtures, static audit, three Pawn compile targets, staging artifact upload (ID `15178978161`), and pinned open.mp headless boot. The self-test hooks are compiled/source-checked; live player transition checks remain manual.
 
 ## Remaining release gates
 
