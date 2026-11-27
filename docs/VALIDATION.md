@@ -55,6 +55,17 @@ This remains a headless gamemode-load result. It does not execute `/acstagetest`
 
 
 
+PR #6 adds explicit server-owned interior, virtual-world, and spectating notifications. Its tested head `5cde5fa8b368ae93f31794f6a346b768489eaa03` passed GitHub Actions run #54 (`45957558835`):
+
+- Static repository audit: PASSED (35 required files).
+- Python unit tests: PASSED (9 tests).
+- Deterministic telemetry replay: PASSED (all 10 fixtures).
+- Default, opt-in feature-gate, and staging Pawn compiles: PASSED.
+- Staging package upload: PASSED (`ac-staging-package`, artifact ID `15178978161`).
+- Pinned open.mp `v1.6.7.3218` headless boot: PASSED.
+
+These checks verify compilation, source contracts, and gamemode startup. They do not execute `/acstagetest` with a connected client or prove that actual live interior/world/spectating transitions are false-positive free.
+
 ## Required release suite
 
 | Area | Required cases |
