@@ -139,13 +139,15 @@ def validate_review_record(data: Any) -> dict[str, Any]:
         environment.get("openmp_version", "")
     ):
         errors.append("environment.openmp_version must use the vX.Y.Z.BUILD form")
-    if environment.get("client_platform") not in CLIENT_PLATFORMS:
+    client_platform = environment.get("client_platform")
+    if not isinstance(client_platform, str) or client_platform not in CLIENT_PLATFORMS:
         errors.append("environment.client_platform is unsupported")
     if not isinstance(environment.get("client_build"), str) or not CLIENT_BUILD_PATTERN.fullmatch(
         environment.get("client_build", "")
     ):
         errors.append("environment.client_build must be a short build label, not a device identifier")
-    if environment.get("network_profile") not in NETWORK_PROFILES:
+    network_profile = environment.get("network_profile")
+    if not isinstance(network_profile, str) or network_profile not in NETWORK_PROFILES:
         errors.append("environment.network_profile is unsupported")
     if not _valid_timestamp(environment.get("started_at")):
         errors.append("environment.started_at must be an ISO-8601 timestamp with a timezone")
@@ -186,10 +188,10 @@ def validate_review_record(data: Any) -> dict[str, Any]:
         block_reason = observation.get("block_reason")
         secondary_connected = observation.get("secondary_client_connected")
 
-        if result not in RESULTS:
+        if not isinstance(result, str) or result not in RESULTS:
             errors.append(f"{scenario_id}: result is unsupported")
             continue
-        if decision not in REVIEW_DECISIONS:
+        if not isinstance(decision, str) or decision not in REVIEW_DECISIONS:
             errors.append(f"{scenario_id}: review_decision is unsupported")
             continue
         if not isinstance(categories, list) or any(
@@ -217,7 +219,12 @@ def validate_review_record(data: Any) -> dict[str, Any]:
             if block_reason is not None:
                 errors.append(f"{scenario_id}: evidence results cannot have a block reason")
         elif result == "blocked":
-            if categories or decision != "not_applicable" or block_reason not in BLOCK_REASONS:
+            if (
+                categories
+                or decision != "not_applicable"
+                or not isinstance(block_reason, str)
+                or block_reason not in BLOCK_REASONS
+            ):
                 errors.append(f"{scenario_id}: blocked results require a controlled block reason and no evidence")
         elif result == "not_run":
             if categories or decision != "not_applicable" or block_reason is not None:
