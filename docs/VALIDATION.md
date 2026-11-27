@@ -242,3 +242,14 @@ PR #18, [Add privacy-safe staging log export](https://github.com/yyouki/antichea
 - Staging artifact: `ac-staging-package`, ID `15202502073`, size 46,348 bytes, SHA-256 `f14c77cfd99701879c8c41cf11bb28d1818fd731ba7916f698f0ee98cef8ac3d`.
 
 The sanitizer retains one complete, parser-valid staging acceptance capture and valid vehicle telemetry records. It strips unrelated console metadata and writes a new local file. Review digests bind the sanitized export, not the original raw console log. This validates format and record consistency only; run #102 did not connect an interactive game client or establish false-positive performance.
+
+## PR #19 — harden staging log sanitizer input handling
+
+PR #19, [Harden staging log sanitizer input handling](https://github.com/yyouki/anticheat/pull/19), merged to `main` as `f0ce421a0996fda67c7173c58fce3662e1a5cdb6` on 2026-11-27. Post-merge Actions run #104 (`46009968251`) passed all three jobs on that exact merge commit:
+
+- Static repository audit, 102 Python unit tests, and deterministic telemetry replay: PASSED.
+- Default, opt-in feature-gate, and staging Pawn compile targets: PASSED.
+- Pinned open.mp `v1.6.7.3218` headless runtime smoke: PASSED.
+- Staging artifact: `ac-staging-package`, ID `15202508116`, size 46,348 bytes, SHA-256 `88316d28740b6527cf6d3e5a25a27f98efeb095b4cf83f85427eefe0f67ea5fc`.
+
+PR #19 hardens the local sanitizer against source symlink swaps, adds regression coverage, and corrects the false-positive matrix to use sanitized exports before review binding. The run did not connect interactive clients or establish false-positive performance.
