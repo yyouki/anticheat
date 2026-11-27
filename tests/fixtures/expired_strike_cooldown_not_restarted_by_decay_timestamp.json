@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "scenario_id": "expired_strike_cooldown_not_restarted_by_decay_timestamp",
+  "description": "A six-hour decay timestamp may be recent while the actual last strike is old; reconnect must not create a fresh five-minute cooldown.",
+  "events": [
+    {
+      "type": "connect",
+      "at_ms": 1000
+    },
+    {
+      "type": "load_begin",
+      "at_ms": 2000,
+      "account_id": 24
+    },
+    {
+      "type": "load_complete",
+      "at_ms": 21700000,
+      "account_id": 24,
+      "session_token": 2,
+      "score": 50,
+      "strikes": 1,
+      "strike_decay_at": 21603,
+      "last_strike_at": 3
+    },
+    {
+      "type": "evidence",
+      "at_ms": 21701000,
+      "category": "movement",
+      "points": 10
+    },
+    {
+      "type": "evidence",
+      "at_ms": 21702000,
+      "category": "vehicle",
+      "points": 10
+    }
+  ],
+  "expected": {
+    "evidence_count": 2,
+    "evidence_categories": [
+      "movement",
+      "vehicle"
+    ],
+    "movement_evidence": 0,
+    "score": 38,
+    "strikes": 2,
+    "loaded": true,
+    "account_id": 24,
+    "session_token": 2,
+    "load_completion_results": [
+      true
+    ]
+  }
+}
