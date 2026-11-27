@@ -137,6 +137,12 @@ CI also performs the repository static audit and default/opt-in Pawn smoke compi
 - This is a headless process/gamemode-load check only. It does not connect a player client or establish detector accuracy.
 - Persistence in the sample is RAM-only, bounded to `MAX_PLAYERS` test accounts, and lost after server restart. Do not use it in production.
 
+## Current follow-up: staging self-test
+
+The branch `test/staging-persistence-selftest` adds `/acstagetest` to the isolated staging gamemode. It checks stale session-token rejection, account-ID mismatch rejection, duplicate account-load rejection, independent restoration of `last_strike_at`, grace notification, persistence callback save, and restoration after simulating the framework disconnect/connect reset path while the game client remains connected. It uses a reserved synthetic account ID range beginning at `2000000000`, saves the currently active synthetic account first, and restores it at the end.
+
+This self-test is not a real network reconnect and does not test client movement synchronization. The manual reconnect and live-client false-positive checks remain separate.
+
 ## Next work
 
 1. Install the `ac-staging-package` artifact on an isolated private open.mp server and follow `examples/staging/README.md` with supported game clients.
