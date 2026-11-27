@@ -119,6 +119,11 @@ Always use a session token and account key to reject stale asynchronous loads an
   - Merge commit: `088cd2da36b84f28eb1e6c4cf78f202151aa7ffd`.
   - Post-merge run #67 (`45973908533`) passed static audit (38 files), 23 Python unit tests, replay, all three Pawn compile targets, staging package upload, and pinned open.mp headless boot.
   - Artifact: `ac-staging-package`, ID `15185799075`, SHA-256 `ae8e9e5a930cf4e7267bc5af8205764708940b266837fb8d7cca833aac497745`.
+- PR #10, versioned JSON staging report output, merged to `main`.
+  - PR: https://github.com/yyouki/anticheat/pull/10
+  - Merge commit: `257b3d8bb371639a5d12725111eb9b77991b27ff`.
+  - Post-merge run #69 (`45976338084`) passed all three jobs.
+  - Artifact: `ac-staging-package`, ID `15186404863`, SHA-256 `82a1cb95ced58ed251ab17755445537f2769ab3b20e774480074bbce191ed699`.
 
 A PR being merged does not imply every CI job passed. Always verify the latest workflow for the resulting `main` commit.
 
@@ -155,22 +160,30 @@ CI also performs the repository static audit and default/opt-in Pawn smoke compi
 
 ## Current staging work and verified CI
 
-PR #7, [Add live staging commands for legal state transitions](https://github.com/yyouki/anticheat/pull/7), is merged as `da1464dbbe1c499eac074a5a7aa5d8d621b95bc4`. Its post-merge run #59 passed all three CI jobs.
+PR #7, [Add live staging commands for legal state transitions](https://github.com/yyouki/anticheat/pull/7), is merged as `da1464dbbe1c499eac074a5a7aa5d8d621b95bc4`. Its post-merge run #59 passed all three jobs.
 
 PR #8, [Add privacy-safe staging acceptance report](https://github.com/yyouki/anticheat/pull/8), is merged as `49c7b4476d136b7f8117118644915d63485fc9cf`. Post-merge run #65 (`45965726373`) passed.
 
-PR #9, [Harden staging acceptance log validation](https://github.com/yyouki/anticheat/pull/9), is merged as `088cd2da36b84f28eb1e6c4cf78f202151aa7ffd`. Post-merge run #67 (`45973908533`) passed static audit (38 files), 23 Python unit tests, deterministic replay, all three Pawn compile targets, staging artifact packaging, and pinned open.mp `v1.6.7.3218` headless boot. The artifact is `ac-staging-package`, ID `15185799075`, SHA-256 `ae8e9e5a930cf4e7267bc5af8205764708940b266837fb8d7cca833aac497745`.
+PR #9, [Harden staging acceptance log validation](https://github.com/yyouki/anticheat/pull/9), is merged as `088cd2da36b84f28eb1e6c4cf78f202151aa7ffd`. Post-merge run #67 (`45973908533`) passed static audit (38 files), 23 Python unit tests, replay, all three Pawn compile targets, staging package upload, and pinned open.mp `v1.6.7.3218` headless boot.
 
-The staging capture uses pseudonymous `[AC-STAGE-EVENT]` records and `/acstagelogbegin` / `/acstagelogend`. The offline parser checks one complete legal teleport, vehicle, interior callback, virtual-world, and spectating sequence; it rejects malformed/duplicate fields, missing event-specific fields, negative counters, unsupported evidence categories, and evidence/review markers inside the capture.
+PR #10, [Add explicit JSON staging report contract](https://github.com/yyouki/anticheat/pull/10), is merged as `257b3d8bb371639a5d12725111eb9b77991b27ff`. Post-merge run #69 (`45976338084`) passed all three jobs and uploaded artifact `ac-staging-package` ID `15186404863`, SHA-256 `82a1cb95ced58ed251ab17755445537f2769ab3b20e774480074bbce191ed699`.
 
-The report tool supports human-readable output and versioned `--json` output. Both describe structured-log contract validation only. JSON explicitly leaves `client_runtime_verified`, `log_origin_authenticated`, and `production_ready` false. A parser PASS does not authenticate the log or prove that a real client performed the actions.
+The staging capture uses pseudonymous `[AC-STAGE-EVENT]` records and `/acstagelogbegin` / `/acstagelogend`. The offline parser validates one bounded transition capture and its versioned JSON mode reports only structured-log contract results. It does not authenticate log origin or prove client runtime behavior.
 
-The sample adapter remains volatile RAM only. The synthetic success fixture validates parser behavior only; it is not runtime evidence.
+The sample adapter remains volatile RAM only. The staging report's synthetic success fixture is parser coverage, not runtime evidence.
+
+## Current manual false-positive evaluation tools
+
+- `docs/STAGING_FALSE_POSITIVE_MATRIX.md` defines benign scenarios across client builds and controlled network profiles.
+- `tools/anticheat/staging_review_scenarios.json` is the versioned scenario manifest.
+- `docs/templates/staging-review-template.json` is a local-only template; it intentionally starts with unfilled environment metadata and all scenarios marked `not_run`.
+- `tools/anticheat/staging_review.py` validates one operator-authored JSON review record and reports missing, blocked, not-run, pending, inconclusive, and confirmed false-positive outcomes.
+- The review validator never certifies that tests were actually executed, that the detector is false-positive-free, or that the project is production-ready.
 
 ## Remaining release gates
 
 1. Run `/acstagetest` and one complete `/acstagelogbegin`–`/acstagelogend` capture on an isolated private open.mp server with two connected test clients; inspect the offline report.
-2. Perform real disconnect/reconnect tests and ordinary gameplay on each supported desktop/Android client.
-3. Record representative legal server transitions and review false-positive outcomes. Do not change thresholds based on synthetic reports alone.
+2. Perform the benign scenario matrix separately for supported desktop and Android client builds and each relevant network profile. Use real disconnect/reconnect testing; the simulated `/acstagetest` reset is not a substitute.
+3. Review every evidence event, record its human adjudication, and resolve confirmed false positives before considering threshold changes.
 4. Benchmark runtime cost and review adversarial traces before changing detector thresholds.
 5. Replace the sample RAM adapter only in a host-specific integration package with a known persistence contract.
