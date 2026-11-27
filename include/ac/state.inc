@@ -51,8 +51,15 @@ new AC_NetworkQualityTick[MAX_PLAYERS];
 new Float:AC_NetworkPacketLoss[MAX_PLAYERS];
 new bool:AC_NetworkPacketLossKnown[MAX_PLAYERS];
 
+stock bool:AC_IsValidPlayerId(playerid)
+{
+    return playerid >= 0 && playerid < MAX_PLAYERS;
+}
+
 stock AC_ResetSampling(playerid)
 {
+    if (!AC_IsValidPlayerId(playerid))
+        return 0;
     AC_LastUpdateTick[playerid] = 0;
     AC_LastMovementTick[playerid] = 0;
     AC_HasMovementSample[playerid] = false;
@@ -68,6 +75,8 @@ stock AC_ResetSampling(playerid)
 
 stock AC_ResetEvidence(playerid)
 {
+    if (!AC_IsValidPlayerId(playerid))
+        return 0;
     AC_EvidenceHead[playerid] = 0;
     AC_EvidenceCount[playerid] = 0;
 
@@ -88,6 +97,8 @@ stock AC_ResetEvidence(playerid)
 
 stock AC_ResetPlayer(playerid)
 {
+    if (!AC_IsValidPlayerId(playerid))
+        return 0;
     AC_PlayerLoaded[playerid] = false;
     AC_PlayerEnabled[playerid] = false;
     AC_AccountKey[playerid] = 0;
