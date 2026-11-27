@@ -211,7 +211,15 @@ Run #90 did not connect an interactive game client or collect real vehicle trace
 
 
 
-PR #16, [Bind vehicle trace summaries to staging review captures](https://github.com/yyouki/anticheat/pull/16), latest head `047aa601e1c04612dab8399988fdfc26d56dea05`, passed workflow run #93 (`45997527879`). All three jobs completed successfully:
+PR #16, [Bind vehicle trace summaries to staging review captures](https://github.com/yyouki/anticheat/pull/16), merged to `main` as `849e2defb16ea908cb7fa54ceb393071a495069f` on 2026-11-27. Post-merge Actions run #95 (`45999875860`) completed successfully on that exact merge commit:
+
+- Static repository audit, 90 Python unit tests, and deterministic telemetry replay: PASSED.
+- Default, opt-in feature-gate, and staging Pawn compile targets: PASSED.
+- Pinned open.mp `v1.6.7.3218` headless runtime smoke: PASSED.
+- Staging artifact: `ac-staging-package`, ID `15197766625`, size 45,753 bytes, SHA-256 `a434fccb84166145e243c139ea369d041df98c8fabef9310a7f397833a4e4119`.
+
+PR #16 verifies that each vehicle trace is paired with the exact schema-v2 review capture and that review metadata is consistent across the set. It does not authenticate log origin, prove operator scenario execution, connect a game client, or establish detector accuracy. The Pawn detector and its thresholds remain unchanged.
+(https://github.com/yyouki/anticheat/pull/16), latest head `047aa601e1c04612dab8399988fdfc26d56dea05`, passed workflow run #93 (`45997527879`). All three jobs completed successfully:
 
 - Static repository audit, all 90 Python unit tests, and deterministic telemetry replay: PASSED.
 - Default, opt-in feature-gate, and staging Pawn compile targets: PASSED.
