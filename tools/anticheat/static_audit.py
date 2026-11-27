@@ -32,6 +32,7 @@ REQUIRED = [
     "tests/fixtures/cross_category_evidence_can_create_review_strike.json",
     "tests/fixtures/expired_packet_loss_measurement_does_not_suppress.json",
     "tests/fixtures/stale_and_duplicate_account_loads_are_rejected.json",
+    "tests/fixtures/strike_cooldown_survives_reconnect.json",
     "docs/TELEMETRY_REPLAY.md",
     "docs/ARCHITECTURE.md",
     "docs/INTEGRATION.md",
