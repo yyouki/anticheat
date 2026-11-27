@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
@@ -38,6 +39,26 @@ class StagingReport:
     errors: tuple[str, ...]
 
 
+def report_to_payload(report: StagingReport) -> dict[str, object]:
+    """Return a machine-readable summary without implying runtime verification."""
+    return {
+        "report_schema_version": 1,
+        "report_type": "openmp_staging_acceptance",
+        "status": "pass" if report.passed else "fail",
+        "passed": report.passed,
+        "validation_scope": "structured_log_contract",
+        "runtime_validation": {
+            "client_runtime_verified": False,
+            "log_origin_authenticated": False,
+            "production_ready": False,
+        },
+        "event_counts": report.event_counts,
+        "evidence_count": report.evidence_count,
+        "review_marker_count": report.review_marker_count,
+        "errors": list(report.errors),
+    }
+
+
 def _parse_record(payload: str, line_number: int) -> dict[str, str]:
     fields: dict[str, str] = {}
     for token in payload.split():
@@ -58,7 +79,8 @@ def _parse_record(payload: str, line_number: int) -> dict[str, str]:
         raise ValueError(f"line {line_number}: unsupported abort reason")
     event = fields.get("event")
     if event not in ALLOWED_EVENTS:
-        raise ValueError(f"line {line_number}: unsupported event {event!r}")
+        # Do not echo arbitrary log values into a shareable report.
+        raise ValueError(f"line {line_number}: unsupported event value")
 
     for name in INTEGER_FIELDS.intersection(fields):
         try:
@@ -220,6 +242,11 @@ def main() -> int:
         description="Validate one privacy-safe open.mp staging acceptance log."
     )
     parser.add_argument("--log", required=True, type=Path, help="server console log containing one capture")
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="print a machine-readable summary (does not verify live runtime or log origin)",
+    )
     args = parser.parse_args()
 
     try:
@@ -229,15 +256,22 @@ def main() -> int:
         print(f"Could not read staging log: {error}", file=sys.stderr)
         return 2
 
-    print(f"Staging acceptance report: {'PASS' if report.passed else 'FAIL'}")
-    print(
-        f"Observed events: {sum(report.event_counts.values())}; "
-        f"evidence: {report.evidence_count}; review markers: {report.review_marker_count}"
-    )
-    for name, count in report.event_counts.items():
-        print(f"  {name}: {count}")
-    for error in report.errors:
-        print(f"ERROR: {error}")
+    if args.json:
+        print(json.dumps(report_to_payload(report), indent=2, sort_keys=True))
+    else:
+        print(f"Staging log contract: {'PASS' if report.passed else 'FAIL'}")
+        print(
+            f"Observed events: {sum(report.event_counts.values())}; "
+            f"evidence: {report.evidence_count}; review markers: {report.review_marker_count}"
+        )
+        for name, count in report.event_counts.items():
+            print(f"  {name}: {count}")
+        for error in report.errors:
+            print(f"ERROR: {error}")
+        print(
+            "Scope: structured log contract only. Live client behavior, log origin, "
+            "and production readiness are not verified."
+        )
     return 0 if report.passed else 1
 
 
