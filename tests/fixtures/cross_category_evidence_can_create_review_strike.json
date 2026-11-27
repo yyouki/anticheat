@@ -4,6 +4,21 @@
   "description": "Two different families inside the correlation window may cross the score threshold and create one investigation strike.",
   "events": [
     {
+      "type": "connect",
+      "at_ms": 100
+    },
+    {
+      "type": "load_begin",
+      "at_ms": 200,
+      "account_id": 1006
+    },
+    {
+      "type": "load_complete",
+      "at_ms": 300,
+      "account_id": 1006,
+      "session_token": 2
+    },
+    {
       "type": "evidence",
       "at_ms": 100000,
       "category": "movement",
@@ -24,6 +39,12 @@
     ],
     "movement_evidence": 0,
     "score": 38,
-    "strikes": 1
+    "strikes": 1,
+    "loaded": true,
+    "account_id": 1006,
+    "session_token": 2,
+    "load_completion_results": [
+      true
+    ]
   }
 }
