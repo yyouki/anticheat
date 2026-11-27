@@ -55,18 +55,28 @@ The supplied config disables server-list announcement, query visibility, and RCO
 9. Run `/acstageinterior` twice to enter and leave the 24/7 interior (ID 17). Then run `/acstageworld` twice to enter and leave reserved virtual world 9000.
 10. Run `/acstagespectate <targetid>` on the primary client, then `/acstageunspectate`. The target is logged only as the pseudonymous role `secondary`; the report never needs either client's player ID. The harness restores the spectator's previous position/context after spectating ends.
 11. On the primary client, run `/acstagelogend`. Copy the server console log to a local text file. The structured `[AC-STAGE-EVENT]` records contain only the fixed role labels `primary` and `secondary`, transition values, and detector category counters. Supplemental `[AC-STAGE-VEHICLE]` records contain only the fixed `primary` role, schema version, measured sample interval, model ID, quantized speed, ping, and optional packet-loss measurement. Neither record type includes player IDs, account IDs, vehicle IDs, coordinates, IP addresses, or session tokens.
-The raw server console log may contain unrelated host/server connection metadata. Keep it local, do not commit or publicly upload it, and share only the redacted report summary if results need to be discussed.
+The raw server console log may contain unrelated host/server connection metadata. Keep it local and do not commit or publicly upload it.
+
+Before running reports or preparing a review record, create a sanitized export containing only validated structured staging records:
+
+```sh
+python3 tools/anticheat/staging_log_sanitize.py \
+  --log /path/to/private-raw-console.log \
+  --output /path/to/staging-sanitized.log
+```
+
+The exporter requires one complete acceptance capture, validates every event and vehicle telemetry record, removes timestamps and all unrelated console output, and creates a new output file without overwriting an existing file. The output contains only `[AC-STAGE-EVENT]` and `[AC-STAGE-VEHICLE]` records. It does not authenticate log origin or prove that the operator performed the scenarios. Use the sanitized file for every report and digest-binding command below; the review digest will bind the sanitized bytes, not the original raw console log. Keep the raw source file private.
 
 12. Run the offline transition report checker from the repository root:
 
     ```sh
-    python3 tools/anticheat/staging_report.py --log /path/to/staging-console.log
+    python3 tools/anticheat/staging_report.py --log /path/to/staging-sanitized.log
     ```
 
     For automation, append `--json` to print a machine-readable summary:
 
     ```sh
-    python3 tools/anticheat/staging_report.py --log /path/to/staging-console.log --json
+    python3 tools/anticheat/staging_report.py --log /path/to/staging-sanitized.log --json
     ```
 
     The JSON includes a versioned report schema, pass/fail status, event counts, evidence/review counts, and errors. Its `runtime_validation` fields deliberately remain false: this parser does not verify a connected client's behavior, authenticate the log's origin, or determine production readiness. A JSON `status: pass` means only that the supplied structured records satisfy the expected log contract.
@@ -76,28 +86,28 @@ The raw server console log may contain unrelated host/server connection metadata
 13. For an exploratory summary without review binding, run the supplemental local tool. Repeat `--log` for each separate model capture:
 
     ```sh
-    python3 tools/anticheat/vehicle_trace_report.py --log /path/to/model-411-console.log
+    python3 tools/anticheat/vehicle_trace_report.py --log /path/to/model-411-sanitized.log
     ```
 
     New staging builds emit vehicle telemetry schema 2. Each record stores `sample_interval_ms=0` for the first accepted observation and the elapsed milliseconds since the previous accepted observation thereafter. The report schema is version 3 and, per model, summarizes measured intervals with min/p50/p95/max. Legacy telemetry schema-1 logs remain readable but report timing as unavailable. The interval summary is a collection-quality diagnostic only; it is not a detector input or a client/network latency measurement.
 
-    For an evidence-bound summary, first finish the schema-v2 review record and bind it to the exact raw capture:
+    For an evidence-bound summary, first finish the schema-v2 review record and bind it to the exact sanitized capture:
 
     ```sh
-    python3 tools/anticheat/staging_review_capture.py --record /path/to/model-411-review.json --capture-log /path/to/model-411-console.log --write-digest
+    python3 tools/anticheat/staging_review_capture.py --record /path/to/model-411-review.json --capture-log /path/to/model-411-sanitized.log --write-digest
     ```
 
     Then provide one `--record` for every `--log`, in matching order:
 
     ```sh
     python3 tools/anticheat/vehicle_trace_report.py \\
-      --log /path/to/model-411-console.log --record /path/to/model-411-review.json \\
-      --log /path/to/model-560-console.log --record /path/to/model-560-review.json --json
+      --log /path/to/model-411-sanitized.log --record /path/to/model-411-review.json \\
+      --log /path/to/model-560-sanitized.log --record /path/to/model-560-review.json --json
     ```
 
     Bound mode verifies each review record against the exact capture bytes and staging event contract. It requires a clean `vehicle_enter_drive_exit` observation, distinct run IDs and capture digests, one approved vehicle model per file, and matching server commit, artifact digest, open.mp version, client platform/build, and network profile across all inputs. Each capture must contain vehicle telemetry samples. It rejects more than 500 captures, 64 MiB combined logs, 8 MiB combined review records, and 100,000 samples.
 
-    The report marks `provenance.binding_status=verified` only when those checks pass. This binds file bytes to operator-entered review metadata; it does not authenticate who produced a log or prove that a human actually performed the scenarios. Without `--record`, the report says `not_provided` and remains exploratory. Percentiles are not safe speed limits. Keep source logs and review records local.
+    The report marks `provenance.binding_status=verified` only when those checks pass. This binds file bytes to operator-entered review metadata; it does not authenticate who produced a log or prove that a human actually performed the scenarios. Without `--record`, the report says `not_provided` and remains exploratory. Percentiles are not safe speed limits. Keep original source logs and review records local; only share sanitized exports when necessary.
 
 The report must show `PASS`. It requires the complete teleport, vehicle, interior callback, world, and spectating event sequence. Any evidence, review marker, missing callback, failed restoration, capture abort, or incomplete capture makes the report fail. The parser ignores ordinary console lines and only evaluates the structured records inside the capture window.
 14. Outside the capture, run `/acstageevidence` and `/acstageclear` to inspect and clear the current review state. Then run `/acstagesave`, disconnect, reconnect, and authenticate again with the same synthetic account ID. This persistence test works only while the same server process remains running.
@@ -123,15 +133,15 @@ The review record template is docs/templates/staging-review-template.json. Copy 
 python3 tools/anticheat/staging_review.py --record /path/to/staging-review.json
 ```
 
-The validator checks record structure and whether scenario/evidence reviews are complete. It cannot prove that the scenarios were actually executed or that a run is false-positive-free. Its output always leaves independent verification and production readiness false. Keep review records and raw logs local and remove any accidental identifiers before sharing a summary.
+The validator checks record structure and whether scenario/evidence reviews are complete. It cannot prove that the scenarios were actually executed or that a run is false-positive-free. Its output always leaves independent verification and production readiness false. Keep review records and original raw logs local. Use the sanitized export for reports and digest binding; review records must not be uploaded with raw logs.
 
-The review template uses schema version 2. Bind the review record to the exact raw capture file with:
+The review template uses schema version 2. Bind the review record to the exact sanitized capture file with:
 
 ```sh
-python3 tools/anticheat/staging_review_capture.py --record /path/to/staging-review.json --capture-log /path/to/staging-console.log --write-digest
+python3 tools/anticheat/staging_review_capture.py --record /path/to/staging-review.json --capture-log /path/to/staging-sanitized.log --write-digest
 ```
 
-This command checks the staging log contract, computes SHA-256 over the exact raw file bytes, upgrades a schema-v1 record to schema v2 when explicitly requested, and writes the digest into `environment.capture_sha256`. Run it again without `--write-digest` to verify the binding later. It rejects symlinks and capture files larger than 32 MiB. It prints no raw log contents or local file paths. This binds the review to one exact file and checks its structure; it does not authenticate who produced the log or prove that a human executed the scenarios.
+This command checks the staging log contract, computes SHA-256 over the exact sanitized export bytes, upgrades a schema-v1 record to schema v2 when explicitly requested, and writes the digest into `environment.capture_sha256`. Run it again without `--write-digest` to verify the binding later. It rejects symlinks and capture files larger than 32 MiB. It prints no raw log contents or local file paths. This binds the review to one exact file and checks its structure; it does not authenticate who produced the log or prove that a human executed the scenarios.
 
 
 For repeated client/build/network runs, use the batch summary tool after individually validating and saving each review JSON in a private directory:

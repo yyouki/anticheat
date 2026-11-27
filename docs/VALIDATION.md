@@ -221,15 +221,26 @@ PR #16, [Bind vehicle trace summaries to staging review captures](https://github
 PR #16 verifies that each vehicle trace is paired with the exact schema-v2 review capture and that review metadata is consistent across the set. It does not authenticate log origin, prove operator scenario execution, connect a game client, or establish detector accuracy. The Pawn detector and its thresholds remain unchanged.
 
 
-## PR #17 — measured vehicle sample intervals (pre-merge)
+## PR #17 — measured vehicle sample intervals
 
-PR #17, [Add vehicle telemetry sample interval diagnostics](https://github.com/yyouki/anticheat/pull/17), head `c439b9ee89e30c4abeb2c57fddce9d9e26af8d2a`, passed Actions run #97 (`46001052529`) on 2026-11-27:
+PR #17, [Add vehicle telemetry sample interval diagnostics](https://github.com/yyouki/anticheat/pull/17), merged to `main` as `4af2cd0994b8f6bc0d46cfc7aef077de4cf015c5` on 2026-11-27. Post-merge Actions run #99 (`46004415945`) completed successfully on that exact merge commit:
+
+- Static repository audit, 93 Python unit tests, and deterministic telemetry replay: PASSED.
+- Default, opt-in feature-gate, and staging Pawn compile targets: PASSED.
+- Pinned open.mp `v1.6.7.3218` headless runtime smoke: PASSED.
+- Staging artifact: `ac-staging-package`, ID `15199203857`, size 46,093 bytes, SHA-256 `8d9ae316fceb169899979703f8b885f4a0bf5342091c05b221edee35eb5d8a07`.
+
+PR #17 records elapsed milliseconds between accepted staging vehicle observations, with backward compatibility for schema-1 telemetry logs. The report describes collector cadence only; it does not establish detector accuracy, client timing, safe speed envelopes, or production readiness. No connected client test ran in run #99.
+
+## PR #18 — privacy-safe structured staging-log export (pre-merge)
+
+PR #18, [Add privacy-safe staging log export](https://github.com/yyouki/anticheat/pull/18), head `928f32baecc8740a56d418b3049f2fc3f14bff37`, passed Actions run #100 (`46005183503`) on 2026-11-27:
 
 - Static repository audit: PASSED.
-- Python unit tests: PASSED (93 tests).
+- Python unit tests: PASSED (101 tests).
 - Deterministic telemetry replay: PASSED.
-- Default, opt-in feature-gate, and staging Pawn compiles: PASSED.
+- Default, opt-in feature-gate, and staging Pawn compile targets: PASSED.
 - Pinned open.mp `v1.6.7.3218` headless runtime smoke: PASSED.
-- Staging artifact: `ac-staging-package`, ID `15198191515`, size 46,093 bytes, SHA-256 `e75ba3abc7d1b297956e4e77f11d66f813fde27f0f8668069432d2c66d263bba`.
+- Staging artifact: `ac-staging-package`, ID `15202240154`, size 46,348 bytes, SHA-256 `2639a238840a6c93cc33a13af129bddcfe25c5c7af88ecd069762e752d52991b`.
 
-This is a PR-branch validation result, not a post-merge `main` result. The headless runtime job does not connect interactive game clients. The new timing report describes intervals between accepted server-side observations only; no detector, threshold, evidence, score, or enforcement behavior changes are included.
+The sanitizer retains only one complete, parser-valid staging acceptance capture and valid vehicle telemetry records. It strips unrelated console metadata and writes a new local file. The review digest then binds that sanitized file, not the original raw console log. This checks format and record consistency only; run #100 did not connect an interactive game client.

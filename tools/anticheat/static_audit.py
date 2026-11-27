@@ -31,6 +31,7 @@ REQUIRED = [
     "tools/anticheat/staging_review.py",
     "tools/anticheat/staging_review_batch.py",
     "tools/anticheat/staging_review_capture.py",
+    "tools/anticheat/staging_log_sanitize.py",
     "tools/anticheat/vehicle_trace_report.py",
     "tools/anticheat/staging_review_scenarios.json",
     "tools/anticheat/openmp_runtime_smoke.py",
@@ -39,6 +40,7 @@ REQUIRED = [
     "tests/test_staging_review.py",
     "tests/test_staging_review_batch.py",
     "tests/test_staging_review_capture.py",
+    "tests/test_staging_log_sanitize.py",
     "tests/test_vehicle_trace_report.py",
     "docs/STAGING_FALSE_POSITIVE_MATRIX.md",
     "docs/templates/staging-review-template.json",
@@ -138,6 +140,17 @@ def main() -> int:
     assert "duplicate capture digest detected" in sources["tools/anticheat/vehicle_trace_report.py"]
     assert "test_bound_capture_verifies_sha256_and_environment" in sources["tests/test_vehicle_trace_report.py"]
     assert "test_bound_capture_requires_matching_metadata" in sources["tests/test_vehicle_trace_report.py"]
+
+    # Raw console exports must retain only validated structured staging records.
+    sanitizer = sources["tools/anticheat/staging_log_sanitize.py"]
+    assert "MAX_SOURCE_BYTES" in sanitizer and "MAX_EXPORT_BYTES" in sanitizer
+    assert "parse_staging_log" in sanitizer and "_parse_record" in sanitizer
+    assert "parse_vehicle_observations" in sanitizer
+    assert "os.O_EXCL" in sanitizer and "0o600" in sanitizer
+    assert "test_export_keeps_only_valid_structured_records" in sources["tests/test_staging_log_sanitize.py"]
+    assert "test_export_rejects_event_records_after_run_end" in sources["tests/test_staging_log_sanitize.py"]
+    assert "test_export_rejects_malformed_vehicle_telemetry" in sources["tests/test_staging_log_sanitize.py"]
+    assert "Bind review records to this sanitized file" in sanitizer
 
     # Staging telemetry must be bounded, model-scoped, and pseudonymous.
     staging = sources["examples/staging.pwn"]
