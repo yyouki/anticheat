@@ -373,6 +373,41 @@ class VehicleTraceReportTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "review record must not be a symlink"):
                 _load_bound_traces([log_path], [link_path])
 
+    def test_bound_capture_enforces_combined_record_byte_limit(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            log_path, record_path = create_bound_capture(Path(directory))
+            with patch("vehicle_trace_report.MAX_TOTAL_RECORD_BYTES", 1):
+                with self.assertRaisesRegex(ValueError, "combined review records exceed"):
+                    _load_bound_traces([log_path], [record_path])
+
+    def test_unbound_trace_set_enforces_capture_count_limit(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            first = root / "first.log"
+            second = root / "second.log"
+            first.write_text(line(411) + "\n", encoding="utf-8")
+            second.write_text(line(560) + "\n", encoding="utf-8")
+            with patch("vehicle_trace_report.MAX_CAPTURES", 1):
+                with patch(
+                    "sys.argv",
+                    ["vehicle_trace_report.py", "--log", str(first), "--log", str(second)],
+                ):
+                    with redirect_stderr(StringIO()):
+                        self.assertEqual(main(), 2)
+
+    def test_bound_record_rejects_duplicate_json_keys(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            log_path, record_path = create_bound_capture(Path(directory))
+            raw = record_path.read_text(encoding="utf-8")
+            duplicate = raw.replace(
+                '"schema_version": 2,',
+                '"schema_version": 2,\n  "schema_version": 2,',
+                1,
+            )
+            record_path.write_text(duplicate, encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "duplicate JSON keys"):
+                _load_bound_traces([log_path], [record_path])
+
     def test_cli_supports_one_to_one_bound_log_and_review_arguments(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             log_path, record_path = create_bound_capture(Path(directory))
