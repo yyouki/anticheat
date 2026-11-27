@@ -123,6 +123,18 @@ PR #9 strengthens required event fields, negative-value rejection, spectate targ
 
 The staging report's JSON mode provides a versioned machine-readable representation of the structured-log check. Its `status` and `passed` fields describe only whether the supplied records satisfy the expected log contract. The report explicitly states that client runtime behavior is unverified, log origin is unauthenticated, and production readiness is false. A successful JSON report is not a runtime acceptance result.
 
+
+PR #10, [Add explicit JSON staging report contract](https://github.com/yyouki/anticheat/pull/10), was merged as 257b3d8bb371639a5d12725111eb9b77991b27ff. Post-merge GitHub Actions run #69 (45976338084) completed successfully:
+
+- Static repository audit, Python unit tests and deterministic replay: PASSED.
+- Default, opt-in feature-gate, and staging Pawn compiles: PASSED.
+- Staging package upload: PASSED (ac-staging-package, artifact ID 15186404863, SHA-256 82a1cb95ced58ed251ab17755445537f2769ab3b20e774480074bbce191ed699).
+- Pinned open.mp v1.6.7.3218 headless boot: PASSED.
+
+Run #69 does not execute connected game clients. The JSON staging report validates only the structured event-log contract.
+
+The next manual-testing increment adds docs/STAGING_FALSE_POSITIVE_MATRIX.md, a versioned review-record template, and tools/anticheat/staging_review.py. They help record benign actions across client builds and network profiles while keeping raw identifiers out of the review schema. The validator reports record completeness and human evidence-review state only; it does not certify test execution, false-positive rate, independent verification, or production readiness. Interactive runtime testing remains outstanding.
+
 ## Required release suite
 
 | Area | Required cases |
