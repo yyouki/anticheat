@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "scenario_id": "cross_category_evidence_can_create_review_strike",
+  "description": "Two different families inside the correlation window may cross the score threshold and create one investigation strike.",
+  "events": [
+    {
+      "type": "evidence",
+      "at_ms": 100000,
+      "category": "movement",
+      "points": 40
+    },
+    {
+      "type": "evidence",
+      "at_ms": 101000,
+      "category": "vehicle",
+      "points": 30
+    }
+  ],
+  "expected": {
+    "evidence_count": 2,
+    "evidence_categories": [
+      "movement",
+      "vehicle"
+    ],
+    "movement_evidence": 0,
+    "score": 38,
+    "strikes": 1
+  }
+}
