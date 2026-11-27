@@ -10,7 +10,10 @@ new AC_StageSavedStrikeDecayAt[AC_STAGE_STORE_CAPACITY];
 new AC_StageSavedLastStrikeAt[AC_STAGE_STORE_CAPACITY];
 new AC_StageVehicleId[MAX_PLAYERS];
 new AC_StageLastVehicleTraceTick[MAX_PLAYERS];
+new AC_StageVehicleTraceSampleCount;
 new AC_StageLogCaptureOwner = INVALID_PLAYER_ID;
+
+#define AC_STAGE_MAX_VEHICLE_TRACE_SAMPLES (3600)
 
 #define AC_STAGE_TEST_INTERIOR_ID (17)
 #define AC_STAGE_TEST_WORLD_ID (9000)
@@ -129,6 +132,9 @@ stock AC_StageCaptureVehicleTelemetry(playerid)
         return 0;
     }
 
+    if (AC_StageVehicleTraceSampleCount >= AC_STAGE_MAX_VEHICLE_TRACE_SAMPLES)
+        return 0;
+
     new tick = GetTickCount();
     if ((tick - AC_StageLastVehicleTraceTick[playerid]) < AC_SAMPLE_INTERVAL_MS)
         return 0;
@@ -172,6 +178,7 @@ stock AC_StageCaptureVehicleTelemetry(playerid)
         ping,
         packet_loss_centi_pct
     );
+    AC_StageVehicleTraceSampleCount++;
     return 1;
 }
 
@@ -224,6 +231,7 @@ stock AC_StageBeginLogCapture(playerid)
 
     AC_StageLogCaptureOwner = playerid;
     AC_StageLastVehicleTraceTick[playerid] = 0;
+    AC_StageVehicleTraceSampleCount = 0;
     AC_StageLogEvent(playerid, "run_begin", "");
     SendClientMessage(playerid, 0xD8D8D8FF, "[AC-STAGE] Acceptance log capture started.");
     return 1;
@@ -1194,8 +1202,8 @@ public OnPlayerCommandText(playerid, cmdtext[])
         if (GetPlayerState(playerid) == PLAYER_STATE_DRIVER
             || GetPlayerState(playerid) == PLAYER_STATE_PASSENGER)
         {
-            RemovePlayerFromVehicle(playerid);
             AC_NotifyLegitimateVehicleChange(playerid);
+            RemovePlayerFromVehicle(playerid);
             AC_StageLogEvent(playerid, "vehicle_exit", "");
             SendClientMessage(playerid, 0xD8D8D8FF, "[AC-STAGE] Vehicle exit completed.");
         }
