@@ -22,7 +22,7 @@
 - [ ] Add an optional durable evidence storage adapter with retention controls.
 - [x] Add versioned synthetic telemetry fixtures and a deterministic Python reference replay.
 - [x] Add CI regression tests for movement grace, sustained anomalies, network suppressors, sampling resets, evidence correlation, and stale/duplicate account loads.
-- [ ] Keep replay/unit-test CI green on the merged default branch (follow-up CI repair is tracked in the current PR).
+- [x] Repair replay/unit-test CI regression; PR #3 run #33 passed static audit, 5 Python unit tests, 10 fixtures, and both Pawn smoke compile modes. Merge to `main` is still pending.
 
 ## Milestone 2 — detection coverage
 
