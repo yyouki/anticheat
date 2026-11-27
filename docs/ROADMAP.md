@@ -8,11 +8,11 @@
 - [x] Implement evidence ring, category correlation, score/strike policy and decay.
 - [x] Implement conservative movement and driver-only vehicle sampling.
 - [x] Keep memory scans and combat cadence scoring disabled by default.
-- [x] Validate default and compile-only opt-in feature-gate builds with the pinned CI compiler and open.mp includes (GitHub Actions run #14 passed).
+- [x] Validate default and compile-only opt-in feature-gate builds with the pinned CI compiler and open.mp includes.
 - [x] Add defensive player-ID validation to per-player state, lifecycle, network and evidence helpers.
 - [x] Reject duplicate asynchronous account-load completions after the active session has already been loaded.
-- [x] Restore an active strike cooldown from the persisted strike-decay timestamp after reconnect.
-- [ ] Runtime and false-positive testing on staging server.
+- [x] Restore an active strike cooldown from the persisted `last_strike_at` timestamp; keep it separate from the six-hour `strike_decay_at` timestamp.
+- [ ] Complete staging-server runtime and false-positive testing.
 
 ## Milestone 1 — investigation and host adapters
 
@@ -22,6 +22,7 @@
 - [ ] Add an optional durable evidence storage adapter with retention controls.
 - [x] Add versioned synthetic telemetry fixtures and a deterministic Python reference replay.
 - [x] Add CI regression tests for movement grace, sustained anomalies, network suppressors, sampling resets, evidence correlation, and stale/duplicate account loads.
+- [ ] Keep replay/unit-test CI green on the merged default branch (follow-up CI repair is tracked in the current PR).
 
 ## Milestone 2 — detection coverage
 
